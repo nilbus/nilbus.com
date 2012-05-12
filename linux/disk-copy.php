@@ -13,12 +13,30 @@
 <style type="text/css">
 <!--
 /* Quote & Code blocks */
-PRE {
-  font-family: Courier, Courier New, sans-serif; font-size: 11px; color: #007700;
-  background-color: #EEEEFF; border: #000044; border-style: solid;
-  border-left-width: 1px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px
+article {
+  font-size: 18px;
+  line-height: 1.5;
 }
-B { color: #000000; }
+article pre {
+  background-color: #EEEEFF;
+  border: 1px solid #aaa;
+  color: #007700;
+  display: block;
+  font-family: Courier, Courier New, sans-serif;
+}
+article b {
+  color: #000000;
+}
+article dt {
+  font-weight: bold;
+}
+article h2 {
+  font-size: 24px;
+}
+article h3 {
+  border-bottom: 4px solid #777;
+  line-height: 1.5;
+}
 -->
 </style>
 <!-- //////// Css StyleSheets ////////  -->
@@ -74,13 +92,17 @@ B { color: #000000; }
 		<div class="container_12">
 			<article>
 <h2>Copying Windows to a new drive, using linux - How-to/Guide</h2>
-Written 20 Mar 2005 by Edward Anderson. Updated 8 Apr 2010 (How to view dd progress; recommend ntfsclone)
 <p>
-Another good resource: <a href="http://www.2pi.info/software/copying-windows-new-hard-drive.html">www.2pi.info/software/copying-windows-new-hard-drive.html</a>
+Written 20 Mar 2005 by Edward Anderson. Updated 11 Feb 2012 (tell how to get root, give an example ntfsclone command, suggest chkdsk for ntfs)
+</p>
+<p>
+Another good resource: <a href="http://www.2pi.info/software/copying-windows-new-hard-drive.html" target="_blank">www.2pi.info/software/copying-windows-new-hard-drive.html</a>
 <h3>Overview</h3>
 This guide will show you how to copy an existing installation of Windows (or any other OS) from one drive to another - as long as the destination drive is the same size or larger.
+</p>
 <p>
 This is a free and relatively easy method that will create a clone of your current hard disk, without having to buy any third party software.
+</p>
 <p><ol>
 <li><a href="#tools">Gathering tools
 <li><a href="#hardware">Physical Installation
@@ -88,32 +110,43 @@ This is a free and relatively easy method that will create a clone of your curre
 <li><a href="#mbr">Copy the MBR
 <li><a href="#copy">Copy the Partition
 <li><a href="#resize">Resizing the Partition
-<li><a href="#faq">FAQ
 </ol>
+</p>
 
 <h3><a name="tools"></a>Gathering Tools</h3>
+<p>
 For this project, you will need a Linux Live CD that has dd, fdisk, parted/qtparted, and ntfsresize.<br>
 <a href="http://www.knopper.net/knoppix/index-en.html" target="_blank">Knoppix</a> is a Live CD that has everything you'll need.
 Many other Live CDs will work as well, such as an <a href="http://www.ubuntu.com/getubuntu/download" target="_blank">Ubuntu</a> install CD.<br>
 Burn the contents of the ISO to CD to boot from later.<br>
+</p>
 <h3><a name="hardware"></a>Physical Installation</h3>
+<p>
 Install both hard drives in your computer. In this guide, I will use the following disk setup as an example:
 <b>
+</p>
 <p>
 /dev/sda (Primary Master) - New, empty 80G drive<br>
 /dev/sdb (Primary Slave) - Old 10G drive with all data on one NTFS partition (/dev/sdb1)<br>
 </p>
+<p>
 </b>
-Your disk setup can vary, but in this guide, I will refer to the new drive as /dev/sda, and the old as /dev/sdb. Use device names according to your own setup. For example, yours might be /dev/sda and /dev/sdb.
+Your disk setup can vary, but in this guide, I will refer to the new drive as /dev/sda, and the old as /dev/sdb. Use device names according to your own setup.
+</p>
 <p><!-- If you're not familiar with this naming scheme for disks/partitions, read the <a href="http://www.linux.com/howtos/Partition/partition-2.shtml" target="_blank">Linux Partition HOWTO</a>.<br> -->
 To sum it up, SCSI disks are referred to by /dev/sdX where X is corresponds to the disk order (a for the first disk, d for the last). Partitions are referred to as /dev/sdXY where Y is the partiton number. (eg. /dev/sdc2 is the 3rd disk, 2nd partition)  IDE disks are the same, but hdX instead of sdX.
-
+</p>
 <h3><a name="table"></a>Preparing new partition table</h3>
+<p>
 Before you start, you may want to run scandisk on your drive to verify that there are no errors on the disk.
+</p>
 <p>
 Boot from the Live CD. Press enter at the boot: prompt.
+</p>
 <p>
 Open a new terminal as root.  In knoppix 3.7, click on the Penguin icon, and click Root Shell.
+Otherwise, just open a normal terminal and run <pre>$ <b>sudo su</b></pre> to switch to the root user.
+</p>
 <p>
 View the partition table for the old disk:
 <pre># <b>fdisk -l -u /dev/sdb</b>
@@ -126,8 +159,10 @@ Units = sectors of 1 * 512 = 512 bytes
 /dev/sdb1   *          63    19968794     9984366    7  HPFS/NTFS</pre>
 
 Note that I used the -u option on fdisk. This displays the start and end units in sectors, rather than cylinders, since the cylinder size varies from disk to disk.
+</p>
 <p>
 Record the Start and End positions, and the Id for the existing partition.
+</p>
 <p>
 Now run fdisk on the new disk.
 <pre># <b>fdisk /dev/sda</b>
@@ -149,6 +184,7 @@ w(rite)
 
 Command (m for help):</pre>
 When you run fdisk on an emptry drive, it may tell you that there is no partition table, or that the disk is large. You may safely ignore these warnings.
+</p>
 <p>
 Print the current partition table to verify that there are no partitions on the disk.
 <pre>Command (m for help): <b>p</b>
@@ -161,6 +197,7 @@ Units = cylinders of 1008 * 512 = 516096 bytes
 
 </pre>
 If there are partitions listed, and you were expecting none, make sure you ran fdisk on the correct device. You should delete the existing partitions on the new disk, only if you know that the data is not needed.
+</p>
 <p>
 Create an identical partition, using the Start and End positions from the other disk.  Be sure to change the units to Sectors.
 <pre>Command (m for help): <b>u</b>
@@ -203,6 +240,7 @@ Units = sectors of 1 * 512 = 512 bytes
 /dev/sda1   *          63    19968794     9984366    7  HPFS/NTFS</pre>
 
 The partition should now look identical to when you ran fdisk -l -u /dev/sdb
+</p>
 <p>
 Now we must write the changes to disk.
 <pre>Command (m for help): <b>w</b>
@@ -211,8 +249,11 @@ The partition table has been altered!
 Calling ioctl() to re-read partition table.
 Syncing disks.</pre>
 
+</p>
 <h3><a name="mbr"></a>Copy the MBR</h3>
+<p>
 For the new disk to boot, we must copy the boot code from the Master Boot Record (MBR) to the new disk.
+</p>
 <p>
 The MBR is on the first sector of the disk, and is split into three parts:
 <ul><li>Boot Code (446 bytes)
@@ -225,7 +266,9 @@ We only want to copy the boot code - the first 446 bytes. We do this with dd:
 1+0 records out
 446 bytes transferred in 0.026312 seconds (16950 bytes/sec)</pre>
 
+</p>
 <h3><a name="copy"></a>Copying the Partition</h3>
+<p>
 Optional: We should try to enable DMA on both disks, to increase the transfer speed.
 <pre># <b>hdparm -d 1 /dev/sda</b>
 /dev/sda:
@@ -237,8 +280,17 @@ Optional: We should try to enable DMA on both disks, to increase the transfer sp
  setting using_dma to 1 (on)
  using_dma    =  1 (on)</pre>
 The next task is to copy the filesystem from one disk to the other.
-If this is an NTFS filesystem, you can use <b>ntfsclone</b> to copy it very efficiently. In this guide, we use dd, which will work with any filesystem type, but will be slower.
 This time, instead of working with the disk device (sda, sdb), we'll be using the partition device (sda1, sdb1).
+</p>
+<p>
+If this is an NTFS filesystem, you can use <b>ntfsclone</b> to copy it very efficiently.
+<pre># <b>ntfsclone --overwrite /dev/sda1 /dev/sdb1</b></pre>
+Add the --rescue option if there are bad sectors on the source disk.
+<pre># <b>ntfsclone --rescue --overwrite /dev/sda1 /dev/sdb1</b></pre>
+</p>
+<p>
+If it's not NTFS, you can use dd, which will work with any filesystem type.
+If your source disk has bad sectors, you should use ddrescue instead of dd.
 <pre># <b>dd if=/dev/sdb1 of=/dev/sda1 bs=4096</b>
 2496092+0 records in
 2496092+0 records out
@@ -251,8 +303,11 @@ The terminal running dd will output something like:
 1261525+0 records out
 5167206400 bytes transferred, 152.312 seconds (33925143 bytes/sec)</pre>
 
+</p>
 <h3><a name="resize"></a>Resizing the Partition</h3>
+<p>
 Next, we resize the partition to fill the disk. You should only do this section if you are copying to a larger disk, and don't want to leave unpartitioned space.
+</p>
 <p>
 By far, the easist way is with qtparted. It is a graphical front-end to parted and ntfsresize. If you are using a Live CD without a GUI, you'll have to use parted or ntfsresize.
 <h4>Method 1: qtparted</h4>
@@ -264,11 +319,13 @@ This method should work with most filesystems, including NTFS and FAT32.
 <li>Change "Free Space After" to 0, and press OK. The partition should now span the disk.
 <li>Commit the changes to disk using the the Commit option in the File menu.
 </ol>
-After the commit operation finishes with your disk, you can reboot onto your new hard drive, and everything should work. Since you resized your partition, be sure to run scandisk to remove any errors in the newly created filesystem.
+After the commit operation finishes with your disk, you can reboot onto your new hard drive, and everything should work. Since you resized your partition, be sure to run scandisk (FAT32) or chkdsk (NTFS) to remove any errors in the newly created filesystem.
+<pre><b>chkdsk C: /f /r</b></pre>
 <h4>Method 2: ntfsresize</h4>
 (no examples yet)
 <h4>Method 3: parted</h4>
 If you don't have a GUI, you can use parted to resize almost any non-ntfs partition. In this example, I'll resize a FAT32 partition to fill the drive.
+</p>
 <p>
 Run parted. You may safely ignore errors about the partition alignment.
 <pre># <b>parted /dev/sda</b>
@@ -299,26 +356,10 @@ Start?  [0.0308]? <b>0.0308</b>
 End?  [9750.2339]? <b>78125.000</b>
 (parted)</pre>
 This may take some time, depending on the size of the partition. When it's done, you can reboot into windows. Since you modified the partition, be sure to run scandisk to remove any errors in the newly created filesystem.
-<h3><a name="faq"></a>FAQ</h3>
-<ul>
-<li><b>Why can't I just copy the files, instead of the whole partition?</b><br>
-I haven't experimented doing this on Linux. You can't if you have NTFS partitions, since linux can't write files on an NTFS partition.
+</p>
+<h3><a name="contact"></a>Contact</h3>
 <p>
-On FAT32, I would be afraid of losing windows file attributes, missing files, and messing up file order. The advantage would be that no unused space on the filesystem would need to be transferred. Someone please let me know if you've tried, and I'll update this page.  
-<p>
-If I were to try this method on a FAT32 disk, I would create a large partition on /dev/sda, and run
-<pre># <b>mkfs.vfat -F 32 /dev/sda1</b>
-mkfs.vfat 2.10 (22 Sep 2003)
-# <b>mkdir old new</b>
-# <b>mount /dev/sdb1 /mnt/old</b>
-# <b>mount /dev/sda1 /mnt/new</b>
-# <b>cd old</b>
-# <b>find | cpio -pdV ../new</b></pre></li>
-<li><b>Can't I create the MBR with the DOS fdisk /mbr, instead of dd?</b><br>
-Yes, but that would require making a boot disk, or something else that requires more effort than dd. :) Since we're in the Linux environment, it's easier to use dd.</li>
-<p>
-<li><b>I have a suggestion or need some help. Can I contact you?</b><br>
-I'm always glad to help.
+I'm always glad to help if I can. Feel free to shoot me an email:
               <script type="text/javascript" language="javascript">
               <!--
               // Email obfuscator script 2.1 by Tim Williams, University of Arizona
@@ -343,9 +384,7 @@ I'm always glad to help.
               }
               //-->
               </script><noscript>Sorry, you need Javascript enabled to email me.</noscript>
-</li>
-</ul>
-<hr color="black" size="1" width="100%">
+</p>
 
     </article>
   </div>
