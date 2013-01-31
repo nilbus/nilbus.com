@@ -113,6 +113,18 @@ This is a free and relatively easy method that will create a clone of your curre
 </ol>
 </p>
 
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5974624498841092";
+/* disk-copy */
+google_ad_slot = "2333167650";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+
 <h3><a name="tools"></a>Gathering Tools</h3>
 <p>
 For this project, you will need a Linux Live CD that has dd, fdisk, parted/qtparted, and ntfsresize.<br>
@@ -250,6 +262,19 @@ Calling ioctl() to re-read partition table.
 Syncing disks.</pre>
 
 </p>
+
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5974624498841092";
+/* disk-copy-mid */
+google_ad_slot = "6763367257";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+
 <h3><a name="mbr"></a>Copy the MBR</h3>
 <p>
 For the new disk to boot, we must copy the boot code from the Master Boot Record (MBR) to the new disk.
@@ -339,9 +364,8 @@ PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 Using /dev/sda
 Warning: Unable to align partition properly.  This probably means that another
-partitioning tool generated an incorrect partition table, because it didn't hav
-e
-the correct BIOS geometry.  It is safe to ignore,but ignoring may cause
+partitioning tool generated an incorrect partition table, because it didn't have
+the correct BIOS geometry.  It is safe to ignore, but ignoring may cause
 (fixable) problems with some boot loaders.
 Ignore/Cancel? <b>i</b></pre>
 Display the current partition table (p), and resize the partition to the size of the drive.
@@ -357,6 +381,19 @@ End?  [9750.2339]? <b>78125.000</b>
 (parted)</pre>
 This may take some time, depending on the size of the partition. When it's done, you can reboot into windows. Since you modified the partition, be sure to run scandisk to remove any errors in the newly created filesystem.
 </p>
+
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-5974624498841092";
+/* disk-copy-low */
+google_ad_slot = "9716833650";
+google_ad_width = 728;
+google_ad_height = 90;
+//-->
+</script>
+<script type="text/javascript"
+src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+
 <h3><a name="contact"></a>Contact</h3>
 <p>
 I'm always glad to help if I can. Feel free to shoot me an email:
