@@ -93,7 +93,7 @@ article h3 {
 			<article>
 <h2>Copying Windows to a new drive, using linux - How-to/Guide</h2>
 <p>
-Written 20 Mar 2005 by Edward Anderson. Updated 11 Feb 2012 (tell how to get root, give an example ntfsclone command, suggest chkdsk for ntfs)
+Written 20 Mar 2005 by Edward Anderson. Updated 1 Nov 2013 (give an example using ntfsresize)
 </p>
 <p>
 Another good resource: <a href="http://www.2pi.info/software/copying-windows-new-hard-drive.html" target="_blank">www.2pi.info/software/copying-windows-new-hard-drive.html</a>
@@ -335,6 +335,10 @@ Next, we resize the partition to fill the disk. You should only do this section 
 </p>
 <p>
 By far, the easist way is with qtparted. It is a graphical front-end to parted and ntfsresize. If you are using a Live CD without a GUI, you'll have to use parted or ntfsresize.
+</p>
+<p>
+If Windows was not shut down properly, the partition is dirty and cannot be resized. The resizing tools will tell you if the this is the case. If needed, boot into your new Windows partition and shut down cleanly before continuing.
+</p>
 <h4>Method 1: qtparted</h4>
 This method should work with most filesystems, including NTFS and FAT32.
 <ol>
@@ -347,9 +351,31 @@ This method should work with most filesystems, including NTFS and FAT32.
 After the commit operation finishes with your disk, you can reboot onto your new hard drive, and everything should work. Since you resized your partition, be sure to run scandisk (FAT32) or chkdsk (NTFS) to remove any errors in the newly created filesystem.
 <pre><b>chkdsk C: /f /r</b></pre>
 <h4>Method 2: ntfsresize</h4>
-(no examples yet)
+<p>
+On the command line, ntfsresize works great for NTFS filesystems. First, delete the old partition and create a new one in its place that matches the new disk size. Deleting a partition does not erase the data that exists there. Just make sure the new partition is at the same start position. Finally, run ntfsresize to grow the filesystem to the size of the partition it's now in. 
+</p>
+<ol>
+<li>
+  Use fdisk to recreate the partition to be resized with the new size:
+  <pre># <b>fdisk /dev/sda</b>
+Command (m for help): <b>u</b>
+Changing display/entry units to sectors
+
+Command (m for help): <b>d</b>
+Command (m for help): <b>n</b>
+Command action
+   e   extended
+   p   primary partition (1-4)
+<b>p</b>
+
+Partition number (1-4): <b>1</b>
+First sector (63-159999999, default 63): <b>63</b>
+Last sector or +size or +sizeM or +sizeK (63-159999999, default 159999999): <b>159999999</b>
+</pre></li>
+<li>Resize the partition:<pre># <b>ntfsresize /dev/sda1</b></pre></li>
+</ol>
 <h4>Method 3: parted</h4>
-If you don't have a GUI, you can use parted to resize almost any non-ntfs partition. In this example, I'll resize a FAT32 partition to fill the drive.
+For any non-NTFS filesystem, you can use parted. In this example, I'll resize a FAT32 partition to fill the drive.
 </p>
 <p>
 Run parted. You may safely ignore errors about the partition alignment.
