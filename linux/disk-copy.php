@@ -37,6 +37,12 @@ article h3 {
   border-bottom: 4px solid #777;
   line-height: 1.5;
 }
+.sda {
+  color: #0073C6;
+}
+.sdb {
+  color: #AE7A00;
+}
 -->
 </style>
 <!-- //////// Css StyleSheets ////////  -->
@@ -138,12 +144,12 @@ Install both hard drives in your computer. In this guide, I will use the followi
 <b>
 </p>
 <p>
-/dev/sda (Primary Master) - New, empty 80G drive<br>
-/dev/sdb (Primary Slave) - Old 10G drive with all data on one NTFS partition (/dev/sdb1)<br>
+/dev/<span class="sda">sda</span> (Primary Master) - New, empty 80G drive<br>
+/dev/<span class="sdb">sdb</span> (Primary Slave) - Old 10G drive with all data on one NTFS partition (/dev/<span class="sdb">sdb</span>1)<br>
 </p>
 <p>
 </b>
-Your disk setup can vary, but in this guide, I will refer to the new drive as /dev/sda, and the old as /dev/sdb. Use device names according to your own setup.
+Your disk setup can vary, but in this guide, I will refer to the new drive as /dev/<span class="sda">sda</span>, and the old as /dev/<span class="sdb">sdb</span>. Use device names according to your own setup.
 </p>
 <p><!-- If you're not familiar with this naming scheme for disks/partitions, read the <a href="http://www.linux.com/howtos/Partition/partition-2.shtml" target="_blank">Linux Partition HOWTO</a>.<br> -->
 To sum it up, SCSI disks are referred to by /dev/sdX where X is corresponds to the disk order (a for the first disk, d for the last). Partitions are referred to as /dev/sdXY where Y is the partiton number. (eg. /dev/sdc2 is the 3rd disk, 2nd partition)  IDE disks are the same, but hdX instead of sdX.
@@ -161,14 +167,14 @@ Otherwise, just open a normal terminal and run <pre>$ <b>sudo su</b></pre> to sw
 </p>
 <p>
 View the partition table for the old disk:
-<pre># <b>fdisk -l -u /dev/sdb</b>
+<pre># <b>fdisk -l -u /dev/<span class="sdb">sdb</span></b>
 
-Disk /dev/sdb: 10.2 GB, 10240000000 bytes
+Disk /dev/<span class="sdb">sdb</span>: 10.2 GB, 10240000000 bytes
 255 heads, 63 sectors/track, 1244 cylinders, total 20000000 sectors
 Units = sectors of 1 * 512 = 512 bytes
 
    Device Boot      Start         End      Blocks   Id  System
-/dev/sdb1   *          63    19968794     9984366    7  HPFS/NTFS</pre>
+/dev/<span class="sdb">sdb</span>1   *          63    19968794     9984366    7  HPFS/NTFS</pre>
 
 Note that I used the -u option on fdisk. This displays the start and end units in sectors, rather than cylinders, since the cylinder size varies from disk to disk.
 </p>
@@ -177,7 +183,7 @@ Record the Start and End positions, and the Id for the existing partition.
 </p>
 <p>
 Now run fdisk on the new disk.
-<pre># <b>fdisk /dev/sda</b>
+<pre># <b>fdisk /dev/<span class="sda">sda</span></b>
 Device contains neither a valid DOS partition table, nor Sun, SGI or
 OSF disklabel
 Building a new DOS disklabel. Changes will remain in memory only,
@@ -201,7 +207,7 @@ When you run fdisk on an emptry drive, it may tell you that there is no partitio
 Print the current partition table to verify that there are no partitions on the disk.
 <pre>Command (m for help): <b>p</b>
 
-Disk /dev/sda: 81.9 GB, 81920000000 bytes
+Disk /dev/<span class="sda">sda</span>: 81.9 GB, 81920000000 bytes
 16 heads, 63 sectors/track, 158730 cylinders
 Units = cylinders of 1008 * 512 = 516096 bytes
 
@@ -227,12 +233,12 @@ Last sector or +size or +sizeM or +sizeK (63-159999999, default 159999999): <b>1
 
 Command (m for help): <b>p</b>
 
-Disk /dev/sda: 81.9 GB, 81920000000 bytes
+Disk /dev/<span class="sda">sda</span>: 81.9 GB, 81920000000 bytes
 16 heads, 63 sectors/track, 158730 cylinders, total 160000000 sectors
 Units = sectors of 1 * 512 = 512 bytes
 
    Device Boot      Start         End      Blocks   Id  System
-/dev/sda1              63    19968794     9984366   83  Linux</pre>
+/dev/<span class="sda">sda</span>1              63    19968794     9984366   83  Linux</pre>
 
 Before we're done, we must set the Boot flag and System Id. Use the same Id that was listed on your old partition table.
 <pre>Command (m for help): <b>a</b>
@@ -244,14 +250,14 @@ Hex code (type L to list codes): <b>7</b>
 Changed system type of partition 1 to 7 (HPFS/NTFS)
 
 Command (m for help): <b>p</b>
-Disk /dev/sda: 81.9 GB, 81920000000 bytes
+Disk /dev/<span class="sda">sda</span>: 81.9 GB, 81920000000 bytes
 16 heads, 63 sectors/track, 158730 cylinders, total 160000000 sectors
 Units = sectors of 1 * 512 = 512 bytes
 
    Device Boot      Start         End      Blocks   Id  System
-/dev/sda1   *          63    19968794     9984366    7  HPFS/NTFS</pre>
+/dev/<span class="sda">sda</span>1   *          63    19968794     9984366    7  HPFS/NTFS</pre>
 
-The partition should now look identical to when you ran fdisk -l -u /dev/sdb
+The partition should now look identical to when you ran fdisk -l -u /dev/<span class="sdb">sdb</span>
 </p>
 <p>
 Now we must write the changes to disk.
@@ -286,7 +292,7 @@ The MBR is on the first sector of the disk, and is split into three parts:
 <li>Boot Code Signature = 55aa (2 bytes)
 </ul>
 We only want to copy the boot code - the first 446 bytes. We do this with dd:
-<pre># <b>dd if=/dev/sdb of=/dev/sda bs=446 count=1</b>
+<pre># <b>dd if=/dev/<span class="sdb">sdb</span> of=/dev/<span class="sda">sda</span> bs=446 count=1</b>
 1+0 records in
 1+0 records out
 446 bytes transferred in 0.026312 seconds (16950 bytes/sec)</pre>
@@ -295,28 +301,28 @@ We only want to copy the boot code - the first 446 bytes. We do this with dd:
 <h3><a name="copy"></a>Copying the Partition</h3>
 <p>
 Optional: We should try to enable DMA on both disks, to increase the transfer speed.
-<pre># <b>hdparm -d 1 /dev/sda</b>
-/dev/sda:
+<pre># <b>hdparm -d 1 /dev/<span class="sda">sda</span></b>
+/dev/<span class="sda">sda</span>:
  setting using_dma to 1 (on)
  using_dma    =  1 (on)
 
-# <b>hdparm -d 1 /dev/sdb</b>
-/dev/sdb:
+# <b>hdparm -d 1 /dev/<span class="sdb">sdb</span></b>
+/dev/<span class="sdb">sdb</span>:
  setting using_dma to 1 (on)
  using_dma    =  1 (on)</pre>
 The next task is to copy the filesystem from one disk to the other.
-This time, instead of working with the disk device (sda, sdb), we'll be using the partition device (sda1, sdb1).
+This time, instead of working with the disk device (<span class="sda">sda</span>, <span class="sdb">sdb</span>), we'll be using the partition device (<span class="sda">sda</span>1, <span class="sdb">sdb</span>1).
 </p>
 <p>
 If this is an NTFS filesystem, you can use <b>ntfsclone</b> to copy it very efficiently.
-<pre># <b>ntfsclone --overwrite /dev/sda1 /dev/sdb1</b></pre>
+<pre># <b>ntfsclone --overwrite /dev/<span class="sda">sda</span>1 /dev/<span class="sdb">sdb</span>1</b></pre>
 Add the --rescue option if there are bad sectors on the source disk.
-<pre># <b>ntfsclone --rescue --overwrite /dev/sda1 /dev/sdb1</b></pre>
+<pre># <b>ntfsclone --rescue --overwrite /dev/<span class="sda">sda</span>1 /dev/<span class="sdb">sdb</span>1</b></pre>
 </p>
 <p>
 If it's not NTFS, you can use dd, which will work with any filesystem type.
 If your source disk has bad sectors, you should use ddrescue instead of dd.
-<pre># <b>dd if=/dev/sdb1 of=/dev/sda1 bs=4096</b>
+<pre># <b>dd if=/dev/<span class="sdb">sdb</span>1 of=/dev/<span class="sda">sda</span>1 bs=4096</b>
 2496092+0 records in
 2496092+0 records out
 10223990784 bytes transferred in 355.312 seconds (28774684 bytes/sec)</pre>
@@ -343,7 +349,7 @@ If Windows was not shut down properly, the partition is dirty and cannot be resi
 This method should work with most filesystems, including NTFS and FAT32.
 <ol>
 <li>Start qtparted from the command line.
-<li>Select the new disk (/dev/sda)
+<li>Select the new disk (/dev/<span class="sda">sda</span>)
 <li>Right click on the partition to rezise, and click Resize.
 <li>Change "Free Space After" to 0, and press OK. The partition should now span the disk.
 <li>Commit the changes to disk using the the Commit option in the File menu.
@@ -357,7 +363,7 @@ On the command line, ntfsresize works great for NTFS filesystems. First, delete 
 <ol>
 <li>
   Use fdisk to recreate the partition to be resized with the new size:
-  <pre># <b>fdisk /dev/sda</b>
+  <pre># <b>fdisk /dev/<span class="sda">sda</span></b>
 Command (m for help): <b>u</b>
 Changing display/entry units to sectors
 
@@ -372,14 +378,14 @@ Partition number (1-4): <b>1</b>
 First sector (63-159999999, default 63): <b>63</b>
 Last sector or +size or +sizeM or +sizeK (63-159999999, default 159999999): <b>159999999</b>
 </pre></li>
-<li>Resize the partition:<pre># <b>ntfsresize /dev/sda1</b></pre></li>
+<li>Resize the partition:<pre># <b>ntfsresize /dev/<span class="sda">sda</span>1</b></pre></li>
 </ol>
 <h4>Method 3: parted</h4>
 For any non-NTFS filesystem, you can use parted. In this example, I'll resize a FAT32 partition to fill the drive.
 </p>
 <p>
 Run parted. You may safely ignore errors about the partition alignment.
-<pre># <b>parted /dev/sda</b>
+<pre># <b>parted /dev/<span class="sda">sda</span></b>
 GNU Parted 1.6.9
 Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
 This program is free software, covered by the GNU General Public License.
@@ -388,7 +394,7 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-Using /dev/sda
+Using /dev/<span class="sda">sda</span>
 Warning: Unable to align partition properly.  This probably means that another
 partitioning tool generated an incorrect partition table, because it didn't have
 the correct BIOS geometry.  It is safe to ignore, but ignoring may cause
@@ -396,7 +402,7 @@ the correct BIOS geometry.  It is safe to ignore, but ignoring may cause
 Ignore/Cancel? <b>i</b></pre>
 Display the current partition table (p), and resize the partition to the size of the drive.
 <pre>(parted) <b>p</b>
-Disk geometry for /dev/sda: 0.000-78125.000 megabytes
+Disk geometry for /dev/<span class="sda">sda</span>: 0.000-78125.000 megabytes
 Disk label type: msdos
 Minor    Start       End     Type      Filesystem  Flags
 1          0.031   9750.234  primary   fat32       boot, lba
