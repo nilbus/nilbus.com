@@ -99,7 +99,7 @@ article h3 {
 			<article>
 <h2>Copying Windows to a new drive, using linux - How-to/Guide</h2>
 <p>
-Written 20 Mar 2005 by Edward Anderson. Updated 1 Nov 2013 (give an example using ntfsresize)
+Written 20 Mar 2005 by Edward Anderson. Updated 20 May 2014 (warn about the non-intuitive ntfsclone argument order)
 </p>
 <p>
 Another good resource: <a href="http://www.2pi.info/software/copying-windows-new-hard-drive.html" target="_blank">www.2pi.info/software/copying-windows-new-hard-drive.html</a>
@@ -318,6 +318,7 @@ If this is an NTFS filesystem, you can use <b>ntfsclone</b> to copy it very effi
 <pre># <b>ntfsclone --overwrite /dev/<span class="sda">sda</span>1 /dev/<span class="sdb">sdb</span>1</b></pre>
 Add the --rescue option if there are bad sectors on the source disk.
 <pre># <b>ntfsclone --rescue --overwrite /dev/<span class="sda">sda</span>1 /dev/<span class="sdb">sdb</span>1</b></pre>
+Be careful that your source drive (<span class="sdb">sdb</span>) is the last argument. The argument order may be counter-intuitive, and doing this backward would be bad.
 </p>
 <p>
 If it's not NTFS, you can use dd, which will work with any filesystem type.
