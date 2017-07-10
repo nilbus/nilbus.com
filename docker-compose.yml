@@ -4,3 +4,5 @@ services:
     build: .
     ports:
       - "80:80"
+    volumes:
+      - "./pub/:/usr/local/apache2/htdocs/"
