@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+
+  <meta charset="UTF-8">
+  <link rel="shortcut icon" type="image/x-icon" href="https://static.codepen.io/assets/favicon/favicon-8ea04875e70c4b0bb41da869e81236e54394d63638a1ef12fa558a4a835f1164.ico" />
+  <link rel="mask-icon" type="" href="https://static.codepen.io/assets/favicon/logo-pin-f2d2b6d2c61838f7e76325261b7195c27224080bc099486ddd6dccb469b8e8e6.svg" color="#111" />
+  <title>CodePen - Noise</title>
+
+
+
+
+      <style>
+      button, body, html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  font-size: 32px;
+  background-color: saddlebrown;
+}
+
+    </style>
+
+
+
+
+
+
+</head>
+
+<body translate="no" >
+
+  <button id="brown-stereo">Click for brown noise.<br>Reload to stop.</button>
+
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+
+
+
+    <script >
+      $('#brown-stereo').click(function() {
+  if (window.playing) return;
+  window.playing = true;
+
+  var audioContext = new AudioContext();
+  var bufferSize = 4096;
+
+  function createBrownNoiseNode() {
+    var lastOut = 0.0;
+    var node = audioContext.createScriptProcessor(bufferSize, 1, 1);
+    node.onaudioprocess = function(e) {
+      var output = e.outputBuffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        var white = Math.random() * 2 - 1;
+        output[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = output[i];
+        output[i] *= 3.5; // (roughly) compensate for gain
+      }
+    }
+    return node;
+  };
+
+  function createStereoNode(leftNode, rightNode) {
+    var channelMerger = audioContext.createChannelMerger(2);
+    leftNode.connect(channelMerger, 0, 0);
+    rightNode.connect(channelMerger, 0, 1);
+    return channelMerger;
+  }
+
+  var brownStereo = createStereoNode(createBrownNoiseNode(), createBrownNoiseNode());
+  brownStereo.connect(audioContext.destination);
+}).focus();
+    </script>
+
+
+
+
+
+
+</body>
+
+</html>
