@@ -1,0 +1,9 @@
+{
+  "name": "Brown Noise",
+  "short_name": "noise",
+  "theme_color": "saddlebrown",
+  "background_color": "saddlebrown",
+  "display": "browser",
+  "scope": "/noise.html",
+  "start_url": "/noise.html"
+}
