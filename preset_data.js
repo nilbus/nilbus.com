@@ -64,6 +64,14 @@ const PRESET_TONES = [
     ]
   },
   {
+    name: "Primal Drop",
+    layers: [
+      { freq: 6.3, carrier: 210.42, type: "isochronic", vol: "75", purpose: "Trance focus" },
+      { freq: 2.5, carrier: 157.43, type: "isochronic", vol: "70", purpose: "Surrender and body sensitivity" },
+      { freq: 0.2, carrier: 396, type: "isochronic", vol: "60", purpose: "Deep primal embodiment" }
+    ]
+  },
+  {
     name: "HFDO Surrender",
     layers: [
       { freq: 5.5, carrier: 150, type: "isochronic", vol: "80", purpose: "Pelvic sensory mapping, interoception" },
