@@ -121,33 +121,17 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 .fb_iframe_widget{display:inline-block;position:relative}.fb_iframe_widget span{display:inline-block;position:relative;text-align:justify}.fb_iframe_widget iframe{position:absolute}.fb_iframe_widget_fluid_desktop,.fb_iframe_widget_fluid_desktop span,.fb_iframe_widget_fluid_desktop iframe{max-width:100%}.fb_iframe_widget_fluid_desktop iframe{min-width:220px;position:relative}.fb_iframe_widget_lift{z-index:1}.fb_iframe_widget_fluid{display:inline}.fb_iframe_widget_fluid span{width:100%}
 </style><script type="text/javascript" async="" src="./Brainaural_files/in.php"></script></head>
 
-<body onload="init();showTopMenuButtons();" style="overscroll-behavior-x: auto;">
+<body onload="init();" style="overscroll-behavior-x: auto;">
 
 <div class="background"></div>
 
-<div id="myNav" class="overlayNav">
-  <div id="menuLinks" class="navCentered">
-
- 	 <p><img src="./Brainaural_files/ba_logo.png" class="logo"></p>
-	  <div class="navLink" onclick="goTo(&#39;welcome&#39;)">Introduction</div>
-	  <div class="navLink" onclick="goTo(&#39;brainwaves&#39;)">Brainwaves</div>
-	  <div class="navLink" onclick="goTo(&#39;entrainment&#39;)">Entrainment</div>
-	  <div class="navLink" onclick="goTo(&#39;player&#39;)">Back to Player</div>
- </div>
-	<div id="fbtwtshares" class="sectionBottomLikes">
-	<div class="fb-share-button fb_iframe_widget" data-href="https://brainaural.com" data-layout="button_count" fb-xfbml-state="rendered" fb-iframe-plugin-query="app_id=688005281387671&amp;container_width=772&amp;href=https%3A%2F%2Fbrainaural.com%2F&amp;layout=button_count&amp;locale=en_US&amp;sdk=joey"><span style="vertical-align: bottom; width: 89px; height: 20px;"><iframe name="f9926a0f8573e32cc" width="1000px" height="1000px" data-testid="fb:share_button Facebook Social Plugin" title="fb:share_button Facebook Social Plugin" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" allow="encrypted-media" src="./Brainaural_files/share_button.html" style="border: none; visibility: visible; width: 89px; height: 20px;" class=""></iframe></span></div>
-	<iframe id="twitter-widget-0" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="true" class="twitter-share-button twitter-share-button-rendered twitter-tweet-button" title="X Post Button" src="./Brainaural_files/tweet_button.2f70fb173b9000da126c79afe2098f02.en.html" style="position: static; visibility: visible; width: 66px; height: 20px;" data-url="http://brainaural.com"></iframe>
-	</div>
-</div>
-
-
-<div id="hamburger" class="upperLeft show" style="background-image: url(&quot;/Pix/hamburger.png&quot;);"></div><div class="anchor" id="player"></div>
+<div class="anchor" id="player"></div>
 
 <div class="tile1">
 	<a href="https://brainaural.com/" class="nounderline"><div id="title"><img src="./Brainaural_files/ba_logo.png" class="logo"> <span class="black">brain</span><span class="white">aural</span><span class="reg">®</span></div></a>
 <div id="subtitle"><span class="white">Ultimate</span> <span class="black">Brainwaves</span></div>	<div class="ctrSection">
-		<img src="./Brainaural_files/mute.png" class="ctrlImg" id="mute" onclick="muteOutput()" onmouseover="msg(&#39;Muting the Audio Output&#39;)" alt="">
-		<img src="./Brainaural_files/link.png" class="ctrlImg" onclick="toURL()" onmouseover="msg(&#39;Save or Share current settings in a custom URL&#39;)" alt="">
+		<img src="./Brainaural_files/mute.png" class="ctrlImg" id="mute" onclick="handlePlayPauseClick()" onmouseover="msg('Pause/Play Audio')" alt="">
+		<img src="./Brainaural_files/link.png" class="ctrlImg" onclick="toURL()" onmouseover="msg('Save or Share current settings in a custom URL')" alt="">
 </div>
 
 
@@ -207,17 +191,18 @@ var OCTMOD=10;
 var MOD=[1,0.5,1.95,3,0.2]; //Hz
 var ISOCHRONIC=[50,100,0,0,100]; //%
 var BINAURAL=[100,100,100,0,100]; //%
-var BILATERAL=[00,0,0,100,100]; //%
+var BILATERAL=[0,0,0,100,100]; //%
 var FM=[0,100,0,0,100]; //%
 var LEVEL=[0,0,0,0,0]; //%
 var NOISE=[0,0,0,0,0]
 var bWEBAUDIO=0;
 var bSUSPENDED=0;
-var bMute=0;
+var bPaused=1; // Start in paused state (will be set correctly when audio initializes)
 var bAUDIO_INITIALIZED=0;
 var msgTimer;
 var currentPreset = null;
 var currentOutputType = 'headphones';
+var mediaSessionAnchor = null; // Hidden audio element to anchor Media Session
 
 // WEBAUDIO ELEMENTS
 var context;
@@ -392,6 +377,14 @@ function initializeAudio() {
 
 	// Check if context was suspended after creation
 	setTimeout(function() {webAudioContextCheck();}, 100);
+
+	// Set up Media Session API
+	setupMediaSession();
+
+	// Set initial state - context starts suspended, so we're paused
+	bPaused = true;
+	$("#mute").addClass("superactive");
+	updateMediaSessionState('paused');
 }
 
 
@@ -562,24 +555,18 @@ function selectPreset(preset, outputType) {
 }
 
 function applyPresetLogic(preset, outputType) {
-	// Remove active class from all preset buttons
-	document.querySelectorAll('.preset-button').forEach(btn => {
-		btn.classList.remove('active');
-	});
-
-	// Add active class to selected button
-	const selectedButton = document.getElementById(`preset-${PRESET_TONES.indexOf(preset)}-${outputType}`);
-	selectedButton.classList.add('active');
-
-	// Update mute button states
-	// Mute preset buttons removed
-
 	// Store current selection
 	currentPreset = preset;
 	currentOutputType = outputType;
 
 	// Apply preset parameters
 	applyPreset(preset, outputType);
+
+	// Update preset display and metadata
+	updateActivePresetDisplay();
+
+	// Auto-play when preset is selected - ensure context is resumed and playing
+	ensureAudioPlaying();
 
 	// Show message
 	msg(`Applied ${preset.name} for ${outputType}`);
@@ -958,47 +945,165 @@ function setG(mode){
 	refreshSliders(G);
 }
 
-function muteOutput(){
-	// Initialize audio context on first user interaction
-	if (!bAUDIO_INITIALIZED) {
-		initializeAudio();
-		// Continue with mute toggle after audio is initialized
-		toggleMute();
-		return;
-	}
 
-	// Check if context is suspended and resume if needed (handles iOS autoplay prevention)
-	if (bSUSPENDED && context.state === "suspended") {
+function performPlayAction(){
+	if (bPaused) {
+		bPaused = false;
+		// Play: resume the audio context
 		context.resume().then(() => {
-			bSUSPENDED = 0;
-			// Continue with mute toggle after context is resumed
-			toggleMute();
+			$("#mute").removeClass("superactive");
+
+			// Play the anchor audio element to maintain Media Session
+			if (mediaSessionAnchor) {
+				mediaSessionAnchor.play().catch(e => console.log('Anchor play error:', e));
+			}
+
+			// Update preset display and metadata when resuming
+			updateActivePresetDisplay();
+			updateMediaSessionState('playing');
+			msg("Audio playing");
 		}).catch((error) => {
 			console.error('Failed to resume audio context:', error);
-			// Still try to toggle mute even if resume fails
-			toggleMute();
 		});
-	} else {
-		// Normal mute toggle
-		toggleMute();
 	}
 }
 
-function toggleMute(){
-	bMute=!bMute;
-	if (bMute) {
-		$("#mute").addClass("superactive");
-		// Remove active class from all preset buttons
-		document.querySelectorAll('.preset-button').forEach(btn => {
-			btn.classList.remove('active');
+function performPauseAction(){
+	if (!bPaused) {
+		bPaused = true;
+		// Pause: suspend the audio context
+		context.suspend().then(() => {
+			$("#mute").addClass("superactive");
+			// Remove active class from all preset buttons
+			document.querySelectorAll('.preset-button').forEach(btn => {
+				btn.classList.remove('active');
+			});
+
+			// Pause the anchor audio element
+			if (mediaSessionAnchor) {
+				mediaSessionAnchor.pause();
+			}
+
+			updateMediaSessionState('paused');
+			msg("Audio paused");
+		}).catch((error) => {
+			console.error('Failed to suspend audio context:', error);
 		});
-		for (var t=0;t<TABS;t++) gainGlobal[t].gain.value=0;
-		msg("Audio muted");
+	} else {
+		console.log('Already paused, no action needed');
 	}
-	else {
-		$("#mute").removeClass("superactive");
-		for (var t=0;t<TABS;t++) gainGlobal[t].gain.value=LEVEL[t]*LEVEL[t]/10000;
-		msg("Audio unmuted");
+}
+
+function setupMediaSession() {
+	// Check if Media Session API is supported
+	if (!('mediaSession' in navigator)) {
+		console.log('Media Session API not supported');
+		return;
+	}
+
+	// Create a silent audio element to anchor the Media Session
+	// This is a workaround for browsers that don't properly support Media Session with Web Audio API alone
+	if (!mediaSessionAnchor) {
+		mediaSessionAnchor = new Audio();
+		// Create a very short silent audio data URL
+		mediaSessionAnchor.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+		mediaSessionAnchor.loop = true;
+		mediaSessionAnchor.volume = 0; // Silent
+		mediaSessionAnchor.preload = 'auto';
+
+	}
+
+	// Set initial media metadata
+	updateMediaSessionMetadata();
+
+	// Set up action handlers
+	navigator.mediaSession.setActionHandler('play', () => {
+		if (bPaused) {
+			performPlayAction();
+		}
+	});
+
+	navigator.mediaSession.setActionHandler('pause', () => {
+		if (!bPaused) {
+			performPauseAction();
+		}
+	});
+
+	navigator.mediaSession.setActionHandler('stop', () => {
+		if (!bPaused) {
+			performPauseAction();
+		}
+	});
+
+	// Set initial playback state based on current audio state
+	const initialState = bPaused ? 'paused' : 'playing';
+	navigator.mediaSession.playbackState = initialState;
+
+	// Try to activate the media session
+	try {
+		// This might help with some browsers
+		if (navigator.mediaSession.setPositionState) {
+			navigator.mediaSession.setPositionState({
+				duration: Infinity, // Live/continuous audio
+				playbackRate: 1.0,
+				position: 0
+			});
+		}
+	} catch (e) {
+		console.log('Position state not supported:', e);
+	}
+}
+
+function updateMediaSessionState(state) {
+	if (!('mediaSession' in navigator)) return;
+	navigator.mediaSession.playbackState = state;
+}
+
+function updateMediaSessionMetadata(presetName = 'Ultimate Brainwaves') {
+	if (!('mediaSession' in navigator)) return;
+
+	navigator.mediaSession.metadata = new MediaMetadata({
+		title: presetName,
+		artist: 'nilbus.com',
+		album: 'Brainaural Sets',
+		artwork: [
+			{ src: './Brainaural_files/ba_logo.png', sizes: '192x192', type: 'image/png' },
+			{ src: './Brainaural_files/ba_logo.png', sizes: '512x512', type: 'image/png' }
+		]
+	});
+}
+
+function updateActivePresetDisplay() {
+	// Remove active class from all preset buttons
+	document.querySelectorAll('.preset-button').forEach(btn => {
+		btn.classList.remove('active');
+	});
+
+	// If we have an active preset, highlight its button and update metadata
+	if (currentPreset && currentOutputType) {
+		const selectedButton = document.getElementById(`preset-${PRESET_TONES.indexOf(currentPreset)}-${currentOutputType}`);
+		if (selectedButton) {
+			selectedButton.classList.add('active');
+		}
+		updateMediaSessionMetadata(currentPreset.name);
+	} else {
+		// No preset active, use default metadata
+		updateMediaSessionMetadata();
+	}
+}
+
+function ensureAudioPlaying() {
+	// If context is suspended, resume it
+	if (context && context.state === "suspended") {
+		context.resume().then(() => {
+			bSUSPENDED = 0;
+			performPlayAction();
+		}).catch((error) => {
+			console.error('Failed to resume audio context:', error);
+		});
+	} else if (bPaused) {
+		// If context is running but we're in paused state, play
+		performPlayAction();
 	}
 }
 
@@ -1031,36 +1136,48 @@ function toURL(bRender){
 	window.open(url, '_blank');
 }
 
-// Keypresses
+// Unified play/pause handler that works the same as OS media events
+function handlePlayPauseClick() {
+	// Initialize audio context on first user interaction
+	if (!bAUDIO_INITIALIZED) {
+		initializeAudio();
+		// Continue with play/pause toggle after audio is initialized
+		performUnifiedPlayPauseToggle();
+		return;
+	}
 
-Mousetrap.bind('m', function() { muteOutput(); });
+	// Check if context is suspended and resume if needed (handles iOS autoplay prevention)
+	if (bSUSPENDED && context.state === "suspended") {
+		context.resume().then(() => {
+			bSUSPENDED = 0;
+			// Continue with play/pause toggle after context is resumed
+			performUnifiedPlayPauseToggle();
+		}).catch((error) => {
+			console.error('Failed to resume audio context:', error);
+			// Still try to toggle play/pause even if resume fails
+			performUnifiedPlayPauseToggle();
+		});
+	} else {
+		// Normal play/pause toggle
+		performUnifiedPlayPauseToggle();
+	}
+}
+
+function performUnifiedPlayPauseToggle() {
+	// Use the same logic as Media Session API handlers
+	if (bPaused) {
+		performPlayAction();
+	} else {
+		performPauseAction();
+	}
+}
+
+// Keypresses - use the same unified handler as the mute button
+Mousetrap.bind('m', function() { handlePlayPauseClick(); });
+Mousetrap.bind('space', function() { handlePlayPauseClick(); });
 
 
 </script> <script>
-// Screen management
-
-function openNav() {
-	$("#hamburger").css('background-image', 'url(/Pix/close.png)');
-    document.getElementById("myNav").style.left = 0;
-    $("#hamburger").unbind('click').click(closeNav);
-}
-
-function closeNav() {
-	$("#hamburger").css('background-image', 'url(/Pix/hamburger.png)');
-    document.getElementById("myNav").style.left = "-100%";
-    $("#hamburger").unbind('click').click(openNav);
-}
-
-function goTo(id) {
-    closeNav();
-    document.getElementById(id).scrollIntoView();
-}
-
-function showTopMenuButtons() {
-	$("#hamburger").css('background-image', 'url(/Pix/hamburger.png)');
-	$("#hamburger").addClass('upperLeft show');
-	$("#hamburger").unbind('click').click(openNav);
-}
 
 
 </script>

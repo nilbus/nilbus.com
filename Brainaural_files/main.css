@@ -199,8 +199,6 @@ a.white:hover {
     opacity:1;
 }
 
-.active:hover{
-}
 
 .superactive{
 	opacity:1;
@@ -243,119 +241,8 @@ blockquote {
 
 
 
-/* The overlayNav (background) */
-.overlayNav {
-    height: 100%;
-    width: 100%;
-    position: fixed;
-    z-index: 99;
-    left: -100%;
-    top: 0;
-	background: #257;;
-	background: -moz-radial-gradient(center, ellipse cover, rgba(70,150,190,1) 0%, rgba(16,72,113,1) 100%);
-	background: -webkit-radial-gradient(center, ellipse cover, rgba(70,150,190,1) 0%,rgba(16,72,113,1) 100%);
-	background: radial-gradient(ellipse at center, rgba(70,150,190,1) 0%,rgba(16,72,113,1) 100%);
-    overflow-x: hidden;
-    transition: 0.5s;
-    opacity:0.98;
-}
 
 
-.upperLeft{
-	position:fixed;
-	left:10px;
-	top:10px;
-	width:26px;
-	height:26px;
-	opacity:1;
-	cursor:pointer;
-	z-index:999;
-	background-size: contain;
-	visibility:hidden;
-	filter: invert(0%);
-	opacity:0.8;
-}
-
-.upperLeft:hover{
-	filter: invert(100%);
-}
-
-.navCentered{
-  position:absolute;
-  top:50%;
-  left:50%;
-  padding:0px;
-  width:80%;
-  -ms-transform: translate(-50%,-50%);
-  -webkit-transform: translate(-50%,-50%);
-  transform: translate(-50%,-50%);
-  text-align:center;
-  border:0px dotted #F00;
-}
-
-.navLink{
-	padding: 2vh;
-    font-size: 22px;
-    color: #000;
-    cursor:pointer;
-    line-height:1.5em;
-    letter-spacing: 2px;
-}
-
-.navLink:hover{
-	color: #FFF;
-}
-
-.sectionBottomLikes{
-	position:absolute;
-	width:100%;
-	left:0;
-	right:0;
-	bottom:20px;
-	border: 0px solid rgba(255,255,255,0.5);
-	text-align:center;
-	transition: 0.5s;
-}
-
-.show{
-	-moz-animation: cssAnimationVisible 0s ease-in 0.5s forwards;
-    -webkit-animation: cssAnimationVisible 0s ease-in 0.5s forwards;
-    -o-animation: cssAnimationVisible 0s ease-in 0.5s forwards;
-    animation: cssAnimationVisible 0s ease-in 0.5s forwards;
-    -webkit-animation-fill-mode: forwards;
-    animation-fill-mode: forwards;
-}
-
-.hide{
-	-moz-animation: cssAnimationHidden 0s ease-in 0.5s forwards;
-    -webkit-animation: cssAnimationHidden 0s ease-in 0.5s forwards;
-    -o-animation: cssAnimationHidden 0s ease-in 0.5s forwards;
-    animation: cssAnimationHidden 0s ease-in 0.5s forwards;
-    -webkit-animation-fill-mode: forwards;
-    animation-fill-mode: forwards;
-}
-
-@keyframes cssAnimationHidden {
-    to {visibility:hidden;}
-
-}
-@-webkit-keyframes cssAnimationHidden {
-    to {visibility:hidden;}
-}
-
-@keyframes cssAnimationVisible {
-    to {visibility:visible;}
-
-}
-@-webkit-keyframes cssAnimationVisible {
-    to {visibility:visible;}
-}
-
-@media screen and (max-height: 480px) {
-.sectionBottomLikes  {
-	display:none;
-}
-}
 
 @media screen and (max-height: 640px) {
 #title {
@@ -368,9 +255,9 @@ blockquote {
 
 @media screen and (max-width: 640px) {
 body {
-	background: #257;;
-	background: -moz-radial-gradient(center, ellipse cover, rgba(34,85,119,1) 0%, rgba(50,105,140,1); 100%);
-	background: -webkit-radial-gradient(center, ellipse cover, rgba(34,85,119,1) 0%,rgba(50,105,140,1); 100%);
-	background: radial-gradient(ellipse at center, rgba(34,85,119,1) 0%,rgba(50,105,140,1); 100%);
+	background: #257;
+	background: -moz-radial-gradient(center, ellipse cover, rgba(34,85,119,1) 0%, rgba(50,105,140,1) 100%);
+	background: -webkit-radial-gradient(center, ellipse cover, rgba(34,85,119,1) 0%,rgba(50,105,140,1) 100%);
+	background: radial-gradient(ellipse at center, rgba(34,85,119,1) 0%,rgba(50,105,140,1) 100%);
 }
 }
