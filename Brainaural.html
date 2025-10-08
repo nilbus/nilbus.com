@@ -1249,19 +1249,6 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
-	// Sync brainaural tones with YouTube player state
-	if (event.data == YT.PlayerState.PLAYING) {
-		// YouTube started playing - ensure brainaural tones are also playing
-		if (bPaused) {
-			performPlayAction();
-		}
-	} else if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.ENDED) {
-		// YouTube paused/ended - pause brainaural tones
-		if (!bPaused) {
-			performPauseAction();
-		}
-	}
-
 	// Handle track changes and state clearing
 	if (event.data == YT.PlayerState.ENDED) {
 		// Video ended - clear saved state to start fresh next time
