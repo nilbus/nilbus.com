@@ -93,12 +93,40 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 		}
 
 		.youtube-controls {
+			display: flex;
+			align-items: center;
+			gap: 10px;
 			margin-bottom: 15px;
 		}
 
+		.save-button {
+			background: linear-gradient(135deg, #4a7ba7, #3a6b97);
+			border: 2px solid #2c5a7a;
+			border-radius: 8px;
+			color: white;
+			padding: 12px 20px;
+			font-size: 14px;
+			font-weight: 500;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			flex-shrink: 0;
+			min-width: 80px;
+		}
+
+		.save-button:hover {
+			background: linear-gradient(135deg, #5a8bb7, #4a7ba7);
+			border-color: #0077aa;
+			transform: translateY(-1px);
+			box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+		}
+
+		.save-button:active {
+			transform: translateY(0);
+			box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+		}
+
 		.playlist-input {
-			width: 100%;
-			max-width: 500px;
+			flex: 1;
 			padding: 12px 15px;
 			border: 2px solid #2c5a7a;
 			border-radius: 8px;
@@ -136,6 +164,23 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 		}
 
 		@media (max-width: 768px) {
+			.youtube-controls {
+				flex-direction: row;
+				gap: 8px;
+			}
+
+			.save-button {
+				flex-shrink: 0;
+				min-width: 120px;
+				padding: 10px 16px;
+				font-size: 13px;
+			}
+
+			.playlist-input {
+				flex: 1;
+				min-width: 0;
+			}
+
 			#youtube-player {
 				width: 100%;
 				height: 200px;
@@ -247,6 +292,7 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 <!-- YouTube Music Integration -->
 <div class="youtube-section">
 	<div class="youtube-controls">
+		<button id="save-playlist-btn" class="save-button">Update Playlist</button>
 		<input type="text" id="playlist-url" class="playlist-input"
 			placeholder="Enter YouTube playlist URL"
 			value="https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF">
@@ -1450,6 +1496,8 @@ function loadPlaylist() {
 // Set up playlist input event listener
 document.addEventListener('DOMContentLoaded', function() {
 	var playlistInput = document.getElementById('playlist-url');
+	var saveButton = document.getElementById('save-playlist-btn');
+
 	if (playlistInput) {
 		// Restore saved playlist URL on page load
 		var savedPlaylistUrl = localStorage.getItem('youtube_playlist_url');
@@ -1457,7 +1505,17 @@ document.addEventListener('DOMContentLoaded', function() {
 			playlistInput.value = savedPlaylistUrl;
 		}
 
-		playlistInput.addEventListener('blur', loadPlaylist);
+		// Add Enter key event listener
+		playlistInput.addEventListener('keypress', function(event) {
+			if (event.key === 'Enter') {
+				loadPlaylist();
+			}
+		});
+	}
+
+	if (saveButton) {
+		// Add click event listener for Save button
+		saveButton.addEventListener('click', loadPlaylist);
 	}
 });
 
