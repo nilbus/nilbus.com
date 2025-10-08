@@ -218,7 +218,7 @@ var ISOCHRONIC=[50,100,0,0,100]; //%
 var BINAURAL=[100,100,100,0,100]; //%
 var BILATERAL=[00,0,0,100,100]; //%
 var FM=[0,100,0,0,100]; //%
-var LEVEL=[50,0,0,0,0]; //%
+var LEVEL=[0,0,0,0,0]; //%
 var NOISE=[0,0,0,0,0]
 var bWEBAUDIO=0;
 var bSUSPENDED=0;
@@ -422,23 +422,7 @@ function init() {
   	// Suspended Policy by Mobile Browsers and Chrome!
 	setTimeout(function() {webAudioContextCheck();}, 500);	// race condition, set in a timer
 
-	// Auto-select "Focused Code Reading (speakers)" on page load
-	setTimeout(function() {
-		if (PRESET_TONES && PRESET_TONES.length > 0) {
-			selectPreset(PRESET_TONES[0], 'speakers');
-		}
-	}, 0);
 
-setSliders(1,220,0,100,100,0,0,4);
-setLevel(0,4);
-setSliders(1,220,0,100,100,0,0,3);
-setLevel(0,3);
-setSliders(10,180,0,100,0,0,0,2);
-setLevel(50,2);
-setSliders(22,220,0,100,0,0,0,1);
-setLevel(65,1);
-setSliders(42,240,0,100,0,0,0,0);
-setLevel(70,0);
 
 
 }
