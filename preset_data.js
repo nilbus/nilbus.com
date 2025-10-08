@@ -1,7 +1,7 @@
 // Preset tone configurations parsed from CSV
 const PRESET_TONES = [
   {
-    name: "Focused Code Reading",
+    name: "Focused, Sustainable Thinking",
     layers: [
       { freq: 42, carrier: 240, type: "isochronic", vol: "70", purpose: "Cognitive sharpness" },
       { freq: 22, carrier: 220, type: "binaural", vol: "80/65", purpose: "Mental energy" },
