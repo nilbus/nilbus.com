@@ -95,8 +95,8 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 <div class="tile1">
 	<a href="https://brainaural.com/" class="nounderline"><div id="title"><img src="./Brainaural_files/ba_logo.png" class="logo"> <span class="black">brain</span><span class="white">aural</span><span class="reg">®</span></div></a>
 <div id="subtitle"><span class="white">Ultimate</span> <span class="black">Brainwaves</span></div>	<div class="ctrSection">
-		<img src="./Brainaural_files/mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" onmouseover="msg('Pause/Play Audio')" alt="">
-		<img src="./Brainaural_files/link.png" class="ctrlImg" onclick="toURL()" onmouseover="msg('Save or Share current settings in a custom URL')" alt="">
+		<img src="./Brainaural_files/mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" alt="">
+		<img src="./Brainaural_files/link.png" class="ctrlImg" onclick="toURL()" alt="">
 </div>
 
 
@@ -545,9 +545,6 @@ function applyPresetLogic(preset, outputType) {
 
 	// Auto-play when preset is selected - ensure context is resumed and playing
 	ensureAudioPlaying();
-
-	// Show message
-	msg(`Applied ${preset.name} for ${outputType}`);
 }
 
 function applyPreset(preset, outputType) {
@@ -578,55 +575,55 @@ function applyPreset(preset, outputType) {
 	});
 }
 
-function setCarrier(val,g,bNoMsg){
+function setCarrier(val,g){
 	if(typeof g === "undefined") g=G;
-	if (MULTI) for (var t=0;t<TABS;t++) setSingleCarrier(val,t,bNoMsg);
-	else setSingleCarrier(val,g,bNoMsg);
+	if (MULTI) for (var t=0;t<TABS;t++) setSingleCarrier(val,t);
+	else setSingleCarrier(val,g);
 }
 
-function setMod(val,g,bNoMsg){
+function setMod(val,g){
 	if(typeof g === "undefined") g=G;
-	if (MULTI) for (var t=0;t<TABS;t++) setSingleMod(val,t,bNoMsg);
-	else setSingleMod(val,g,bNoMsg);
+	if (MULTI) for (var t=0;t<TABS;t++) setSingleMod(val,t);
+	else setSingleMod(val,g);
 }
 
-function setBinaural(val,g,bNoMsg){
+function setBinaural(val,g){
 	if(typeof g === "undefined") g=G;
-	if (MULTI) for (var t=0;t<TABS;t++) setSingleBinaural(val,t,bNoMsg);
-	else setSingleBinaural(val,g,bNoMsg);
+	if (MULTI) for (var t=0;t<TABS;t++) setSingleBinaural(val,t);
+	else setSingleBinaural(val,g);
 }
 
-function setBilateral(val,g,bNoMsg){
+function setBilateral(val,g){
 	if(typeof g === "undefined") g=G;
-	if (MULTI) for (var t=0;t<TABS;t++) setSingleBilateral(val,t,bNoMsg);
-	else setSingleBilateral(val,g,bNoMsg);
+	if (MULTI) for (var t=0;t<TABS;t++) setSingleBilateral(val,t);
+	else setSingleBilateral(val,g);
 }
 
-function setIsochronic(val,g,bNoMsg){
+function setIsochronic(val,g){
 	if(typeof g === "undefined") g=G;
-	if (MULTI) for (var t=0;t<TABS;t++) setSingleIsochronic(val,t,bNoMsg);
-	else setSingleIsochronic(val,g,bNoMsg);
+	if (MULTI) for (var t=0;t<TABS;t++) setSingleIsochronic(val,t);
+	else setSingleIsochronic(val,g);
 }
 
-function setFm(val,g,bNoMsg){
+function setFm(val,g){
 	if(typeof g === "undefined") g=G;
-	if (MULTI) for (var t=0;t<TABS;t++) setSingleFm(val,t,bNoMsg);
-	else setSingleFm(val,g,bNoMsg);
+	if (MULTI) for (var t=0;t<TABS;t++) setSingleFm(val,t);
+	else setSingleFm(val,g);
 }
 
-function setNoise(val,g,bNoMsg){
+function setNoise(val,g){
 	if(typeof g === "undefined") g=G;
-	if (MULTI) for (var t=0;t<TABS;t++) setSingleNoise(val,t,bNoMsg);
-	else setSingleNoise(val,g,bNoMsg);
+	if (MULTI) for (var t=0;t<TABS;t++) setSingleNoise(val,t);
+	else setSingleNoise(val,g);
 }
 
-function setLevel(val,g,bNoMsg){
+function setLevel(val,g){
 	if(typeof g === "undefined") g=G;
-	if (MULTI) for (var t=0;t<TABS;t++) setSingleLevel(val,t,bNoMsg);
-	else setSingleLevel(val,g,bNoMsg);
+	if (MULTI) for (var t=0;t<TABS;t++) setSingleLevel(val,t);
+	else setSingleLevel(val,g);
 }
 
-function setSingleCarrier(val,t,bNoMsg){
+function setSingleCarrier(val,t){
 	CARRIER[t]=val;
 	oscL[t].frequency.value=CARRIER[t]-MOD[t]/2*BINAURAL[t]/100;
 	oscR[t].frequency.value=CARRIER[t]+MOD[t]/2*BINAURAL[t]/100;
@@ -638,13 +635,9 @@ function setSingleCarrier(val,t,bNoMsg){
 	var fmax=Math.pow(2,OCTCAR)*FCARMIN;
 	gainI[t].gain.value=0.5*(1-0.5*CARRIER[t]/fmax)*(1-0.6*CARRIER[t]/fmax);
 	$("#carval").val(parseInt(val)+'Hz');
-	if (!bNoMsg){
-		if (val>1000) msg("A high as you can hear!");
-		else msg("Make it low, but still audible");
-	}
 }
 
-function setSingleMod(val,t,bNoMsg){
+function setSingleMod(val,t){
 var cT=context.currentTime;
 	MOD[t]=val;
 	oscL[t].frequency.value=CARRIER[t]+val/2*BINAURAL[t]/100;
@@ -662,59 +655,49 @@ var cT=context.currentTime;
 	if (val>12)text="Beta";
 	if (val>30)text="Gamma";
 	if (val>60)text="High Gamma";
-	if (!bNoMsg) msg(text);
 }
 
-function setSingleBinaural(val,t,bNoMsg){
+function setSingleBinaural(val,t){
 	BINAURAL[t]=val;
 	oscL[t].frequency.value=CARRIER[t]+MOD[t]/2*BINAURAL[t]/100;
 	oscR[t].frequency.value=CARRIER[t]-MOD[t]/2*BINAURAL[t]/100;
 	noiseGainRR[t].gain.value=val/100;
 	noiseGainRL[t].gain.value=1-val/100;
 	$("#binval").val(parseInt(val)+'%');
-	if (!bNoMsg) msg('Best for Headphones');
 }
 
-function setSingleBilateral(val,t,bNoMsg){
+function setSingleBilateral(val,t){
 	BILATERAL[t]=val;
 	bilatGain[t].gain.value=BILATERAL[t]/100*0.25;
 	$("#bilval").val(parseInt(val)+'%');
-	if (!bNoMsg) msg('For Stereo Speakers and Headphones');
 }
 
-function setSingleIsochronic(val,t,bNoMsg){
+function setSingleIsochronic(val,t){
 	ISOCHRONIC[t]=val;
 	lfoGain[t].gain.value=ISOCHRONIC[t]/100*gainI[t].gain.value;
 	$("#isoval").val(parseInt(val)+'%');
-	if (!bNoMsg) msg('Best for Single Speaker use');
 }
 
-function setSingleFm(val,t,bNoMsg){
+function setSingleFm(val,t){
 	FM[t]=val;
 	fmGain[t].gain.value=FM[t]/100*CARRIER[t];
 	filterGain[t].gain.value=FM[t]/150*CARRIER[t];
 	$("#fmval").val(parseInt(val)+'%');
-	if (!bNoMsg) msg('Works with everything!');
 }
 
-function setSingleNoise(val,t,bNoMsg){
+function setSingleNoise(val,t){
 	NOISE[t]=val;
 	noiseGainL[t].gain.value=val/100;
 	noiseGainR[t].gain.value=val/100;
 	oscGainL[t].gain.value=1-val/100;
 	oscGainR[t].gain.value=1-val/100;
 	$("#noiseval").val(parseInt(val)+'%');
-	if (!bNoMsg) msg('Works with everything!');
 }
 
-function setSingleLevel(val,t,bNoMsg){
+function setSingleLevel(val,t){
 	LEVEL[t]=val;
 	gainGlobal[t].gain.value=LEVEL[t]*LEVEL[t]/10000;
 	$("#levval").val(parseInt(val)+'%');
-	if (!bNoMsg){
-		if (LEVEL>0.5) msg("A loud as you want, but not louder!");
-		else msg("As quiet as you want, but audible");
-	}
 }
 
 function setSliderMod(val,g){
@@ -807,13 +790,6 @@ function refreshSliders(g){
 		$("#levval").val(parseInt(LEVEL[g])+'%');
 	}
 }
-
-function msg(txt){
-		$("#msg").html(txt);
-		clearTimeout(msgTimer);
-		msgTimer = setTimeout(function(){msg("<b class='mod'>Scroll down</b> for more instructions...")}, 5000);
-}
-
 
 function newSet(setting){
 	var mod,car,iso,bin,bil,fm;
@@ -945,7 +921,6 @@ function performPlayAction(){
 			// Update preset display and metadata when resuming
 			updateActivePresetDisplay();
 			updateMediaSessionState('playing');
-			msg("Audio playing");
 		}).catch((error) => {
 			console.error('Failed to resume audio context:', error);
 		});
@@ -961,7 +936,6 @@ function performPlayAction(){
 			// Update preset display and metadata when resuming
 			updateActivePresetDisplay();
 			updateMediaSessionState('playing');
-			msg("Audio playing");
 		}
 	}
 }
@@ -991,7 +965,6 @@ function performPauseAction(){
 			}
 
 			updateMediaSessionState('paused');
-			msg("Audio paused");
 		}).catch((error) => {
 			console.error('Failed to suspend audio context:', error);
 		});
@@ -1016,7 +989,6 @@ function performPauseAction(){
 			}
 
 			updateMediaSessionState('paused');
-			msg("Audio paused");
 		}
 	} else {
 		console.log('Already paused, no action needed');
