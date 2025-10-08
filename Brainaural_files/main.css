@@ -1,4 +1,13 @@
+/* ===========================================
+   BRAINAURAL STYLESHEET
+   =========================================== */
+
+/* Font Import */
 @import url('https://fonts.googleapis.com/css2?family=Titillium+Web&display=swap');
+
+/* ===========================================
+   BASE STYLES
+   =========================================== */
 
 html {
 	width: 100%;
@@ -45,6 +54,10 @@ body  {
 }
 
 
+/* ===========================================
+   TYPOGRAPHY & TEXT STYLES
+   =========================================== */
+
 .white{
 	color:#FFF;
 	text-shadow: 0px 0px 5px rgba(0,0,0,128);
@@ -69,6 +82,10 @@ body  {
 }
 
 
+/* ===========================================
+   FORM ELEMENTS
+   =========================================== */
+
 input[type="text"] {
     font-family: inherit;
     font-size:13px;
@@ -81,6 +98,10 @@ input:focus {
     outline: none;
 }
 
+
+/* ===========================================
+   LAYOUT & STRUCTURE
+   =========================================== */
 
 .tile1{
   	min-height: 100%;
@@ -172,6 +193,10 @@ a.white:hover {
 }
 
 
+/* ===========================================
+   UI COMPONENTS & CONTROLS
+   =========================================== */
+
 .ctrlImg{
 	height:30px;
 	width:30px;
@@ -220,6 +245,10 @@ blockquote {
 }
 
 
+/* ===========================================
+   SLIDER COMPONENTS
+   =========================================== */
+
 .ui-slider-horizontal {
     height: 2px;
     border: solid 0px #888;
@@ -250,6 +279,196 @@ blockquote {
 #subtitle {
 	display:none;
 }
+}
+
+/* ===========================================
+   PRESET GRID STYLES
+   =========================================== */
+.preset-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 20px 0;
+}
+
+.preset-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.preset-button {
+	display: flex;
+	align-items: center;
+	padding: 15px;
+	background: linear-gradient(135deg, #4a7ba7, #3a6b97);
+	border: 2px solid #2c5a7a;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	text-align: left;
+	min-height: 60px;
+	color: white;
+}
+
+.preset-button:hover {
+	background: linear-gradient(135deg, #5a8bb7, #4a7ba7);
+	border-color: #0077aa;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.preset-button.active {
+	background: linear-gradient(135deg, #0077aa, #0056b3);
+	border-color: #0056b3;
+	color: white;
+}
+
+.preset-button.active:hover {
+	background: linear-gradient(135deg, #0088cc, #0066aa);
+}
+
+.preset-icon {
+	width: 24px;
+	height: 24px;
+	margin-right: 12px;
+	flex-shrink: 0;
+}
+
+.preset-name {
+	font-weight: 500;
+	font-size: 14px;
+	line-height: 1.2;
+}
+
+/* ===========================================
+   YOUTUBE SECTION STYLES
+   =========================================== */
+.youtube-section {
+	margin: 20px 0;
+	text-align: center;
+}
+
+.youtube-controls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 15px;
+}
+
+.save-button {
+	background: linear-gradient(135deg, #4a7ba7, #3a6b97);
+	border: 2px solid #2c5a7a;
+	border-radius: 8px;
+	color: white;
+	padding: 12px 20px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	flex-shrink: 0;
+	min-width: 80px;
+}
+
+.save-button:hover {
+	background: linear-gradient(135deg, #5a8bb7, #4a7ba7);
+	border-color: #0077aa;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.save-button:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.playlist-input {
+	flex: 1;
+	padding: 12px 15px;
+	border: 2px solid #2c5a7a;
+	border-radius: 8px;
+	background: linear-gradient(135deg, #4a7ba7, #3a6b97);
+	color: white;
+	font-size: 14px;
+	transition: all 0.3s ease;
+}
+
+.playlist-input::placeholder {
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.playlist-input:focus {
+	outline: none;
+	border-color: #0077aa;
+	background: linear-gradient(135deg, #5a8bb7, #4a7ba7);
+}
+
+.playlist-input.invalid {
+	background: linear-gradient(135deg, #d32f2f, #b71c1c);
+	border-color: #d32f2f;
+}
+
+.youtube-player-container {
+	display: flex;
+	justify-content: center;
+	margin-top: 15px;
+}
+
+#youtube-player {
+	width: 560px;
+	height: 315px;
+	max-width: 100%;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+	/* Preset Grid Mobile Styles */
+	.preset-row {
+		grid-template-columns: 1fr 1fr;
+		gap: 8px;
+	}
+
+	.preset-button {
+		padding: 10px;
+		min-height: 45px;
+	}
+
+	.preset-icon {
+		width: 18px;
+		height: 18px;
+		margin-right: 8px;
+	}
+
+	.preset-name {
+		font-size: 12px;
+	}
+
+	/* YouTube Section Mobile Styles */
+	.youtube-controls {
+		flex-direction: row;
+		gap: 8px;
+	}
+
+	.save-button {
+		flex-shrink: 0;
+		min-width: 120px;
+		padding: 10px 16px;
+		font-size: 13px;
+	}
+
+	.playlist-input {
+		flex: 1;
+		min-width: 0;
+	}
+
+	#youtube-player {
+		width: 100%;
+		height: 200px;
+	}
 }
 
 @media screen and (max-width: 640px) {
