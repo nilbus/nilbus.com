@@ -5,10 +5,103 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 </style>
 	<link rel="stylesheet" href="./Brainaural_files/jquery-ui.css">
 	<link href="./Brainaural_files/main.css" rel="stylesheet" type="text/css">
+	<style>
+		.preset-grid {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			margin: 20px 0;
+		}
+
+		.preset-row {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 10px;
+		}
+
+		.preset-button {
+			display: flex;
+			align-items: center;
+			padding: 15px;
+			background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+			border: 2px solid #ccc;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			text-align: left;
+			min-height: 60px;
+		}
+
+		.preset-button:hover {
+			background: linear-gradient(135deg, #e8f4fd, #d1e7dd);
+			border-color: #0077aa;
+			transform: translateY(-2px);
+			box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+		}
+
+		.preset-button.active {
+			background: linear-gradient(135deg, #0077aa, #0056b3);
+			border-color: #0056b3;
+			color: white;
+		}
+
+		.preset-button.active:hover {
+			background: linear-gradient(135deg, #0056b3, #004085);
+		}
+
+		.preset-icon {
+			width: 24px;
+			height: 24px;
+			margin-right: 12px;
+			flex-shrink: 0;
+		}
+
+		.preset-name {
+			font-weight: 500;
+			font-size: 14px;
+			line-height: 1.2;
+		}
+
+		.mute-button {
+			background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+			border-color: #dc3545;
+			color: white;
+		}
+
+		.mute-button:hover {
+			background: linear-gradient(135deg, #ee5a52, #dc3545);
+		}
+
+		.mute-button.active {
+			background: linear-gradient(135deg, #dc3545, #c82333);
+		}
+
+		@media (max-width: 768px) {
+			.preset-row {
+				grid-template-columns: 1fr;
+			}
+
+			.preset-button {
+				padding: 12px;
+				min-height: 50px;
+			}
+
+			.preset-icon {
+				width: 20px;
+				height: 20px;
+				margin-right: 10px;
+			}
+
+			.preset-name {
+				font-size: 13px;
+			}
+		}
+	</style>
 	<script src="./Brainaural_files/sdk.js" async="" crossorigin="anonymous"></script><script id="twitter-wjs" src="./Brainaural_files/widgets.js"></script><script id="facebook-jssdk" src="./Brainaural_files/sdk(1).js"></script><script src="./Brainaural_files/jquery.min.js"></script>
 	<script src="./Brainaural_files/jquery-ui.min.js"></script>
 	<script src="./Brainaural_files/jquery.ui.touch-punch.min.js"></script>
 	<script src="./Brainaural_files/mousetrap.min.js"></script>
+	<script src="./preset_data.js"></script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Ultimate Brainwaves • Binaural &amp; Bilateral Beats &amp; Isochronic Tones</title>
@@ -81,34 +174,23 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 </div>
 
 
-<div class="group black">
-		<div class="sliderGroup"><span class="label black">brainwave</span><div id="mod" class="ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"><span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default" style="left: 87.1%;"></span></div><input type="text" id="modval" onfocus="this.value=&#39;&#39;" onkeydown="if(event.keyCode==13) setSliderMod(this.value);"></div>
+<!-- Preset Tone Grid -->
+<div class="preset-grid">
+	<div class="preset-row">
+		<div class="preset-button mute-button" onclick="muteOutput()" id="mute-preset">
+			<img src="./Brainaural_files/mute.png" class="preset-icon">
+			<span class="preset-name">Mute</span>
 		</div>
-		<span class="black">↓</span>
-		<div class="group white">
-		<div class="sliderGroup"><span class="label black">a-mod</span><div id="isochronic" class="ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"><span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default" style="left: 100%;"></span></div><input type="text" id="isoval" onfocus="this.value=&#39;&#39;" onkeydown="if(event.keyCode==13) setSliderIso(this.value);"></div>
-		<div class="sliderGroup"><span class="label black">binaural</span><div id="binaural" class="ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"><span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default" style="left: 0%;"></span></div><input type="text" id="binval" onfocus="this.value=&#39;&#39;" onkeydown="if(event.keyCode==13) setSliderBin(this.value);"></div>
-		<div class="sliderGroup"><span class="label black">stereo</span><div id="bilateral" class="ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"><span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default" style="left: 0%;"></span></div><input type="text" id="bilval" onfocus="this.value=&#39;&#39;" onkeydown="if(event.keyCode==13) setSliderBil(this.value);"></div>
-		<div class="sliderGroup"><span class="label black">f-mod</span><div id="fm" class="ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"><span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default" style="left: 0%;"></span></div><input type="text" id="fmval" onfocus="this.value=&#39;&#39;" onkeydown="if(event.keyCode==13) setSliderFm(this.value);"></div>
+		<div class="preset-button mute-button" onclick="muteOutput()" id="mute-preset-speakers">
+			<img src="./Brainaural_files/mute.png" class="preset-icon">
+			<span class="preset-name">Mute</span>
 		</div>
-		<span class="white">↑</span>
-		<div class="group white">
-		<div class="sliderGroup"><span class="label white">carrier</span><div id="carrier" class="ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"><span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default" style="left: 34.7778%;"></span></div><input type="text" id="carval" onfocus="this.value=&#39;&#39;" onkeydown="if(event.keyCode==13) setSliderCar(this.value);"></div>
-		<div class="sliderGroup"><span class="label white">noise</span><div id="noise" class="ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"><span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default" style="left: 0%;"></span></div><input type="text" id="noiseval" onfocus="this.value=&#39;&#39;" onkeydown="if(event.keyCode==13) setSliderNoise(this.value);"></div>
-		</div>
-		&nbsp;
-		<div class="group white">
-		<div class="sliderGroup"><span class="label black">mix level</span><div id="level" class="ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"><span tabindex="0" class="ui-slider-handle ui-corner-all ui-state-default" style="left: 50%;"></span></div><input type="text" id="levval" onfocus="this.value=&#39;&#39;" onkeydown="if(event.keyCode==13) setSliderLvl(this.value);"></div>
+	</div>
+	<div id="preset-buttons-container">
+		<!-- Preset buttons will be generated by JavaScript -->
+	</div>
 </div>
 
-<div class="ctrSection">
-		<img src="./Brainaural_files/1.png" id="g0" class="selImg active" onclick="setG(0)" onmouseover="msg(&#39;Edit Generator 1&#39;)" alt="">
-		<img src="./Brainaural_files/2.png" id="g1" class="selImg" onclick="setG(1)" onmouseover="msg(&#39;Edit Generator 2&#39;)" alt="">
-		<img src="./Brainaural_files/3.png" id="g2" class="selImg" onclick="setG(2)" onmouseover="msg(&#39;Edit Generator 3&#39;)" alt="">
-		<img src="./Brainaural_files/4.png" id="g3" class="selImg" onclick="setG(3)" onmouseover="msg(&#39;Edit Generator 4&#39;)" alt="">
-		<img src="./Brainaural_files/5.png" id="g4" class="selImg" onclick="setG(4)" onmouseover="msg(&#39;Edit Generator 5&#39;)" alt="">
-		<img src="./Brainaural_files/multi.png" id="gm" class="selImg" onclick="setG(&#39;m&#39;)" onmouseover="msg(&#39;Multi Edit&#39;)" alt="">
-</div>
 
 <div id="msg"><b class="mod">Scroll down</b> for more instructions...</div>
 
@@ -469,6 +551,8 @@ var bWEBAUDIO=0;
 var bSUSPENDED=0;
 var bMute=0;
 var msgTimer;
+var currentPreset = null;
+var currentOutputType = 'headphones';
 
 // WEBAUDIO ELEMENTS
 var context;
@@ -659,6 +743,7 @@ function init() {
 	else alert('Web Audio API is missing. To enjoy Brainaural, please use a recent version of Chrome, Edge, Safari or Firefox (basically everything but Internet Explorer).');
 
 	buildUI();
+	generatePresetButtons();
 	setG(0);
 
   	// Suspended Policy by Mobile Browsers and Chrome!
@@ -759,6 +844,93 @@ function buildUI(){
           setLevel(ui.value);
         }
       });} );
+}
+
+function generatePresetButtons() {
+	const container = document.getElementById('preset-buttons-container');
+	container.innerHTML = '';
+
+	PRESET_TONES.forEach((preset, index) => {
+		const row = document.createElement('div');
+		row.className = 'preset-row';
+
+		// Headphones button
+		const headphonesButton = document.createElement('div');
+		headphonesButton.className = 'preset-button';
+		headphonesButton.id = `preset-${index}-headphones`;
+		headphonesButton.onclick = () => selectPreset(preset, 'headphones');
+		headphonesButton.innerHTML = `
+			<img src="./Brainaural_files/headphones.png" class="preset-icon">
+			<span class="preset-name">${preset.name}</span>
+		`;
+
+		// Speakers button
+		const speakersButton = document.createElement('div');
+		speakersButton.className = 'preset-button';
+		speakersButton.id = `preset-${index}-speakers`;
+		speakersButton.onclick = () => selectPreset(preset, 'speakers');
+		speakersButton.innerHTML = `
+			<img src="./Brainaural_files/speaker1.png" class="preset-icon">
+			<span class="preset-name">${preset.name}</span>
+		`;
+
+		row.appendChild(headphonesButton);
+		row.appendChild(speakersButton);
+		container.appendChild(row);
+	});
+}
+
+function selectPreset(preset, outputType) {
+	// Remove active class from all preset buttons
+	document.querySelectorAll('.preset-button').forEach(btn => {
+		btn.classList.remove('active');
+	});
+
+	// Add active class to selected button
+	const selectedButton = document.getElementById(`preset-${PRESET_TONES.indexOf(preset)}-${outputType}`);
+	selectedButton.classList.add('active');
+
+	// Update mute button states
+	document.getElementById('mute-preset').classList.remove('active');
+	document.getElementById('mute-preset-speakers').classList.remove('active');
+
+	// Store current selection
+	currentPreset = preset;
+	currentOutputType = outputType;
+
+	// Apply preset parameters
+	applyPreset(preset, outputType);
+
+	// Show message
+	msg(`Applied ${preset.name} for ${outputType}`);
+}
+
+function applyPreset(preset, outputType) {
+	// Clear all generators first
+	for (let i = 0; i < TABS; i++) {
+		setSliders(0, 220, 0, 0, 0, 0, 0, i);
+		setLevel(0, i);
+	}
+
+	// Generate parameters for the selected output type
+	const params = generatePresetParams(preset, outputType);
+
+	// Apply parameters to generators
+	preset.layers.forEach((layer, i) => {
+		if (i >= TABS) return; // Don't exceed available generators
+
+		const mod = params[`mod${i}`] || 0;
+		const car = params[`car${i}`] || 220;
+		const noi = params[`noi${i}`] || 0;
+		const iso = params[`iso${i}`] || 0;
+		const bin = params[`bin${i}`] || 0;
+		const bil = params[`bil${i}`] || 0;
+		const fm = params[`fm${i}`] || 0;
+		const lvl = params[`lvl${i}`] || 0;
+
+		setSliders(mod, car, noi, iso, bin, bil, fm, i);
+		setLevel(lvl, i);
+	});
 }
 
 function setCarrier(val,g,bNoMsg){
@@ -1115,11 +1287,21 @@ function muteOutput(){
 	bMute=!bMute;
 	if (bMute) {
 		$("#mute").addClass("superactive");
+		$("#mute-preset").addClass("active");
+		$("#mute-preset-speakers").addClass("active");
+		// Remove active class from all other preset buttons
+		document.querySelectorAll('.preset-button:not(.mute-button)').forEach(btn => {
+			btn.classList.remove('active');
+		});
 		for (var t=0;t<TABS;t++) gainGlobal[t].gain.value=0;
+		msg("Audio muted");
 	}
 	else {
 		$("#mute").removeClass("superactive");
+		$("#mute-preset").removeClass("active");
+		$("#mute-preset-speakers").removeClass("active");
 		for (var t=0;t<TABS;t++) gainGlobal[t].gain.value=LEVEL[t]*LEVEL[t]/10000;
+		msg("Audio unmuted");
 	}
 }
 
