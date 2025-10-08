@@ -140,15 +140,6 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 	</div>
 </div>
 
-<div id="myWarning" class="overlayWarning">
-<div id="warning" class="navCentered">
-<p>Best experienced with headphones!</p>
-<p><img src="./Brainaural_files/headphoneBlack.png" width="25%" style="opacity:1;cursor:pointer;"></p>
-<p>Click (Tap) to dismiss this message
-<br>- or -
-<br>Enable Auto-Play Sound for bbrainwaves.com in your browser settings</p><p>
-</p></div>
-</div>
 
 <div id="hamburger" class="upperLeft show" style="background-image: url(&quot;/Pix/hamburger.png&quot;);"></div><div class="anchor" id="player"></div>
 
@@ -223,6 +214,7 @@ var NOISE=[0,0,0,0,0]
 var bWEBAUDIO=0;
 var bSUSPENDED=0;
 var bMute=0;
+var bAUDIO_INITIALIZED=0;
 var msgTimer;
 var currentPreset = null;
 var currentOutputType = 'headphones';
@@ -256,19 +248,152 @@ var gainGlobal=[];
 
 
 function webAudioContextCheck() {
-	if(context.state == "suspended") {
+	if(context && context.state == "suspended") {
 		bSUSPENDED=1;
-		document.getElementById("myWarning").onclick = resumeContext;
-		openWarning();
 	}
 }
 
-function resumeContext(){
-	 context.resume();
-	 document.getElementById("myWarning").removeAttribute("onclick");
-	 bSUSPENDED=0;
-	 closeWarning();
+function initializeAudio() {
+	// Create audio context if not already created
+	if (!context) {
+		if (typeof AudioContext !== 'undefined') context = new AudioContext();
+		else context = new webkitAudioContext();
+	}
+
+	// Mark audio as initialized to prevent reinitialization
+	bAUDIO_INITIALIZED = 1;
+
+	// Create all audio nodes and start oscillators
+	for (var t=0;t<TABS;t++) {
+
+	// creating oscillators
+	oscL[t]=context.createOscillator();
+	oscL[t].type='sine';
+	oscL[t].frequency.value=CARRIER[t]+MOD[t]/2*BINAURAL[t]/100; // value in hertz
+
+	oscR[t]=context.createOscillator();
+	oscR[t].type='sine';
+	oscR[t].frequency.value=CARRIER[t]-MOD[t]/2*BINAURAL[t]/100; // value in hertz
+
+	lfo[t]=context.createOscillator();
+	lfo[t].type='sine';
+	lfo[t].frequency.value=MOD[t]; // value in hertz
+	lfoHalf[t]=context.createOscillator();
+	lfoHalf[t].type='sine';
+	lfoHalf[t].frequency.value=MOD[t]/2; // value in hertz
+
+	// noises
+
+	var bufferSize = 6 * context.sampleRate,
+		noiseBuffer = context.createBuffer(1, bufferSize, context.sampleRate),
+		output = noiseBuffer.getChannelData(0);
+	for (var i = 0; i < bufferSize; i++) {
+		output[i] = 3*(Math.random() * 2 - 1);
+	}
+
+	noiseL[t]=context.createBufferSource();
+	noiseL[t].buffer=noiseBuffer;
+	noiseL[t].loop=true;
+	noiseR[t]=context.createBufferSource();
+	noiseR[t].buffer=noiseBuffer;
+	noiseR[t].loop=true;
+
+	// filters for the noise
+	filterR[t] = context.createBiquadFilter();
+	filterL[t] = context.createBiquadFilter();
+	filterR[t].type = "bandpass";
+	filterR[t].frequency.value = CARRIER[t];
+	filterR[t].Q.value = 2;
+	filterL[t].type = "bandpass";
+	filterL[t].frequency.value = CARRIER[t];
+	filterL[t].Q.value = 2;
+
+	// tone+noise
+	noiseGainL[t]=context.createGain();
+	noiseGainR[t]=context.createGain();
+	noiseGainRL[t]=context.createGain();
+	noiseGainRR[t]=context.createGain();
+	oscGainL[t]=context.createGain();
+	oscGainR[t]=context.createGain();
+	noiseGainL[t].gain.value=0;
+	noiseGainR[t].gain.value=0;
+	oscGainL[t].gain.value=1;
+	oscGainR[t].gain.value=1;
+	noiseGainRL[t].gain.value=0;
+	noiseGainRR[t].gain.value=1;
+	noiseL[t].connect(noiseGainL[t]);
+	noiseL[t].connect(noiseGainRL[t]);
+	noiseR[t].connect(noiseGainRR[t]);
+	noiseGainRR[t].connect(noiseGainR[t]);
+	noiseGainRL[t].connect(noiseGainR[t]);
+	noiseGainL[t].connect(filterL[t]);
+	noiseGainR[t].connect(filterR[t]);
+	oscL[t].connect(oscGainL[t]);
+	oscR[t].connect(oscGainR[t]);
+
+	// creating gain nodes and connecting them to the oscs
+	bilatGain[t]=context.createGain();
+	bilatGain[t].gain.value=BILATERAL[t]/100*0.25;
+	bilatInvertedGain[t]=context.createGain();
+	bilatInvertedGain[t].gain.value=-1;
+	bilatGain[t].connect(bilatInvertedGain[t]);
+	lfoHalf[t].connect(bilatGain[t]);
+
+	lfoGain[t]=context.createGain(); // lfo[t] varies between -1 and 1
+	lfo[t].connect(lfoGain[t]); // we will couple lfo[t] with lfoGain[t] to change the output range
+
+	fmGain[t]=context.createGain();
+	fmGain[t].gain.value=FM[t]/100*CARRIER[t];
+	filterGain[t]=context.createGain();
+	filterGain[t].gain.value=FM[t]/150*CARRIER[t];
+	lfo[t].connect(fmGain[t]);
+	lfo[t].connect(filterGain[t]);
+	fmGain[t].connect(oscL[t].frequency);
+	fmGain[t].connect(oscR[t].frequency);
+	filterGain[t].connect(filterL[t].frequency);
+	filterGain[t].connect(filterR[t].frequency);
+
+	gainL[t]=context.createGain();
+	gainR[t]=context.createGain();
+	gainI[t]=context.createGain();
+	gainL[t].gain.value=0.25;
+	gainR[t].gain.value=0.25;
+	bilatInvertedGain[t].connect(gainL[t].gain);
+	bilatGain[t].connect(gainR[t].gain);
+
+	gainI[t].gain.value=0.5;
+	lfoGain[t].connect(gainI[t].gain);
+	lfoGain[t].gain.value=ISOCHRONIC[t]/100*gainI[t].gain.value;
+
+	oscGainL[t].connect(gainL[t]);
+	oscGainR[t].connect(gainR[t]);
+	filterL[t].connect(gainL[t]);
+	filterR[t].connect(gainR[t]);
+
+	merger[t]=context.createChannelMerger(2);
+	merger[t].connect(gainI[t]);
+
+	gainL[t].connect(merger[t],0,0);
+	gainR[t].connect(merger[t],0,1);
+
+	gainGlobal[t]=context.createGain();
+	gainGlobal[t].gain.value=LEVEL[t]/100;
+	gainI[t].connect(gainGlobal[t]);
+	gainGlobal[t].connect(context.destination);
+
+	// everything is ready and connected, start!
+	lfo[t].start();
+	lfoHalf[t].start();
+	oscL[t].start();
+	oscR[t].start();
+	noiseR[t].start(0,3);
+	noiseL[t].start();
+	}
+
+	// Check if context was suspended after creation
+	setTimeout(function() {webAudioContextCheck();}, 100);
 }
+
 
 function init() {
 
@@ -279,148 +404,14 @@ function init() {
 	if(typeof AudioContext !== "undefined") bWEBAUDIO=1;
 
 	if (bWEBAUDIO) {
-
-
-		if (typeof AudioContext !== 'undefined') context= new AudioContext();
-		else context = new webkitAudioContext();
-
-
-		for (var t=0;t<TABS;t++) {
-
-		// creating oscillators
-		oscL[t]=context.createOscillator();
-		oscL[t].type='sine';
-		oscL[t].frequency.value=CARRIER[t]+MOD[t]/2*BINAURAL[t]/100; // value in hertz
-
-		oscR[t]=context.createOscillator();
-		oscR[t].type='sine';
-		oscR[t].frequency.value=CARRIER[t]-MOD[t]/2*BINAURAL[t]/100; // value in hertz
-
-		lfo[t]=context.createOscillator();
-		lfo[t].type='sine';
-		lfo[t].frequency.value=MOD[t]; // value in hertz
-		lfoHalf[t]=context.createOscillator();
-		lfoHalf[t].type='sine';
-		lfoHalf[t].frequency.value=MOD[t]/2; // value in hertz
-
-		// noises
-
-		var bufferSize = 6 * context.sampleRate,
-			noiseBuffer = context.createBuffer(1, bufferSize, context.sampleRate),
-			output = noiseBuffer.getChannelData(0);
-		for (var i = 0; i < bufferSize; i++) {
-			output[i] = 3*(Math.random() * 2 - 1);
-		}
-
-		noiseL[t]=context.createBufferSource();
-		noiseL[t].buffer=noiseBuffer;
-		noiseL[t].loop=true;
-		noiseR[t]=context.createBufferSource();
-		noiseR[t].buffer=noiseBuffer;
-		noiseR[t].loop=true;
-
-		// filters for the noise
-		filterR[t] = context.createBiquadFilter();
-		filterL[t] = context.createBiquadFilter();
-		filterR[t].type = "bandpass";
-		filterR[t].frequency.value = CARRIER[t];
-		filterR[t].Q.value = 2;
-		filterL[t].type = "bandpass";
-		filterL[t].frequency.value = CARRIER[t];
-		filterL[t].Q.value = 2;
-
-		// tone+noise
-		noiseGainL[t]=context.createGain();
-		noiseGainR[t]=context.createGain();
-		noiseGainRL[t]=context.createGain();
-		noiseGainRR[t]=context.createGain();
-		oscGainL[t]=context.createGain();
-		oscGainR[t]=context.createGain();
-		noiseGainL[t].gain.value=0;
-		noiseGainR[t].gain.value=0;
-		oscGainL[t].gain.value=1;
-		oscGainR[t].gain.value=1;
-		noiseGainRL[t].gain.value=0;
-		noiseGainRR[t].gain.value=1;
-		noiseL[t].connect(noiseGainL[t]);
-		noiseL[t].connect(noiseGainRL[t]);
-		noiseR[t].connect(noiseGainRR[t]);
-		noiseGainRR[t].connect(noiseGainR[t]);
-		noiseGainRL[t].connect(noiseGainR[t]);
-		noiseGainL[t].connect(filterL[t]);
-		noiseGainR[t].connect(filterR[t]);
-		oscL[t].connect(oscGainL[t]);
-		oscR[t].connect(oscGainR[t]);
-
-		// creating gain nodes and connecting them to the oscs
-		bilatGain[t]=context.createGain();
-		bilatGain[t].gain.value=BILATERAL[t]/100*0.25;
-		bilatInvertedGain[t]=context.createGain();
-		bilatInvertedGain[t].gain.value=-1;
-		bilatGain[t].connect(bilatInvertedGain[t]);
-		lfoHalf[t].connect(bilatGain[t]);
-
-		lfoGain[t]=context.createGain(); // lfo[t] varies between -1 and 1
-		lfo[t].connect(lfoGain[t]); // we will couple lfo[t] with lfoGain[t] to change the output range
-
-		fmGain[t]=context.createGain();
-		fmGain[t].gain.value=FM[t]/100*CARRIER[t];
-		filterGain[t]=context.createGain();
-		filterGain[t].gain.value=FM[t]/150*CARRIER[t];
-		lfo[t].connect(fmGain[t]);
-		lfo[t].connect(filterGain[t]);
-		fmGain[t].connect(oscL[t].frequency);
-		fmGain[t].connect(oscR[t].frequency);
-		filterGain[t].connect(filterL[t].frequency);
-		filterGain[t].connect(filterR[t].frequency);
-
-		gainL[t]=context.createGain();
-		gainR[t]=context.createGain();
-		gainI[t]=context.createGain();
-		gainL[t].gain.value=0.25;
-		gainR[t].gain.value=0.25;
-		bilatInvertedGain[t].connect(gainL[t].gain);
-		bilatGain[t].connect(gainR[t].gain);
-
-		gainI[t].gain.value=0.5;
-		lfoGain[t].connect(gainI[t].gain);
-		lfoGain[t].gain.value=ISOCHRONIC[t]/100*gainI[t].gain.value;
-
-		oscGainL[t].connect(gainL[t]);
-		oscGainR[t].connect(gainR[t]);
-		filterL[t].connect(gainL[t]);
-		filterR[t].connect(gainR[t]);
-
-		merger[t]=context.createChannelMerger(2);
-		merger[t].connect(gainI[t]);
-
-		gainL[t].connect(merger[t],0,0);
-		gainR[t].connect(merger[t],0,1);
-
-		gainGlobal[t]=context.createGain();
-		gainGlobal[t].gain.value=LEVEL[t]/100;
-		gainI[t].connect(gainGlobal[t]);
-		gainGlobal[t].connect(context.destination);
-
-		// everything is ready and connected, start!
-		lfo[t].start();
-		lfoHalf[t].start();
-		oscL[t].start();
-		oscR[t].start();
-		noiseR[t].start(0,3);
-		noiseL[t].start();
-		}
-
-
+		// Don't create audio context immediately - wait for user interaction
+		// Audio context will be created lazily in initializeAudio()
 	}
 	else alert('Web Audio API is missing. To enjoy Brainaural, please use a recent version of Chrome, Edge, Safari or Firefox (basically everything but Internet Explorer).');
 
 	buildUI();
 	generatePresetButtons();
 	setG(0);
-
-  	// Suspended Policy by Mobile Browsers and Chrome!
-	setTimeout(function() {webAudioContextCheck();}, 500);	// race condition, set in a timer
 
 
 
@@ -545,6 +536,32 @@ function generatePresetButtons() {
 }
 
 function selectPreset(preset, outputType) {
+	// Initialize audio context on first user interaction
+	if (!bAUDIO_INITIALIZED) {
+		initializeAudio();
+		// Continue with preset application after audio is initialized
+		applyPresetLogic(preset, outputType);
+		return;
+	}
+
+	// Check if context is suspended and resume if needed (handles iOS autoplay prevention)
+	if (bSUSPENDED && context.state === "suspended") {
+		context.resume().then(() => {
+			bSUSPENDED = 0;
+			// Continue with preset application after context is resumed
+			applyPresetLogic(preset, outputType);
+		}).catch((error) => {
+			console.error('Failed to resume audio context:', error);
+			// Still try to apply preset even if resume fails
+			applyPresetLogic(preset, outputType);
+		});
+	} else {
+		// Normal preset application
+		applyPresetLogic(preset, outputType);
+	}
+}
+
+function applyPresetLogic(preset, outputType) {
 	// Remove active class from all preset buttons
 	document.querySelectorAll('.preset-button').forEach(btn => {
 		btn.classList.remove('active');
@@ -942,6 +959,32 @@ function setG(mode){
 }
 
 function muteOutput(){
+	// Initialize audio context on first user interaction
+	if (!bAUDIO_INITIALIZED) {
+		initializeAudio();
+		// Continue with mute toggle after audio is initialized
+		toggleMute();
+		return;
+	}
+
+	// Check if context is suspended and resume if needed (handles iOS autoplay prevention)
+	if (bSUSPENDED && context.state === "suspended") {
+		context.resume().then(() => {
+			bSUSPENDED = 0;
+			// Continue with mute toggle after context is resumed
+			toggleMute();
+		}).catch((error) => {
+			console.error('Failed to resume audio context:', error);
+			// Still try to toggle mute even if resume fails
+			toggleMute();
+		});
+	} else {
+		// Normal mute toggle
+		toggleMute();
+	}
+}
+
+function toggleMute(){
 	bMute=!bMute;
 	if (bMute) {
 		$("#mute").addClass("superactive");
@@ -1019,13 +1062,6 @@ function showTopMenuButtons() {
 	$("#hamburger").unbind('click').click(openNav);
 }
 
-function openWarning() {
-    document.getElementById("myWarning").style.right = 0;
-}
-
-function closeWarning() {
-    document.getElementById("myWarning").style.right = "-100%";
-}
 
 </script>
 <script async="" src="./Brainaural_files/101366656.js"></script>
