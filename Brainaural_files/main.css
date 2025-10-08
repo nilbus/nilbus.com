@@ -32,7 +32,6 @@ body  {
   height: 100%;
   z-index: -1;
   pointer-events: none; /* Allows interaction with elements behind the background */
-  background: url("/Pix/bg.jpg") no-repeat center center fixed;
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
