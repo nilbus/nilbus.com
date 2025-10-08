@@ -147,7 +147,48 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 	<script src="./Brainaural_files/jquery.ui.touch-punch.min.js"></script>
 	<script src="./Brainaural_files/mousetrap.min.js"></script>
 	<script src="./preset_data.js"></script>
+	<script>
+		function initializeYouTubePlayer() {
+			// Check if the target element exists
+			var targetElement = document.getElementById('youtube-player');
+			if (!targetElement) {
+				return;
+			}
+
+			player = new YT.Player('youtube-player', {
+				height: '315',
+				width: '560',
+				playerVars: {
+					'listType': 'playlist',
+					'list': 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF',
+					'rel': 0,
+					'showinfo': 0,
+					'controls': 1,
+					'disablekb': 0,
+					'enablejsapi': 1,
+					'autoplay': 0,
+					'origin': window.location.origin
+				},
+				events: {
+					'onReady': onPlayerReady,
+					'onStateChange': onPlayerStateChange
+				}
+			});
+		}
+
+		// Set up the callback before loading the script
+		window.onYouTubeIframeAPIReady = function() {
+			initializeYouTubePlayer();
+		};
+	</script>
 	<script src="https://www.youtube.com/iframe_api"></script>
+	<script>
+		// Check if API is already loaded (cached from previous page load)
+		// If so, call the initialization function immediately
+		if (typeof YT !== 'undefined' && typeof YT.Player !== 'undefined') {
+			initializeYouTubePlayer();
+		}
+	</script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Ultimate Brainwaves • Binaural &amp; Bilateral Beats &amp; Isochronic Tones</title>
@@ -1023,7 +1064,8 @@ function performPlayAction(){
 	if (bPaused) {
 		bPaused = false;
 		// Play: resume the audio context
-		context.resume().then(() => {
+		if (context) {
+			context.resume().then(() => {
 			$("#mute").removeClass("superactive");
 
 			// Play the anchor audio element to maintain Media Session
@@ -1043,6 +1085,20 @@ function performPlayAction(){
 		}).catch((error) => {
 			console.error('Failed to resume audio context:', error);
 		});
+		} else {
+			// Context not initialized yet, just update UI state
+			$("#mute").removeClass("superactive");
+
+			// Play YouTube player if ready
+			if (player && isPlayerReady) {
+				player.playVideo();
+			}
+
+			// Update preset display and metadata when resuming
+			updateActivePresetDisplay();
+			updateMediaSessionState('playing');
+			msg("Audio playing");
+		}
 	}
 }
 
@@ -1050,7 +1106,8 @@ function performPauseAction(){
 	if (!bPaused) {
 		bPaused = true;
 		// Pause: suspend the audio context
-		context.suspend().then(() => {
+		if (context) {
+			context.suspend().then(() => {
 			$("#mute").addClass("superactive");
 			// Remove active class from all preset buttons
 			document.querySelectorAll('.preset-button').forEach(btn => {
@@ -1065,6 +1122,8 @@ function performPauseAction(){
 			// Pause YouTube player if ready
 			if (player && isPlayerReady) {
 				player.pauseVideo();
+				// Save YouTube state when pausing
+				saveYouTubeState();
 			}
 
 			updateMediaSessionState('paused');
@@ -1072,6 +1131,29 @@ function performPauseAction(){
 		}).catch((error) => {
 			console.error('Failed to suspend audio context:', error);
 		});
+		} else {
+			// Context not initialized yet, just update UI state
+			$("#mute").addClass("superactive");
+			// Remove active class from all preset buttons
+			document.querySelectorAll('.preset-button').forEach(btn => {
+				btn.classList.remove('active');
+			});
+
+			// Pause the anchor audio element
+			if (mediaSessionAnchor) {
+				mediaSessionAnchor.pause();
+			}
+
+			// Pause YouTube player if ready
+			if (player && isPlayerReady) {
+				player.pauseVideo();
+				// Save YouTube state when pausing
+				saveYouTubeState();
+			}
+
+			updateMediaSessionState('paused');
+			msg("Audio paused");
+		}
 	} else {
 		console.log('Already paused, no action needed');
 	}
@@ -1259,31 +1341,45 @@ function performUnifiedPlayPauseToggle() {
 Mousetrap.bind('m', function() { handlePlayPauseClick(); });
 Mousetrap.bind('space', function() { handlePlayPauseClick(); });
 
-// YouTube Player Functions
-function onYouTubeIframeAPIReady() {
-	player = new YT.Player('youtube-player', {
-		height: '315',
-		width: '560',
-		playerVars: {
-			'listType': 'playlist',
-			'list': 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF',
-			'rel': 0,
-			'showinfo': 0,
-			'controls': 1,
-			'disablekb': 0,
-			'enablejsapi': 1,
-			'origin': window.location.origin
-		},
-		events: {
-			'onReady': onPlayerReady,
-			'onStateChange': onPlayerStateChange
-		}
-	});
-}
-
 function onPlayerReady(event) {
 	isPlayerReady = true;
-	console.log('YouTube player ready');
+
+	// Try to restore saved playback state
+	var savedState = loadYouTubeState();
+	if (savedState) {
+
+		// Get the current playlist ID from the URL input field
+		var playlistInput = document.getElementById('playlist-url');
+		var currentPlaylistId = null;
+		if (playlistInput && playlistInput.value) {
+			currentPlaylistId = extractPlaylistId(playlistInput.value);
+		}
+
+		// Use the current playlist ID if available, otherwise use the saved one
+		var playlistToLoad = currentPlaylistId || savedState.playlistId;
+
+		if (playlistToLoad) {
+			// Restore the saved track and playback position without autoplay
+			// First load the playlist without startSeconds to prevent autoplay
+			player.loadPlaylist({
+				'listType': 'playlist',
+				'list': playlistToLoad,
+				'index': savedState.videoIndex
+			});
+
+			// After playlist loads, seek to the saved position without playing
+			setTimeout(function() {
+				if (player && isPlayerReady) {
+					// Seek to the saved time without playing
+					player.seekTo(savedState.playbackTime, true);
+					// Ensure it's paused
+					player.pauseVideo();
+				}
+			}, 500);
+		} else {
+			clearYouTubeState();
+		}
+	}
 }
 
 function onPlayerStateChange(event) {
@@ -1297,6 +1393,20 @@ function onPlayerStateChange(event) {
 		// YouTube paused/ended - pause brainaural tones
 		if (!bPaused) {
 			performPauseAction();
+		}
+	}
+
+	// Handle track changes and state clearing
+	if (event.data == YT.PlayerState.ENDED) {
+		// Video ended - clear saved state to start fresh next time
+		clearYouTubeState();
+	} else if (event.data == YT.PlayerState.PLAYING) {
+		// Check if we've changed tracks manually (not from restoration)
+		var currentIndex = player.getPlaylistIndex();
+		var savedIndex = localStorage.getItem('youtube_playlist_index');
+		if (savedIndex !== null && parseInt(savedIndex) !== currentIndex) {
+			// User manually changed tracks, clear saved time to prevent wrong position
+			localStorage.removeItem('youtube_playback_time');
 		}
 	}
 }
@@ -1334,6 +1444,75 @@ document.addEventListener('DOMContentLoaded', function() {
 		playlistInput.addEventListener('blur', loadPlaylist);
 	}
 });
+
+// Save YouTube state when tab is about to close
+window.addEventListener('beforeunload', function() {
+	saveYouTubeState();
+});
+
+// YouTube Playback Persistence Functions
+function saveYouTubeState() {
+	if (!player || !isPlayerReady) {
+		return;
+	}
+
+	try {
+		var videoIndex = player.getPlaylistIndex();
+		var playbackTime = player.getCurrentTime();
+
+		// Get playlist ID from the URL input field instead of player
+		var playlistInput = document.getElementById('playlist-url');
+		var playlistId = '';
+		if (playlistInput && playlistInput.value) {
+			playlistId = extractPlaylistId(playlistInput.value) || '';
+		}
+
+		// Only save if we have valid data
+		if (videoIndex !== undefined && videoIndex >= 0 && playbackTime !== undefined) {
+			localStorage.setItem('youtube_playlist_index', videoIndex.toString());
+			localStorage.setItem('youtube_playback_time', playbackTime.toString());
+			localStorage.setItem('youtube_playlist_id', playlistId);
+		}
+	} catch (error) {
+		console.error('Error saving YouTube state:', error);
+	}
+}
+
+function loadYouTubeState() {
+	try {
+		var savedIndex = localStorage.getItem('youtube_playlist_index');
+		var savedTime = localStorage.getItem('youtube_playback_time');
+		var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
+
+		if (savedIndex !== null && savedTime !== null) {
+			var videoIndex = parseInt(savedIndex);
+			var playbackTime = parseFloat(savedTime);
+
+			// Validate the saved data
+			if (!isNaN(videoIndex) && !isNaN(playbackTime) && videoIndex >= 0 && playbackTime >= 0) {
+				return {
+					videoIndex: videoIndex,
+					playbackTime: playbackTime,
+					playlistId: savedPlaylistId
+				};
+			}
+		}
+	} catch (error) {
+		console.error('Error loading YouTube state:', error);
+	}
+
+	return null;
+}
+
+function clearYouTubeState() {
+	try {
+		localStorage.removeItem('youtube_playlist_index');
+		localStorage.removeItem('youtube_playback_time');
+		localStorage.removeItem('youtube_playlist_id');
+	} catch (error) {
+		console.error('Error clearing YouTube state:', error);
+	}
+}
 
 
 </script> <script>
