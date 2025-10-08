@@ -45,29 +45,12 @@ body  {
   opacity: 0.05; /* Adjust the dimmed opacity as needed */
 }
 
-.label {
-	letter-spacing:5px;
-	font-size:16px;
-}
-
-.value {
-	font-size:13px;
-}
-
-.highlight{
-	color:#000;
-	background:#FFF;
-	padding:0 2px;
-}
 
 .white{
 	color:#FFF;
 	text-shadow: 0px 0px 5px rgba(0,0,0,128);
 }
 
-.red{
-	color:#F00;
-}
 
 .reg{
 	color:#000;
@@ -86,37 +69,6 @@ body  {
 	text-shadow: 0px 0px 10px #fff;
 }
 
-.vol{
-	color:#000;
-}
-
-.group{
-	border-radius: 10px;
-	padding:5px 0px 0px 5px;
-	width:360px;
-	margin:auto;
-	background:rgba(255,255,255,0.3);
-}
-
-.group.black{
-	border: 2px solid rgba(0,0,0,0.9);
-}
-
-.group.white{
-	border: 2px solid rgba(255,255,255,1);
-}
-
-.group.grey{
-	border: 2px solid rgba(255,255,255,0.5);
-}
-
-
-.sliderGroup {
-	width:320px;
-	margin:2px auto;
-	text-align:right;
-	border: 0px solid;
-}
 
 input[type="text"] {
     text-align: right;
@@ -138,10 +90,6 @@ input:focus {
 	text-align:center;
 }
 
-.tile2{
-  	width: 100%;
-	text-align:left;
-}
 
 #title {
 	opacity: 1;
@@ -169,47 +117,11 @@ input:focus {
 	vertical-align:bottom;
 }
 
-.slide
-{
-    position: absolute;
-    text-align:right;
-    width:80%px;
-	top:7px;
-	left:-155px;
-    z-index:10;
-    transition-property:all;
-	transition-duration:1s;
-	-webkit-transition-property:all;
-	-webkit-transition-duration:1s;
-	cursor: pointer;
-	opacity:0.8;
-}
-
-.slide:hover
-{
-	left: 10px;
-	opacity:1;
-}
 
 .fb-share-button{
     top:-4px;
 }
 
-.section{
-	margin:40px 40px 40px 47px;
-	padding:20px 40px;
-	text-align:left;
-	border-radius: 16px;
-	background: rgba(255, 255, 255, .8);
-}
-
-.sectionLast{
-	margin:0px;
-	padding:0px 10% 15px 10%;
-	text-align:center;
-	font-size:13px;
-	line-height:1.2em;
-}
 
 h1{
 	padding:0;
@@ -282,22 +194,6 @@ a.white:hover {
 
 }
 
-.selImg{
-	height:24px;
-	width:24px;
-	margin:6px 6px 0px 6px;
-	cursor:pointer;
-	-webkit-transition: 100ms linear;
-	-moz-transition: 100ms linear;
-	-o-transition: 100ms linear;
-	-ms-transition: 100ms linear;
-	transition: 100ms linear;
-	opacity:0.8;
-}
-
-.selImg:hover{
-	opacity:1;
-}
 
 .active{
     filter: invert(100%);
@@ -312,12 +208,6 @@ a.white:hover {
 	filter: invert(100%);
 }
 
-#msg{
-	padding:0px
-	margin:0px;
-	border: solid 0px #FFF;
-	opacity: 1;
-}
 
 .ctrSection {
 	padding:15px 40px;
@@ -333,21 +223,6 @@ blockquote {
 	clear:both;
 }
 
-#radioTouch{
-	position:fixed;
-	width:256px;
-	height:256px;
-	top:25px;
-	margin-left: auto;
-	margin-right: auto;
-	left: 0;
-	right: 0;
-	background-image: url("/Pix/tap.png");
-	background-size: 256px;
-	background-repeat: no-repeat;
-	display:none;
-	z-index:99;
-}
 
 .ui-slider-horizontal {
     height: 2px;
@@ -367,41 +242,7 @@ blockquote {
     outline: none;
 }
 
-#paymentOverlay {
-  display:none;
-  position: fixed;
-  top:0;
-  left:0;
-  height: 100%;
-  width: 100%;
-  padding:10px 20px;
-  z-index: 999999999;
-  color:#0FF;
-  background-color: rgba(32,32,32,0.9);
-}
 
-#EUnotice {
-	font-size:12px;
-	vertical-align:top;
-}
-
-table.payments td{
-	text-align: left;
-	vertical-align:top;
-}
-
-textarea
-{
-  border:1px solid #999999;
-  width:100%;
-  margin:5px 0;
-  padding:3px;
-}
-
-tt {
-font-size:12px;
-line-height:1em;
-}
 
 /* The overlayNav (background) */
 .overlayNav {
@@ -542,9 +383,6 @@ line-height:1em;
 }
 
 @media screen and (max-width: 640px) {
-.section{
-	padding:10px 20px;
-}
 body {
 	background: #257;;
 	background: -moz-radial-gradient(center, ellipse cover, rgba(34,85,119,1) 0%, rgba(50,105,140,1); 100%);
