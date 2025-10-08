@@ -534,16 +534,6 @@ function generatePresetButtons() {
 		const row = document.createElement('div');
 		row.className = 'preset-row';
 
-		// Headphones button
-		const headphonesButton = document.createElement('div');
-		headphonesButton.className = 'preset-button';
-		headphonesButton.id = `preset-${index}-headphones`;
-		headphonesButton.onclick = () => selectPreset(preset, 'headphones');
-		headphonesButton.innerHTML = `
-			<img src="./Brainaural_files/headphones.png" class="preset-icon">
-			<span class="preset-name">${preset.name}</span>
-		`;
-
 		// Speakers button
 		const speakersButton = document.createElement('div');
 		speakersButton.className = 'preset-button';
@@ -554,8 +544,18 @@ function generatePresetButtons() {
 			<span class="preset-name">${preset.name}</span>
 		`;
 
-		row.appendChild(headphonesButton);
+		// Headphones button
+		const headphonesButton = document.createElement('div');
+		headphonesButton.className = 'preset-button';
+		headphonesButton.id = `preset-${index}-headphones`;
+		headphonesButton.onclick = () => selectPreset(preset, 'headphones');
+		headphonesButton.innerHTML = `
+			<img src="./Brainaural_files/headphones.png" class="preset-icon">
+			<span class="preset-name">${preset.name}</span>
+		`;
+
 		row.appendChild(speakersButton);
+		row.appendChild(headphonesButton);
 		container.appendChild(row);
 	});
 }
