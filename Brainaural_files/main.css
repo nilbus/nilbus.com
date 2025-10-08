@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Titillium+Web&display=swap');
 
-html { 
+html {
 	width: 100%;
   	height: 100%;
 }
@@ -23,7 +23,7 @@ body  {
 	-ms-transition: color 6000ms linear;
 	transition: color 6000ms linear;
 }
-	
+
 .background {
   position: fixed;
   top: 0;
@@ -32,7 +32,7 @@ body  {
   height: 100%;
   z-index: -1;
   pointer-events: none; /* Allows interaction with elements behind the background */
-  background: url("/Pix/bg.jpg") no-repeat center center fixed; 
+  background: url("/Pix/bg.jpg") no-repeat center center fixed;
 	-webkit-background-size: cover;
 	-moz-background-size: cover;
 	-o-background-size: cover;
@@ -118,8 +118,8 @@ body  {
 	border: 0px solid;
 }
 
-input[type="text"] { 
-    text-align: right; 
+input[type="text"] {
+    text-align: right;
     font-family: inherit;
     font-size:13px;
     background-color: transparent;
@@ -279,7 +279,7 @@ a.white:hover {
 .ctrlImg:hover{
 	filter: invert(100%) drop-shadow(2px 2px 5px #CCC);
 	opacity:1;
-	
+
 }
 
 .selImg{
@@ -461,7 +461,7 @@ line-height:1em;
   left:50%;
   padding:0px;
   width:80%;
-  -ms-transform: translate(-50%,-50%); 
+  -ms-transform: translate(-50%,-50%);
   -webkit-transform: translate(-50%,-50%);
   transform: translate(-50%,-50%);
   text-align:center;
@@ -512,7 +512,7 @@ line-height:1em;
 
 @keyframes cssAnimationHidden {
     to {visibility:hidden;}
-    
+
 }
 @-webkit-keyframes cssAnimationHidden {
     to {visibility:hidden;}
@@ -520,7 +520,7 @@ line-height:1em;
 
 @keyframes cssAnimationVisible {
     to {visibility:visible;}
-    
+
 }
 @-webkit-keyframes cssAnimationVisible {
     to {visibility:visible;}
