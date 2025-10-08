@@ -130,7 +130,6 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 	  <div class="navLink" onclick="goTo(&#39;welcome&#39;)">Introduction</div>
 	  <div class="navLink" onclick="goTo(&#39;brainwaves&#39;)">Brainwaves</div>
 	  <div class="navLink" onclick="goTo(&#39;entrainment&#39;)">Entrainment</div>
-	  <div class="navLink" onclick="toURL(1);closeNav();">Audio File Download</div>
 	  <div class="navLink" onclick="goTo(&#39;player&#39;)">Back to Player</div>
  </div>
 	<div id="fbtwtshares" class="sectionBottomLikes">
@@ -156,8 +155,6 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 <div id="subtitle"><span class="white">Ultimate</span> <span class="black">Brainwaves</span></div>	<div class="ctrSection">
 		<img src="./Brainaural_files/mute.png" class="ctrlImg" id="mute" onclick="muteOutput()" onmouseover="msg(&#39;Muting the Audio Output&#39;)" alt="">
 		<img src="./Brainaural_files/link.png" class="ctrlImg" onclick="toURL()" onmouseover="msg(&#39;Save or Share current settings in a custom URL&#39;)" alt="">
-		<img src="./Brainaural_files/alien.png" class="ctrlImg" onclick="newSet(&#39;anything&#39;)" onmouseover="msg(&#39;Anything can happen! (Randomize)&#39;)" alt="">
-		<img src="./Brainaural_files/wav.png" class="ctrlImg" onclick="toURL(1)" onmouseover="msg(&#39;Generate a high quality standalone audio file&#39;)" alt="">
 </div>
 
 
@@ -448,7 +445,6 @@ Inspired by this, I've designed BrainAural's carrier frequency to extend into th
 <div class="anchor" id="audiofile"></div>
 <div class="section">
 <h1>Audio File Download</h1>
-<p><img src="./Brainaural_files/wav2.png" class="ctrlImg" onclick="toURL(1)" onmouseover="msg(&#39;Generate a high quality standalone audio file&#39;)" alt="" style="float: left;margin-right:15px;"></p>
 <p>← Click the icon to turn the brainwave that is currently playing into a perfectly looped audio file. This feature compensates for the absence of a mobile app, and allows you to play BrainAural® sounds without internet connection.</p>
 
 <h2>For Businesses and Commercial Ventures in Sound Therapy</h2>
@@ -1156,11 +1152,6 @@ function newSet(setting){
 	else {start=G;end=G+1;}
 	for (var t=start;t<end;t++) {
 		switch (setting) {
-		case "anything":
-			mod=Math.pow(2,Math.random()*OCTMOD)*FMODMIN;
-			car=Math.pow(2,Math.random()*Math.random()*OCTCAR)*FCARMIN;
-			iso=Math.floor(Math.random()*100);bin=Math.floor(Math.random()*100);bil=Math.floor(Math.random()*100);fm=Math.floor(Math.random()*100);noi=Math.floor(Math.random()*100);
-			break;
 		case "sleep":
 			fmin=0.25;fmax=2;
 			mod=(fmax-fmin)*Math.random()+fmin;
