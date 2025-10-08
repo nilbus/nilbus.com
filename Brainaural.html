@@ -1231,22 +1231,16 @@ function onPlayerReady(event) {
 
 	if (savedState && savedState.playlistId && savedPlaylistId === savedState.playlistId) {
 		// We have saved state and playlist ID matches - restore position and track
-		// Load the specific video from the playlist
+		// Load the specific video from the playlist with startSeconds parameter
 		player.loadPlaylist({
 			'listType': 'playlist',
 			'list': savedState.playlistId,
-			'index': savedState.videoIndex
+			'index': savedState.videoIndex,
+			'startSeconds': savedState.playbackTime
 		});
 
-		// After playlist loads, seek to the saved position without playing
-		setTimeout(function() {
-			if (player && isPlayerReady) {
-				// Seek to the saved time without playing
-				player.seekTo(savedState.playbackTime, true);
-				// Ensure it's paused
-				player.pauseVideo();
-			}
-		}, 1000);
+		// Pause the video after loading (it will start at the correct position)
+		player.pauseVideo();
 	}
 }
 
