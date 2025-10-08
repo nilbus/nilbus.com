@@ -1207,9 +1207,9 @@ function performUnifiedPlayPauseToggle() {
 	}
 }
 
-// Keypresses - use the same unified handler as the mute button
+// Mute via keyboard
 Mousetrap.bind('m', function() { handlePlayPauseClick(); });
-Mousetrap.bind('space', function() { handlePlayPauseClick(); });
+Mousetrap.bind('space', function(e) { e.preventDefault(); handlePlayPauseClick(); });
 
 function onPlayerReady(event) {
 	isPlayerReady = true;
