@@ -722,6 +722,13 @@ function init() {
   	// Suspended Policy by Mobile Browsers and Chrome!
 	setTimeout(function() {webAudioContextCheck();}, 500);	// race condition, set in a timer
 
+	// Auto-select "Focused Code Reading (speakers)" on page load
+	setTimeout(function() {
+		if (PRESET_TONES && PRESET_TONES.length > 0) {
+			selectPreset(PRESET_TONES[0], 'speakers');
+		}
+	}, 0);
+
 setSliders(1,220,0,100,100,0,0,4);
 setLevel(0,4);
 setSliders(1,220,0,100,100,0,0,3);
