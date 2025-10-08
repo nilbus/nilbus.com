@@ -1000,8 +1000,8 @@ function toURL(bRender){
 		url+="&render=1";
 		window.open(url);
 	}
-	else // must then be for copying the embedded URL settings
-	window.prompt('This URL embeds all your settings. Press [Ctrl+C] to Copy', url);
+	else // open the URL in a new tab
+	window.open(url, '_blank');
 }
 
 // Keypresses
