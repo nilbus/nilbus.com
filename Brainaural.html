@@ -95,7 +95,7 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 <div class="tile1">
 	<a href="https://brainaural.com/" class="nounderline"><div id="title"><img src="./Brainaural_files/ba_logo.png" class="logo"> <span class="black">brain</span><span class="white">aural</span><span class="reg">®</span></div></a>
 <div id="subtitle"><span class="white">Ultimate</span> <span class="black">Brainwaves</span></div>	<div class="ctrSection">
-		<img src="./Brainaural_files/mute.png" class="ctrlImg" id="mute" onclick="handlePlayPauseClick()" onmouseover="msg('Pause/Play Audio')" alt="">
+		<img src="./Brainaural_files/mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" onmouseover="msg('Pause/Play Audio')" alt="">
 		<img src="./Brainaural_files/link.png" class="ctrlImg" onclick="toURL()" onmouseover="msg('Save or Share current settings in a custom URL')" alt="">
 </div>
 
@@ -175,7 +175,7 @@ var LEVEL=[0,0,0,0,0]; //%
 var NOISE=[0,0,0,0,0]
 var bWEBAUDIO=0;
 var bSUSPENDED=0;
-var bPaused=1; // Start in paused state (will be set correctly when audio initializes)
+var bPaused=true; // Start in paused state (will be set correctly when audio initializes)
 var bAUDIO_INITIALIZED=0;
 var msgTimer;
 var currentPreset = null;
@@ -377,20 +377,16 @@ function init() {
 	// Supports WebAudio?
 	if(typeof webkitAudioContext !== "undefined") bWEBAUDIO=1;
 	if(typeof AudioContext !== "undefined") bWEBAUDIO=1;
-
-	if (bWEBAUDIO) {
-		// Don't create audio context immediately - wait for user interaction
-		// Audio context will be created lazily in initializeAudio()
+	if (!bWEBAUDIO) {
+	  alert('Web Audio API is missing. To enjoy Brainaural, please use a recent version of Chrome, Edge, Safari or Firefox (basically everything but Internet Explorer).');
 	}
-	else alert('Web Audio API is missing. To enjoy Brainaural, please use a recent version of Chrome, Edge, Safari or Firefox (basically everything but Internet Explorer).');
 
 	buildUI();
 	generatePresetButtons();
 	setG(0);
 
-
-
-
+	// Fix initial mute button visual state to match paused state
+	$("#mute").addClass("superactive");
 }
 
 
@@ -1193,6 +1189,12 @@ function handlePlayPauseClick() {
 	} else {
 		// Normal play/pause toggle
 		performUnifiedPlayPauseToggle();
+	}
+}
+
+function handleMuteClick() {
+	if (currentPreset) {
+		handlePlayPauseClick();
 	}
 }
 
