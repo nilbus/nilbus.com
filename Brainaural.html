@@ -152,15 +152,25 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 			// Check if the target element exists
 			var targetElement = document.getElementById('youtube-player');
 			if (!targetElement) {
+				// Wait for DOM to be ready
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', initializeYouTubePlayer);
+				} else {
+					setTimeout(initializeYouTubePlayer, 100);
+				}
 				return;
 			}
+
+			// Get saved playlist ID or use default
+			var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
+			var playlistId = savedPlaylistId || 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
 
 			player = new YT.Player('youtube-player', {
 				height: '315',
 				width: '560',
 				playerVars: {
 					'listType': 'playlist',
-					'list': 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF',
+					'list': playlistId,
 					'rel': 0,
 					'showinfo': 0,
 					'controls': 1,
@@ -1344,41 +1354,39 @@ Mousetrap.bind('space', function() { handlePlayPauseClick(); });
 function onPlayerReady(event) {
 	isPlayerReady = true;
 
+	// Restore saved playlist URL to input field
+	var savedPlaylistUrl = localStorage.getItem('youtube_playlist_url');
+	if (savedPlaylistUrl) {
+		var playlistInput = document.getElementById('playlist-url');
+		if (playlistInput) {
+			playlistInput.value = savedPlaylistUrl;
+		}
+	}
+
+	// Get the saved playlist ID
+	var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
+
 	// Try to restore saved playback state
 	var savedState = loadYouTubeState();
-	if (savedState) {
 
-		// Get the current playlist ID from the URL input field
-		var playlistInput = document.getElementById('playlist-url');
-		var currentPlaylistId = null;
-		if (playlistInput && playlistInput.value) {
-			currentPlaylistId = extractPlaylistId(playlistInput.value);
-		}
+	if (savedState && savedState.playlistId && savedPlaylistId === savedState.playlistId) {
+		// We have saved state and playlist ID matches - restore position and track
+		// Load the specific video from the playlist
+		player.loadPlaylist({
+			'listType': 'playlist',
+			'list': savedState.playlistId,
+			'index': savedState.videoIndex
+		});
 
-		// Use the current playlist ID if available, otherwise use the saved one
-		var playlistToLoad = currentPlaylistId || savedState.playlistId;
-
-		if (playlistToLoad) {
-			// Restore the saved track and playback position without autoplay
-			// First load the playlist without startSeconds to prevent autoplay
-			player.loadPlaylist({
-				'listType': 'playlist',
-				'list': playlistToLoad,
-				'index': savedState.videoIndex
-			});
-
-			// After playlist loads, seek to the saved position without playing
-			setTimeout(function() {
-				if (player && isPlayerReady) {
-					// Seek to the saved time without playing
-					player.seekTo(savedState.playbackTime, true);
-					// Ensure it's paused
-					player.pauseVideo();
-				}
-			}, 500);
-		} else {
-			clearYouTubeState();
-		}
+		// After playlist loads, seek to the saved position without playing
+		setTimeout(function() {
+			if (player && isPlayerReady) {
+				// Seek to the saved time without playing
+				player.seekTo(savedState.playbackTime, true);
+				// Ensure it's paused
+				player.pauseVideo();
+			}
+		}, 1000);
 	}
 }
 
@@ -1423,17 +1431,25 @@ function loadPlaylist() {
 	var input = document.getElementById('playlist-url');
 
 	if (playlistId && player && isPlayerReady) {
+		// Check if this is a different playlist than what's currently saved
+		var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
+		if (savedPlaylistId !== playlistId) {
+			// Different playlist - clear saved position and video index
+			localStorage.removeItem('youtube_playlist_index');
+			localStorage.removeItem('youtube_playback_time');
+		}
+
+		// Save the new playlist URL and ID
+		localStorage.setItem('youtube_playlist_url', url);
+		localStorage.setItem('youtube_playlist_id', playlistId);
+
 		player.loadPlaylist({
 			'listType': 'playlist',
 			'list': playlistId
 		});
 		input.classList.remove('invalid');
-		console.log('Loaded playlist:', playlistId);
 	} else if (!playlistId) {
 		input.classList.add('invalid');
-		console.log('Invalid playlist URL');
-	} else {
-		console.log('Player not ready yet');
 	}
 }
 
@@ -1441,6 +1457,12 @@ function loadPlaylist() {
 document.addEventListener('DOMContentLoaded', function() {
 	var playlistInput = document.getElementById('playlist-url');
 	if (playlistInput) {
+		// Restore saved playlist URL on page load
+		var savedPlaylistUrl = localStorage.getItem('youtube_playlist_url');
+		if (savedPlaylistUrl) {
+			playlistInput.value = savedPlaylistUrl;
+		}
+
 		playlistInput.addEventListener('blur', loadPlaylist);
 	}
 });
@@ -1509,6 +1531,7 @@ function clearYouTubeState() {
 		localStorage.removeItem('youtube_playlist_index');
 		localStorage.removeItem('youtube_playback_time');
 		localStorage.removeItem('youtube_playlist_id');
+		localStorage.removeItem('youtube_playlist_url');
 	} catch (error) {
 		console.error('Error clearing YouTube state:', error);
 	}
