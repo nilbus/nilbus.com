@@ -1,0 +1,556 @@
+/* ===========================================
+   BRAINAURAL STYLESHEET
+   =========================================== */
+
+/* Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Titillium+Web&display=swap');
+
+/* ===========================================
+   BASE STYLES
+   =========================================== */
+
+html {
+	width: 100%;
+  	height: 100%;
+}
+
+body  {
+	margin:0;
+	padding:0;
+	color:#000;
+	background: #257;
+	font-family:"Titillium Web";
+	letter-spacing:0px;
+	line-height:1.2em;
+	font-size:15px;
+	width:100%;
+  	height: 100%;
+	-webkit-font-smoothing: antialiased;
+	-webkit-transition: color 6000ms linear;
+	-moz-transition: color 6000ms linear;
+	-o-transition: color 6000ms linear;
+	-ms-transition: color 6000ms linear;
+	transition: color 6000ms linear;
+}
+
+.background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none; /* Allows interaction with elements behind the background */
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	transition: opacity 0.5s ease; /* Adjust the transition duration as needed */
+	opacity: 0.3;
+}
+
+.dimmed {
+  opacity: 0.05; /* Adjust the dimmed opacity as needed */
+}
+
+
+/* ===========================================
+   TYPOGRAPHY & TEXT STYLES
+   =========================================== */
+
+.white{
+	color:#FFF;
+	text-shadow: 0px 0px 5px rgba(0,0,0,128);
+}
+
+
+.reg{
+	color:#000;
+	text-shadow: 0px 0px 5px rgba(255,255,255,128);
+	font-size:16px;
+	vertical-align: top;
+}
+
+.black{
+	color:#000;
+	text-shadow: 0px 0px 5px rgba(255,255,255,128);
+}
+
+#msg{
+	font-size:15px;
+	text-shadow: 0px 0px 10px #fff;
+}
+
+
+/* ===========================================
+   FORM ELEMENTS
+   =========================================== */
+
+input[type="text"] {
+    font-family: inherit;
+    font-size:13px;
+    background-color: transparent;
+    border: 0px solid;
+    color:#000;
+}
+
+input:focus {
+    outline: none;
+}
+
+
+/* ===========================================
+   LAYOUT & STRUCTURE
+   =========================================== */
+
+.tile1{
+  	min-height: 100%;
+  	width: 100%;
+	text-align:center;
+}
+
+
+#title {
+	opacity: 1;
+	letter-spacing:2px;
+	line-height:20px;
+	font-size:44px;
+	color:#FFF;
+	padding-top:20px;
+}
+
+#subtitle {
+	opacity: 1;
+	padding-top:12px;
+	letter-spacing:2px;
+	font-size:24px;
+	color:#FFF;
+}
+
+
+
+.logo{
+	padding:0px;
+	margin-bottom:-2px;
+	height:36px;
+	vertical-align:bottom;
+}
+
+
+.fb-share-button{
+    top:-4px;
+}
+
+
+h1{
+	padding:0;
+	text-align:left;
+	font-size:18px;
+	font-weight:bold;
+	line-height:1.2em;
+}
+
+h2{
+	padding:0;
+	text-align:left;
+	font-size:18px;
+	font-weight:normal;
+	line-height:1.2em;
+	color:#07A;
+	font-style:italic;
+}
+
+h3{
+	padding:0;
+	text-align:left;
+	font-size:14px;
+	font-weight:bold;
+	line-height:1.2em;
+}
+
+p {
+	padding:0;
+}
+
+a {
+	color:#000;
+}
+
+a:hover {
+	color:#06A;
+}
+
+a.nounderline {
+	 text-decoration:  none;
+}
+
+a.white {
+	 color:#FFF;
+}
+
+a.white:hover {
+	 color:#FFF;
+}
+
+
+/* ===========================================
+   UI COMPONENTS & CONTROLS
+   =========================================== */
+
+.ctrlImg{
+	height:30px;
+	width:30px;
+	margin:6px;
+	cursor:pointer;
+	-webkit-transition: 100ms linear;
+	-moz-transition: 100ms linear;
+	-o-transition: 100ms linear;
+	-ms-transition: 100ms linear;
+	transition: 100ms linear;
+	opacity:0.8;
+    filter: invert(0%) drop-shadow(2px 2px 5px #222);
+}
+
+.ctrlImg:hover{
+	filter: invert(100%) drop-shadow(2px 2px 5px #CCC);
+	opacity:1;
+
+}
+
+
+.active{
+    filter: invert(100%);
+    opacity:1;
+}
+
+
+.superactive{
+	opacity:1;
+	filter: invert(100%);
+}
+
+
+.ctrSection {
+	padding:15px 40px;
+	border: 0px solid blue;
+}
+
+blockquote {
+	padding: 0.25em 1.5em 0.5em 1.5em;
+	margin: 0 0 1em;
+	border-left: 1px dotted #666;
+	color: #000;
+	font-style: italic;
+	clear:both;
+}
+
+
+/* ===========================================
+   SLIDER COMPONENTS
+   =========================================== */
+
+.ui-slider-horizontal {
+    height: 2px;
+    border: solid 0px #888;
+    background:#000;
+}
+
+.ui-slider .ui-slider-handle {
+	margin-top:-6px;
+	margin-left:-11px;
+    height: 20px;
+    width: 20px;
+    border: solid 2px #000;
+    border-radius: 16px;
+    background:rgba(255,255,255,255);
+    cursor: pointer;
+    outline: none;
+}
+
+
+
+
+
+
+@media screen and (max-height: 640px) {
+#title {
+	display:none;
+}
+#subtitle {
+	display:none;
+}
+}
+
+/* ===========================================
+   PRESET GRID STYLES
+   =========================================== */
+.preset-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin: 20px 0;
+}
+
+.preset-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.preset-button {
+	display: flex;
+	align-items: center;
+	padding: 15px;
+	background: linear-gradient(135deg, #4a7ba7, #3a6b97);
+	border: 2px solid #2c5a7a;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	text-align: left;
+	min-height: 60px;
+	color: white;
+}
+
+.preset-button:hover {
+	background: linear-gradient(135deg, #5a8bb7, #4a7ba7);
+	border-color: #0077aa;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.preset-button.active {
+	background: linear-gradient(135deg, #0077aa, #0056b3);
+	border-color: #0056b3;
+	color: white;
+}
+
+.preset-button.active:hover {
+	background: linear-gradient(135deg, #0088cc, #0066aa);
+}
+
+.preset-icon {
+	width: 24px;
+	height: 24px;
+	margin-right: 12px;
+	flex-shrink: 0;
+}
+
+.preset-name {
+	font-weight: 500;
+	font-size: 14px;
+	line-height: 1.2;
+}
+
+/* ===========================================
+   YOUTUBE SECTION STYLES
+   =========================================== */
+.youtube-section {
+	margin: 20px 0;
+	text-align: center;
+}
+
+.youtube-controls {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 15px;
+}
+
+.save-button {
+	background: linear-gradient(135deg, #4a7ba7, #3a6b97);
+	border: 2px solid #2c5a7a;
+	border-radius: 8px;
+	color: white;
+	padding: 12px 20px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	flex-shrink: 0;
+	min-width: 80px;
+}
+
+.save-button:hover {
+	background: linear-gradient(135deg, #5a8bb7, #4a7ba7);
+	border-color: #0077aa;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.save-button:active {
+	transform: translateY(0);
+	box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.playlist-input {
+	flex: 1;
+	padding: 12px 15px;
+	border: 2px solid #2c5a7a;
+	border-radius: 8px;
+	background: linear-gradient(135deg, #4a7ba7, #3a6b97);
+	color: white;
+	font-size: 14px;
+	transition: all 0.3s ease;
+}
+
+.playlist-input::placeholder {
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.playlist-input:focus {
+	outline: none;
+	border-color: #0077aa;
+	background: linear-gradient(135deg, #5a8bb7, #4a7ba7);
+}
+
+.playlist-input.invalid {
+	background: linear-gradient(135deg, #d32f2f, #b71c1c);
+	border-color: #d32f2f;
+}
+
+.youtube-player-container {
+	display: flex;
+	justify-content: center;
+	margin-top: 15px;
+}
+
+#youtube-player {
+	width: 560px;
+	height: 315px;
+	max-width: 100%;
+}
+
+/* Recent Playlists Styles */
+.recent-playlists-container {
+	margin: 15px 0;
+	text-align: left;
+	max-width: 560px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.recent-playlist-item {
+	display: flex;
+	align-items: center;
+	margin-bottom: 8px;
+	position: relative;
+	padding: 8px 0;
+}
+
+.delete-btn {
+	position: absolute;
+	left: -25px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	font-size: 16px;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	color: #ff6b6b;
+	z-index: 10;
+}
+
+.recent-playlist-item:hover .delete-btn {
+	opacity: 1;
+}
+
+.playlist-link {
+	color: #4a7ba7;
+	text-decoration: none;
+	font-size: 14px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	transition: all 0.2s ease;
+	display: block;
+	flex: 1;
+}
+
+.playlist-link:hover {
+	background: rgba(74, 123, 167, 0.1);
+	color: #0077aa;
+	text-decoration: underline;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+	/* Preset Grid Mobile Styles */
+	.preset-row {
+		grid-template-columns: 1fr 1fr;
+		gap: 8px;
+	}
+
+	.preset-button {
+		padding: 10px;
+		min-height: 45px;
+	}
+
+	.preset-icon {
+		width: 18px;
+		height: 18px;
+		margin-right: 8px;
+	}
+
+	.preset-name {
+		font-size: 12px;
+	}
+
+	/* YouTube Section Mobile Styles */
+	.youtube-controls {
+		flex-direction: row;
+		gap: 8px;
+	}
+
+	.save-button {
+		flex-shrink: 0;
+		min-width: 120px;
+		padding: 10px 16px;
+		font-size: 13px;
+	}
+
+	.playlist-input {
+		flex: 1;
+		min-width: 0;
+	}
+
+	#youtube-player {
+		width: 100%;
+		height: 200px;
+	}
+
+	/* Recent Playlists Mobile Styles */
+	.recent-playlists-container {
+		margin: 10px 0;
+		max-width: 100%;
+	}
+
+	.recent-playlist-item {
+		padding: 6px 0;
+		margin-bottom: 6px;
+	}
+
+	.delete-btn {
+		position: static;
+		transform: none;
+		opacity: 1;
+		margin-right: 8px;
+		font-size: 14px;
+	}
+
+	.playlist-link {
+		font-size: 13px;
+		padding: 6px 8px;
+	}
+}
+
+@media screen and (max-width: 640px) {
+body {
+	background: #257;
+	background: -moz-radial-gradient(center, ellipse cover, rgba(34,85,119,1) 0%, rgba(50,105,140,1) 100%);
+	background: -webkit-radial-gradient(center, ellipse cover, rgba(34,85,119,1) 0%,rgba(50,105,140,1) 100%);
+	background: radial-gradient(ellipse at center, rgba(34,85,119,1) 0%,rgba(50,105,140,1) 100%);
+}
+}
