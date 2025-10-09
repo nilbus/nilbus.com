@@ -110,10 +110,13 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 <!-- YouTube Music Integration -->
 <div class="youtube-section">
 	<div class="youtube-controls">
-		<button id="save-playlist-btn" class="save-button">Update Playlist</button>
+		<button id="save-playlist-btn" class="save-button">Add Playlist</button>
 		<input type="text" id="playlist-url" class="playlist-input"
 			placeholder="Enter YouTube playlist URL"
 			value="https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF">
+	</div>
+	<div id="recent-playlists" class="recent-playlists-container" style="display: none;">
+		<!-- Recent playlists will be rendered here -->
 	</div>
 	<div class="youtube-player-container">
 		<div id="youtube-player"></div>
@@ -1189,8 +1192,8 @@ function onPlayerReady(event) {
 	// Get the saved playlist ID from localStorage (source of truth)
 	var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
 
-	// Try to restore saved playback state
-	var savedState = loadYouTubeState();
+	// Try to restore saved playback state for this specific playlist
+	var savedState = loadYouTubeState(savedPlaylistId);
 
 	if (savedState && savedState.playlistId && savedPlaylistId === savedState.playlistId) {
 		// We have saved state and playlist ID matches - restore position and track
@@ -1211,20 +1214,25 @@ function onPlayerReady(event) {
 			'list': savedPlaylistId
 		});
 	}
+
+	// Render recent playlists on page load
+	renderRecentPlaylists();
 }
 
 function onPlayerStateChange(event) {
 	// Handle track changes and state clearing
 	if (event.data == YT.PlayerState.ENDED) {
-		// Video ended - clear saved state to start fresh next time
-		clearYouTubeState();
-	} else if (event.data == YT.PlayerState.PLAYING) {
-		// Check if we've changed tracks manually (not from restoration)
-		var currentIndex = player.getPlaylistIndex();
-		var savedIndex = localStorage.getItem('youtube_playlist_index');
-		if (savedIndex !== null && parseInt(savedIndex) !== currentIndex) {
-			// User manually changed tracks, clear saved time to prevent wrong position
-			localStorage.removeItem('youtube_playback_time');
+		// Video ended - clear saved state for this playlist to start fresh next time
+		var playlistInput = document.getElementById('playlist-url');
+		var playlistId = '';
+		if (playlistInput && playlistInput.value) {
+			playlistId = extractPlaylistId(playlistInput.value) || '';
+		}
+
+		if (playlistId) {
+			var playlistStates = JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}');
+			delete playlistStates[playlistId];
+			localStorage.setItem('youtube_playlist_states', JSON.stringify(playlistStates));
 		}
 	}
 }
@@ -1235,7 +1243,8 @@ function extractPlaylistId(url) {
 	return match ? match[1] : null;
 }
 
-function loadPlaylist() {
+function loadActivePlaylist() {
+
 	var url = document.getElementById('playlist-url').value;
 	var playlistId = extractPlaylistId(url);
 	var input = document.getElementById('playlist-url');
@@ -1243,14 +1252,6 @@ function loadPlaylist() {
 	if (!playlistId) {
 		input.classList.add('invalid');
 		return;
-	}
-
-	// Always save to localStorage first (source of truth)
-	var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
-	if (savedPlaylistId !== playlistId) {
-		// Different playlist - clear saved position and video index
-		localStorage.removeItem('youtube_playlist_index');
-		localStorage.removeItem('youtube_playback_time');
 	}
 
 	// Save the new playlist URL and ID to localStorage as source of truth
@@ -1266,14 +1267,65 @@ function loadPlaylist() {
 	try {
 		player.stopVideo();
 		player.clearVideo();
-		player.loadPlaylist({
-			'listType': 'playlist',
-			'list': playlistId
-		});
+
+		// Try to restore saved state for this playlist
+		var savedState = loadYouTubeState(playlistId);
+
+		if (savedState && savedState.playlistId === playlistId) {
+			// Load with saved position and track
+			player.loadPlaylist({
+				'listType': 'playlist',
+				'list': playlistId,
+				'index': savedState.videoIndex,
+				'startSeconds': savedState.playbackTime
+			});
+			// Pause after loading to restore position
+			player.pauseVideo();
+		} else {
+			// No saved state, load normally
+			player.loadPlaylist({
+				'listType': 'playlist',
+				'list': playlistId
+			});
+		}
+
 		input.classList.remove('invalid');
 	} catch (error) {
 		console.error('Error loading playlist:', error);
 		input.classList.add('invalid');
+	}
+}
+
+function handlePlaylistFormSubmission() {
+	var url = document.getElementById('playlist-url').value;
+	var playlistId = extractPlaylistId(url);
+
+	if (!playlistId) {
+		document.getElementById('playlist-url').classList.add('invalid');
+		return;
+	}
+
+	// Save current state before switching to new playlist
+	saveCurrentPlaylistState();
+
+	// If loading was successful, prompt for name and add to recent playlists
+	if (!document.getElementById('playlist-url').classList.contains('invalid')) {
+		// Load the playlist first
+		loadActivePlaylist();
+
+		var defaultName = playlistId;
+
+		var title = prompt('Enter a name for this playlist:', defaultName);
+		if (title === null) {
+			// User cancelled, use playlist ID
+			title = playlistId;
+		} else if (title.trim() === '') {
+			// Empty string, use playlist ID
+			title = playlistId;
+		}
+
+		// Add to recent playlists
+		addToRecentPlaylists(playlistId, title, url);
 	}
 }
 
@@ -1282,24 +1334,22 @@ document.addEventListener('DOMContentLoaded', function() {
 	var playlistInput = document.getElementById('playlist-url');
 	var saveButton = document.getElementById('save-playlist-btn');
 
-	if (playlistInput) {
-		// Restore saved playlist URL on page load
-		var savedPlaylistUrl = localStorage.getItem('youtube_playlist_url');
-		if (savedPlaylistUrl) {
-			playlistInput.value = savedPlaylistUrl;
-		}
-
-		// Add Enter key event listener
-		playlistInput.addEventListener('keypress', function(event) {
-			if (event.key === 'Enter') {
-				loadPlaylist();
-			}
-		});
+	// Restore saved playlist URL on page load
+	var savedPlaylistUrl = localStorage.getItem('youtube_playlist_url');
+	if (savedPlaylistUrl) {
+		playlistInput.value = savedPlaylistUrl;
 	}
+
+	// Add Enter key event listener
+	playlistInput.addEventListener('keypress', function(event) {
+		if (event.key === 'Enter') {
+			loadActivePlaylist();
+		}
+	});
 
 	if (saveButton) {
 		// Add click event listener for Save button
-		saveButton.addEventListener('click', loadPlaylist);
+		saveButton.addEventListener('click', handlePlaylistFormSubmission);
 	}
 });
 
@@ -1310,48 +1360,30 @@ window.addEventListener('beforeunload', function() {
 
 // YouTube Playback Persistence Functions
 function saveYouTubeState() {
-	if (!player || !isPlayerReady) {
-		return;
-	}
-
-	try {
-		var videoIndex = player.getPlaylistIndex();
-		var playbackTime = player.getCurrentTime();
-
-		// Get playlist ID from the URL input field instead of player
-		var playlistInput = document.getElementById('playlist-url');
-		var playlistId = '';
-		if (playlistInput && playlistInput.value) {
-			playlistId = extractPlaylistId(playlistInput.value) || '';
-		}
-
-		// Only save if we have valid data
-		if (videoIndex !== undefined && videoIndex >= 0 && playbackTime !== undefined) {
-			localStorage.setItem('youtube_playlist_index', videoIndex.toString());
-			localStorage.setItem('youtube_playback_time', playbackTime.toString());
-			localStorage.setItem('youtube_playlist_id', playlistId);
-		}
-	} catch (error) {
-		console.error('Error saving YouTube state:', error);
-	}
+	// Use the dedicated function for consistency
+	saveCurrentPlaylistState();
 }
 
-function loadYouTubeState() {
+function loadYouTubeState(playlistId) {
 	try {
-		var savedIndex = localStorage.getItem('youtube_playlist_index');
-		var savedTime = localStorage.getItem('youtube_playback_time');
-		var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
+		if (!playlistId) {
+			return null;
+		}
 
-		if (savedIndex !== null && savedTime !== null) {
-			var videoIndex = parseInt(savedIndex);
-			var playbackTime = parseFloat(savedTime);
+		// Load playlist states
+		var playlistStates = JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}');
+		var playlistState = playlistStates[playlistId];
+
+		if (playlistState) {
+			var videoIndex = playlistState.videoIndex;
+			var playbackTime = playlistState.playbackTime;
 
 			// Validate the saved data
 			if (!isNaN(videoIndex) && !isNaN(playbackTime) && videoIndex >= 0 && playbackTime >= 0) {
 				return {
 					videoIndex: videoIndex,
 					playbackTime: playbackTime,
-					playlistId: savedPlaylistId
+					playlistId: playlistId
 				};
 			}
 		}
@@ -1364,13 +1396,150 @@ function loadYouTubeState() {
 
 function clearYouTubeState() {
 	try {
-		localStorage.removeItem('youtube_playlist_index');
-		localStorage.removeItem('youtube_playback_time');
-		localStorage.removeItem('youtube_playlist_id');
-		localStorage.removeItem('youtube_playlist_url');
+		// Clear state for the current playlist when video ends
+		var currentPlaylistId = localStorage.getItem('youtube_playlist_id');
+		if (currentPlaylistId) {
+			var playlistStates = JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}');
+			delete playlistStates[currentPlaylistId];
+			localStorage.setItem('youtube_playlist_states', JSON.stringify(playlistStates));
+		}
 	} catch (error) {
 		console.error('Error clearing YouTube state:', error);
 	}
+}
+
+// Recent Playlists Management Functions
+function getRecentPlaylists() {
+	try {
+		return JSON.parse(localStorage.getItem('youtube_recent_playlists') || '[]');
+	} catch (error) {
+		console.error('Error loading recent playlists:', error);
+		return [];
+	}
+}
+
+function saveRecentPlaylists(playlists) {
+	try {
+		localStorage.setItem('youtube_recent_playlists', JSON.stringify(playlists));
+	} catch (error) {
+		console.error('Error saving recent playlists:', error);
+	}
+}
+
+function addToRecentPlaylists(playlistId, title, url) {
+	var playlists = getRecentPlaylists();
+
+	// Remove existing entry with same ID
+	playlists = playlists.filter(p => p.id !== playlistId);
+
+	// Add new entry to top
+	playlists.unshift({
+		id: playlistId,
+		title: title,
+		url: url,
+		addedAt: Date.now()
+	});
+
+	saveRecentPlaylists(playlists);
+	renderRecentPlaylists();
+}
+
+function deletePlaylist(playlistId) {
+	var playlists = getRecentPlaylists();
+	playlists = playlists.filter(p => p.id !== playlistId);
+	saveRecentPlaylists(playlists);
+	renderRecentPlaylists();
+}
+
+function renderRecentPlaylists() {
+	var container = document.getElementById('recent-playlists');
+	if (!container) return;
+
+	var playlists = getRecentPlaylists();
+	container.innerHTML = '';
+
+	if (playlists.length === 0) {
+		container.style.display = 'none';
+		return;
+	}
+
+	container.style.display = 'block';
+
+	playlists.forEach(function(playlist) {
+		var item = document.createElement('div');
+		item.className = 'recent-playlist-item';
+
+		var deleteBtn = document.createElement('span');
+		deleteBtn.className = 'delete-btn';
+		deleteBtn.innerHTML = '❌';
+		deleteBtn.onclick = function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			handleDeletePlaylist(playlist);
+		};
+
+		var link = document.createElement('a');
+		link.href = '#';
+		link.className = 'playlist-link';
+		link.textContent = playlist.title;
+		link.onclick = function(e) {
+			e.preventDefault();
+			loadPlaylistFromRecent(playlist);
+		};
+
+		item.appendChild(deleteBtn);
+		item.appendChild(link);
+		container.appendChild(item);
+	});
+}
+
+function handleDeletePlaylist(playlist) {
+	// Check if mobile (simple detection)
+	var isMobile = window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+	if (isMobile) {
+		if (confirm('Delete ' + playlist.title + '?')) {
+			deletePlaylist(playlist.id);
+		}
+	} else {
+		deletePlaylist(playlist.id);
+	}
+}
+
+function saveCurrentPlaylistState() {
+	if (!player || !isPlayerReady) {
+		return;
+	}
+
+	try {
+		var videoIndex = player.getPlaylistIndex();
+		var playbackTime = player.getCurrentTime();
+		var currentPlaylistId = localStorage.getItem('youtube_playlist_id');
+
+		// Only save if we have valid data and playlist ID
+		if (videoIndex !== undefined && videoIndex >= 0 && playbackTime !== undefined && currentPlaylistId) {
+			// Load existing playlist states
+			var playlistStates = JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}');
+
+			// Update state for this specific playlist
+			playlistStates[currentPlaylistId] = {
+				videoIndex: videoIndex,
+				playbackTime: playbackTime,
+				lastUsed: Date.now()
+			};
+
+			// Save back to localStorage
+			localStorage.setItem('youtube_playlist_states', JSON.stringify(playlistStates));
+		}
+	} catch (error) {
+		console.error('Error saving current playlist state:', error);
+	}
+}
+
+function loadPlaylistFromRecent(playlist) {
+	// Set the input field and load the playlist
+	document.getElementById('playlist-url').value = playlist.url;
+	loadActivePlaylist();
 }
 
 

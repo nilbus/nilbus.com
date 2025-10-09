@@ -420,6 +420,57 @@ blockquote {
 	max-width: 100%;
 }
 
+/* Recent Playlists Styles */
+.recent-playlists-container {
+	margin: 15px 0;
+	text-align: left;
+	max-width: 560px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.recent-playlist-item {
+	display: flex;
+	align-items: center;
+	margin-bottom: 8px;
+	position: relative;
+	padding: 8px 0;
+}
+
+.delete-btn {
+	position: absolute;
+	left: -25px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	font-size: 16px;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	color: #ff6b6b;
+	z-index: 10;
+}
+
+.recent-playlist-item:hover .delete-btn {
+	opacity: 1;
+}
+
+.playlist-link {
+	color: #4a7ba7;
+	text-decoration: none;
+	font-size: 14px;
+	padding: 4px 8px;
+	border-radius: 4px;
+	transition: all 0.2s ease;
+	display: block;
+	flex: 1;
+}
+
+.playlist-link:hover {
+	background: rgba(74, 123, 167, 0.1);
+	color: #0077aa;
+	text-decoration: underline;
+}
+
 /* ===========================================
    RESPONSIVE DESIGN
    =========================================== */
@@ -468,6 +519,30 @@ blockquote {
 	#youtube-player {
 		width: 100%;
 		height: 200px;
+	}
+
+	/* Recent Playlists Mobile Styles */
+	.recent-playlists-container {
+		margin: 10px 0;
+		max-width: 100%;
+	}
+
+	.recent-playlist-item {
+		padding: 6px 0;
+		margin-bottom: 6px;
+	}
+
+	.delete-btn {
+		position: static;
+		transform: none;
+		opacity: 1;
+		margin-right: 8px;
+		font-size: 14px;
+	}
+
+	.playlist-link {
+		font-size: 13px;
+		padding: 6px 8px;
 	}
 }
 
