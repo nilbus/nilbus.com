@@ -96,6 +96,12 @@
 		<img src="link.png" class="ctrlImg" onclick="toURL()" alt="">
 </div>
 
+<!-- Screen Wake Lock Status -->
+<div id="wake-lock-status" class="wake-lock-status" style="display: none;">
+	<span id="wake-lock-icon">🔒</span>
+	<span id="wake-lock-text">Screen will stay on</span>
+</div>
+
 
 <!-- Preset Tone Grid -->
 <div class="preset-grid">
@@ -162,6 +168,7 @@ var msgTimer;
 var currentPreset = null;
 var currentOutputType = 'headphones';
 var mediaSessionAnchor = null; // Hidden audio element to anchor Media Session
+var wakeLock = null; // Screen Wake Lock API
 
 // YouTube Player Variables
 var player = null;
@@ -882,12 +889,12 @@ function setG(mode){
 }
 
 
-function performPlayAction(){
+async function performPlayAction(){
 	if (bPaused) {
 		bPaused = false;
 		// Play: resume the audio context
 		if (context) {
-			context.resume().then(() => {
+			context.resume().then(async () => {
 			$("#mute").removeClass("superactive");
 
 			// Play the anchor audio element to maintain Media Session
@@ -905,6 +912,9 @@ function performPlayAction(){
 			// Update preset display and metadata when resuming
 			updateActivePresetDisplay();
 			updateMediaSessionState('playing');
+
+			// Request screen wake lock to keep screen on
+			await requestWakeLock();
 		}).catch((error) => {
 			console.error('Failed to resume audio context:', error);
 		});
@@ -922,6 +932,9 @@ function performPlayAction(){
 			// Update preset display and metadata when resuming
 			updateActivePresetDisplay();
 			updateMediaSessionState('playing');
+
+			// Request screen wake lock to keep screen on
+			await requestWakeLock();
 		}
 	}
 }
@@ -953,6 +966,9 @@ function performPauseAction(){
 			}
 
 			updateMediaSessionState('paused');
+
+			// Release screen wake lock when pausing
+			releaseWakeLock();
 		}).catch((error) => {
 			console.error('Failed to suspend audio context:', error);
 		});
@@ -979,11 +995,69 @@ function performPauseAction(){
 			}
 
 			updateMediaSessionState('paused');
+
+			// Release screen wake lock when pausing
+			releaseWakeLock();
 		}
 	} else {
 		console.log('Already paused, no action needed');
 	}
 }
+
+// Screen Wake Lock API Functions
+async function requestWakeLock() {
+	if (!('wakeLock' in navigator)) {
+		console.log('Screen Wake Lock API not supported');
+		return;
+	}
+
+	try {
+		wakeLock = await navigator.wakeLock.request('screen');
+		console.log('Screen Wake Lock is active');
+
+		// Show wake lock status indicator
+		showWakeLockStatus();
+
+		// Listen for release events
+		wakeLock.addEventListener('release', () => {
+			console.log('Screen Wake Lock was released');
+			hideWakeLockStatus();
+		});
+	} catch (err) {
+		console.error('Screen Wake Lock failed:', err);
+		hideWakeLockStatus();
+	}
+}
+
+function releaseWakeLock() {
+	if (wakeLock) {
+		wakeLock.release();
+		wakeLock = null;
+		console.log('Screen Wake Lock released');
+		hideWakeLockStatus();
+	}
+}
+
+function showWakeLockStatus() {
+	const statusElement = document.getElementById('wake-lock-status');
+	if (statusElement) {
+		statusElement.style.display = 'block';
+	}
+}
+
+function hideWakeLockStatus() {
+	const statusElement = document.getElementById('wake-lock-status');
+	if (statusElement) {
+		statusElement.style.display = 'none';
+	}
+}
+
+// Reacquire wake lock when document becomes visible
+document.addEventListener('visibilitychange', async () => {
+	if (wakeLock !== null && document.visibilityState === 'visible' && !bPaused) {
+		await requestWakeLock();
+	}
+});
 
 function setupMediaSession() {
 	// Check if Media Session API is supported
@@ -1008,9 +1082,9 @@ function setupMediaSession() {
 	updateMediaSessionMetadata();
 
 	// Set up action handlers
-	navigator.mediaSession.setActionHandler('play', () => {
+	navigator.mediaSession.setActionHandler('play', async () => {
 		if (bPaused) {
-			performPlayAction();
+			await performPlayAction();
 		}
 	});
 
@@ -1083,18 +1157,18 @@ function updateActivePresetDisplay() {
 	}
 }
 
-function ensureAudioPlaying() {
+async function ensureAudioPlaying() {
 	// If context is suspended, resume it
 	if (context && context.state === "suspended") {
-		context.resume().then(() => {
+		context.resume().then(async () => {
 			bSUSPENDED = 0;
-			performPlayAction();
+			await performPlayAction();
 		}).catch((error) => {
 			console.error('Failed to resume audio context:', error);
 		});
 	} else if (bPaused) {
 		// If context is running but we're in paused state, play
-		performPlayAction();
+		await performPlayAction();
 	}
 }
 
@@ -1128,29 +1202,29 @@ function toURL(bRender){
 }
 
 // Unified play/pause handler that works the same as OS media events
-function handlePlayPauseClick() {
+async function handlePlayPauseClick() {
 	// Initialize audio context on first user interaction
 	if (!bAUDIO_INITIALIZED) {
 		initializeAudio();
 		// Continue with play/pause toggle after audio is initialized
-		performUnifiedPlayPauseToggle();
+		await performUnifiedPlayPauseToggle();
 		return;
 	}
 
 	// Check if context is suspended and resume if needed (handles iOS autoplay prevention)
 	if (bSUSPENDED && context.state === "suspended") {
-		context.resume().then(() => {
+		context.resume().then(async () => {
 			bSUSPENDED = 0;
 			// Continue with play/pause toggle after context is resumed
-			performUnifiedPlayPauseToggle();
-		}).catch((error) => {
+			await performUnifiedPlayPauseToggle();
+		}).catch(async (error) => {
 			console.error('Failed to resume audio context:', error);
 			// Still try to toggle play/pause even if resume fails
-			performUnifiedPlayPauseToggle();
+			await performUnifiedPlayPauseToggle();
 		});
 	} else {
 		// Normal play/pause toggle
-		performUnifiedPlayPauseToggle();
+		await performUnifiedPlayPauseToggle();
 	}
 }
 
@@ -1160,10 +1234,10 @@ function handleMuteClick() {
 	}
 }
 
-function performUnifiedPlayPauseToggle() {
+async function performUnifiedPlayPauseToggle() {
 	// Use the same logic as Media Session API handlers
 	if (bPaused) {
-		performPlayAction();
+		await performPlayAction();
 	} else {
 		performPauseAction();
 	}

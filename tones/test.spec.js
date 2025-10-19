@@ -4,7 +4,8 @@ const { test, expect } = require('@playwright/test');
 let mockCalls = {
   audioContext: [],
   youtube: [],
-  localStorage: []
+  localStorage: [],
+  wakeLock: []
 };
 
 test.beforeEach(async ({ page }) => {
@@ -12,13 +13,50 @@ test.beforeEach(async ({ page }) => {
   mockCalls = {
     audioContext: [],
     youtube: [],
-    localStorage: []
+    localStorage: [],
+    wakeLock: []
   };
 
   // Inject mocks before page load
   await page.addInitScript((mockCallsData) => {
     // Store mock calls in window for access
     window.mockCalls = mockCallsData;
+
+    // Mock Screen Wake Lock API FIRST (before any other mocks)
+    const mockWakeLock = {
+      addEventListener: (event, callback) => {
+        window.mockCalls.wakeLock.push(`addEventListener: ${event}`);
+        // Store callback for potential release events
+        if (event === 'release') {
+          mockWakeLock._releaseCallback = callback;
+        }
+      },
+      release: () => {
+        window.mockCalls.wakeLock.push('release');
+        // Trigger release callback if it exists
+        if (mockWakeLock._releaseCallback) {
+          mockWakeLock._releaseCallback();
+        }
+        return Promise.resolve();
+      }
+    };
+
+    // Store the mock wake lock globally for tests to access
+    window.mockWakeLock = mockWakeLock;
+
+    // Override navigator.wakeLock immediately
+    Object.defineProperty(navigator, 'wakeLock', {
+      value: {
+        request: (type) => {
+          console.log('Mock wakeLock.request called with:', type);
+          window.mockCalls.wakeLock.push(`request: ${type}`);
+          // Always succeed in tests (no permission issues)
+          return Promise.resolve(mockWakeLock);
+        }
+      },
+      writable: true,
+      configurable: true
+    });
 
     // Mock Web Audio API
     const mockOscillator = {
@@ -790,5 +828,154 @@ test.describe('YouTube Playlist Auto-Save Feature', () => {
       window.clearTimeout = window.originalClearTimeout;
       window.clearInterval = window.originalClearInterval;
     });
+  });
+});
+
+test.describe('Screen Wake Lock API', () => {
+  test('should request wake lock when audio starts playing', async ({ page }) => {
+    // Given the user opens the application
+    await page.goto('/');
+
+    // When the user selects a preset to start playing
+    await page.click('#preset-0-headphones');
+
+    // Wait for the wake lock to be requested (with timeout)
+    await page.waitForFunction(() => {
+      const mockCalls = window.mockCalls;
+      return mockCalls.wakeLock.includes('request: screen');
+    }, { timeout: 10000 });
+
+    // Then the Screen Wake Lock API should be requested
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.wakeLock).toContain('request: screen');
+    expect(mockCallsFromPage.wakeLock).toContain('addEventListener: release');
+
+    // And the wake lock status indicator should be visible
+    await expect(page.locator('#wake-lock-status')).toBeVisible();
+    await expect(page.locator('#wake-lock-text')).toHaveText('Screen will stay on');
+  });
+
+  test('should release wake lock when audio is paused', async ({ page }) => {
+    // Given the user has started playing audio (which requests wake lock)
+    await page.goto('/');
+    await page.click('#preset-0-headphones');
+
+    // Wait for wake lock to be requested
+    await page.waitForFunction(() => {
+      const mockCalls = window.mockCalls;
+      return mockCalls.wakeLock.includes('request: screen');
+    });
+
+    // When the user pauses the audio
+    await page.click('#mute');
+
+    // Then the wake lock should be released
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.wakeLock).toContain('release');
+
+    // And the wake lock status indicator should be hidden
+    await expect(page.locator('#wake-lock-status')).not.toBeVisible();
+  });
+
+  test('should reacquire wake lock when resuming after pause', async ({ page }) => {
+    // Given the user has started and then paused audio
+    await page.goto('/');
+    await page.click('#preset-0-headphones');
+    await page.click('#mute');
+
+    // Clear the mock calls to track new requests
+    await page.evaluate(() => {
+      window.mockCalls.wakeLock = [];
+    });
+
+    // When the user resumes playing
+    await page.click('#mute');
+
+    // Then a new wake lock should be requested
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.wakeLock).toContain('request: screen');
+    expect(mockCallsFromPage.wakeLock).toContain('addEventListener: release');
+
+    // And the wake lock status indicator should be visible again
+    await expect(page.locator('#wake-lock-status')).toBeVisible();
+  });
+
+  test('should handle wake lock release events', async ({ page }) => {
+    // Given the user has started playing audio
+    await page.goto('/');
+    await page.click('#preset-0-headphones');
+
+    // Wait for wake lock to be requested
+    await page.waitForFunction(() => {
+      const mockCalls = window.mockCalls;
+      return mockCalls.wakeLock.includes('request: screen');
+    });
+
+    // Wait for wake lock status to be visible
+    await expect(page.locator('#wake-lock-status')).toBeVisible();
+
+    // When the wake lock is released by the system (simulated)
+    await page.evaluate(() => {
+      // Find the wake lock instance and trigger release event
+      if (window.mockWakeLock && window.mockWakeLock._releaseCallback) {
+        window.mockWakeLock._releaseCallback();
+      }
+    });
+
+    // Then the wake lock status indicator should be hidden
+    await expect(page.locator('#wake-lock-status')).not.toBeVisible();
+  });
+
+  test('should gracefully handle unsupported wake lock API', async ({ page }) => {
+    // Given a browser that doesn't support the Wake Lock API
+    await page.addInitScript(() => {
+      // Remove the wake lock API
+      delete window.navigator.wakeLock;
+    });
+
+    await page.goto('/');
+
+    // When the user starts playing audio
+    await page.click('#preset-0-headphones');
+
+    // Then the wake lock status indicator should not be visible
+    await expect(page.locator('#wake-lock-status')).not.toBeVisible();
+
+    // And no errors should occur (graceful degradation)
+    const consoleErrors = await page.evaluate(() => {
+      return window.consoleErrors || [];
+    });
+    expect(consoleErrors.length).toBe(0);
+  });
+
+  test('should reacquire wake lock when page becomes visible again', async ({ page }) => {
+    // Given the user has started playing audio
+    await page.goto('/');
+    await page.click('#preset-0-headphones');
+
+    // Wait for initial wake lock
+    await page.waitForFunction(() => {
+      const mockCalls = window.mockCalls;
+      return mockCalls.wakeLock.includes('request: screen');
+    });
+
+    // Clear mock calls to track new requests
+    await page.evaluate(() => {
+      window.mockCalls.wakeLock = [];
+    });
+
+    // When the page visibility changes (simulate tab switching)
+    await page.evaluate(() => {
+      // Simulate page becoming visible again
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'visible',
+        writable: true
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    // Then a new wake lock should be requested
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.wakeLock).toContain('request: screen');
   });
 });
