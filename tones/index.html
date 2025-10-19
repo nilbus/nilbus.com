@@ -1259,18 +1259,15 @@ function onPlayerReady(event) {
 	if (savedState && savedState.playlistId && savedPlaylistId === savedState.playlistId) {
 		// We have saved state and playlist ID matches - restore position and track
 		// Load the specific video from the playlist with startSeconds parameter
-		player.loadPlaylist({
+		player.cuePlaylist({
 			'listType': 'playlist',
 			'list': savedState.playlistId,
 			'index': savedState.videoIndex,
 			'startSeconds': savedState.playbackTime
 		});
-
-		// Pause the video after loading (it will start at the correct position)
-		player.pauseVideo();
 	} else if (savedPlaylistId) {
-		// No saved state but we have a playlist ID - load the playlist
-		player.loadPlaylist({
+		// No saved state but we have a playlist ID - cue the playlist
+		player.cuePlaylist({
 			'listType': 'playlist',
 			'list': savedPlaylistId
 		});
@@ -1338,17 +1335,15 @@ function loadActivePlaylist() {
 		var savedState = loadYouTubeState(playlistId);
 
 		if (savedState && savedState.playlistId === playlistId) {
-			// Load with saved position and track
+			// Load with saved position and track (autoplay when switching playlists)
 			player.loadPlaylist({
 				'listType': 'playlist',
 				'list': playlistId,
 				'index': savedState.videoIndex,
 				'startSeconds': savedState.playbackTime
 			});
-			// Pause after loading to restore position
-			player.pauseVideo();
 		} else {
-			// No saved state, load normally
+			// No saved state, load normally (autoplay when switching playlists)
 			player.loadPlaylist({
 				'listType': 'playlist',
 				'list': playlistId
