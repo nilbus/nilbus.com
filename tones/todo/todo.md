@@ -1,8 +1,3 @@
-Bugs
-----
-
-- Slow YouTube iframe blocks rendering.
-
 Features
 --------
 
