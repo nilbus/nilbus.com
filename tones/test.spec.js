@@ -257,10 +257,7 @@ test.describe('Preset Selection and Audio Initialization', () => {
     // When the user clicks a preset button (e.g., "Focused, Sustainable Thinking" with headphones)
     await page.click('#preset-0-headphones');
 
-    // Wait for the preset to be applied
-    await page.waitForTimeout(100);
-
-    // Then the preset button has 'active' class, audio context is created and resumed, and mute button loses 'superactive' class
+    // Wait for the preset to be applied by waiting for the active class
     await expect(page.locator('#preset-0-headphones')).toHaveClass(/active/);
     await expect(page.locator('#mute')).not.toHaveClass(/superactive/);
 
@@ -359,7 +356,7 @@ test.describe('YouTube Playlist Management', () => {
     await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
 
     // Wait for YouTube player to be ready
-    await page.waitForTimeout(200);
+    await page.waitForFunction(() => window.isPlayerReady === true);
 
     // When the user clicks "Add Playlist" and provides a name in the prompt
     page.on('dialog', async dialog => {
@@ -368,10 +365,7 @@ test.describe('YouTube Playlist Management', () => {
 
     await page.click('#save-playlist-btn');
 
-    // Wait for the playlist to be processed
-    await page.waitForTimeout(100);
-
-    // Then the playlist appears in the recent playlists section and is saved to localStorage with correct ID and URL
+    // Wait for the playlist to be processed by waiting for the recent playlists section to appear
     await expect(page.locator('#recent-playlists')).toBeVisible();
 
     const recentPlaylists = await page.evaluate(() => {
@@ -425,10 +419,7 @@ test.describe('YouTube Playlist Persistence', () => {
     // When the user pauses playback
     await page.click('#mute');
 
-    // Wait for the async context.suspend().then() to complete
-    await page.waitForTimeout(100);
-
-    // Then the app is in paused state (UI changes)
+    // Wait for the async context.suspend().then() to complete by waiting for UI state change
     await expect(page.locator('#mute')).toHaveClass(/superactive/);
     await expect(page.locator('#preset-0-headphones')).not.toHaveClass(/active/);
   });
@@ -513,14 +504,14 @@ test.describe('YouTube Playlist State Persistence', () => {
 
     // Set up first playlist
     await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
-    await page.waitForTimeout(200);
+    await page.waitForFunction(() => window.isPlayerReady === true);
 
     // Handle dialog for first playlist
     page.once('dialog', async dialog => {
       await dialog.accept('Original Playlist');
     });
     await page.click('#save-playlist-btn');
-    await page.waitForTimeout(100);
+    await expect(page.locator('#recent-playlists')).toBeVisible();
 
     // Start playing a preset to simulate active state
     await page.click('#preset-0-headphones');
@@ -536,7 +527,7 @@ test.describe('YouTube Playlist State Persistence', () => {
     // When the user switches to a new playlist by entering a new URL and pressing Enter
     await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLNEW123456789');
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(100);
+    await page.waitForFunction(() => window.isPlayerReady === true);
 
     // Then the original playlist state should be saved
     const playlistStates = await page.evaluate(() => {
@@ -555,14 +546,14 @@ test.describe('YouTube Playlist State Persistence', () => {
 
     // Set up first playlist
     await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
-    await page.waitForTimeout(200);
+    await page.waitForFunction(() => window.isPlayerReady === true);
 
     // Handle dialog for first playlist
     page.once('dialog', async dialog => {
       await dialog.accept('First Playlist');
     });
     await page.click('#save-playlist-btn');
-    await page.waitForTimeout(100);
+    await expect(page.locator('#recent-playlists')).toBeVisible();
 
     // Start playing a preset
     await page.click('#preset-0-headphones');
@@ -577,14 +568,14 @@ test.describe('YouTube Playlist State Persistence', () => {
 
     // Switch to second playlist (using existing playlist from recent playlists)
     await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLSECOND123456');
-    await page.waitForTimeout(100);
+    await page.waitForFunction(() => window.isPlayerReady === true);
 
     // Handle dialog for second playlist
     page.once('dialog', async dialog => {
       await dialog.accept('Second Playlist');
     });
     await page.click('#save-playlist-btn');
-    await page.waitForTimeout(100);
+    await expect(page.locator('#recent-playlists')).toBeVisible();
 
     // Mock YouTube player state for second playlist (currently playing)
     await page.evaluate(() => {
@@ -596,7 +587,7 @@ test.describe('YouTube Playlist State Persistence', () => {
 
     // When the user clicks on the first playlist in recent playlists to switch back
     await page.click('.recent-playlist-item .playlist-link');
-    await page.waitForTimeout(100);
+    await page.waitForFunction(() => window.isPlayerReady === true);
 
     // Then the second playlist state should be saved
     const playlistStates = await page.evaluate(() => {
@@ -610,7 +601,7 @@ test.describe('YouTube Playlist State Persistence', () => {
 
     // And when switching back to the second playlist, it should restore the saved state
     await page.click('.recent-playlist-item:nth-child(2) .playlist-link');
-    await page.waitForTimeout(100);
+    await page.waitForFunction(() => window.isPlayerReady === true);
 
     // Verify that the first playlist state is also saved when switching back
     const finalPlaylistStates = await page.evaluate(() => {
@@ -629,13 +620,13 @@ test.describe('YouTube Playlist State Persistence', () => {
 
     // Set up a playlist and start playing
     await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
-    await page.waitForTimeout(200);
+    await page.waitForFunction(() => window.isPlayerReady === true);
 
     page.on('dialog', async dialog => {
       await dialog.accept('Test Playlist');
     });
     await page.click('#save-playlist-btn');
-    await page.waitForTimeout(100);
+    await expect(page.locator('#recent-playlists')).toBeVisible();
 
     // Start playing a preset to simulate active state
     await page.click('#preset-0-headphones');

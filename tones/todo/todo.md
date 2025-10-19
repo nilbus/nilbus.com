@@ -1,8 +1,3 @@
-Needs
------
-
-- Build a test framework
-
 Bugs
 ----
 
