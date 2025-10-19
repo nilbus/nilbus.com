@@ -674,3 +674,130 @@ test.describe('YouTube Playlist State Persistence', () => {
     await newPage.close();
   });
 });
+
+test.describe('YouTube Playlist Auto-Save Feature', () => {
+  test('should auto-save playlist state every 29 seconds', async ({ page }) => {
+    // Given the YouTube player is playing
+    await page.goto('/');
+
+    // Set up a playlist
+    await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+
+    page.on('dialog', async dialog => {
+      await dialog.accept('Test Playlist');
+    });
+    await page.click('#save-playlist-btn');
+    await expect(page.locator('#recent-playlists')).toBeVisible();
+
+    // Enable fake timers to simulate time passage without waiting
+    // This must be done BEFORE starting playback to catch the auto-save timer
+    await page.evaluate(() => {
+      // Store original timer functions
+      window.originalSetTimeout = window.setTimeout;
+      window.originalSetInterval = window.setInterval;
+      window.originalClearTimeout = window.clearTimeout;
+      window.originalClearInterval = window.clearInterval;
+
+      // Track all timers
+      window.fakeTimers = {
+        timeouts: new Map(),
+        intervals: new Map(),
+        currentTime: 0,
+        nextId: 1
+      };
+
+      // Replace setTimeout with fake implementation
+      window.setTimeout = (callback, delay) => {
+        const id = window.fakeTimers.nextId++;
+        window.fakeTimers.timeouts.set(id, {
+          callback,
+          delay,
+          scheduledTime: window.fakeTimers.currentTime + delay
+        });
+        return id;
+      };
+
+      // Replace setInterval with fake implementation
+      window.setInterval = (callback, delay) => {
+        const id = window.fakeTimers.nextId++;
+        window.fakeTimers.intervals.set(id, {
+          callback,
+          delay,
+          nextTime: window.fakeTimers.currentTime + delay
+        });
+        return id;
+      };
+
+      // Replace clearTimeout
+      window.clearTimeout = (id) => {
+        window.fakeTimers.timeouts.delete(id);
+      };
+
+      // Replace clearInterval
+      window.clearInterval = (id) => {
+        window.fakeTimers.intervals.delete(id);
+      };
+
+      // Function to advance fake time
+      window.advanceFakeTime = (ms) => {
+        window.fakeTimers.currentTime += ms;
+
+        // Check timeouts
+        for (const [id, timeout] of window.fakeTimers.timeouts) {
+          if (window.fakeTimers.currentTime >= timeout.scheduledTime) {
+            timeout.callback();
+            window.fakeTimers.timeouts.delete(id);
+          }
+        }
+
+        // Check intervals
+        for (const [id, interval] of window.fakeTimers.intervals) {
+          while (window.fakeTimers.currentTime >= interval.nextTime) {
+            interval.callback();
+            interval.nextTime += interval.delay;
+          }
+        }
+      };
+    });
+
+    // Start playing
+    await page.click('#preset-0-headphones');
+
+    // Mock YouTube player state
+    await page.evaluate(() => {
+      if (window.player) {
+        window.player.getPlaylistIndex = () => 1;
+        window.player.getCurrentTime = () => 30;
+      }
+    });
+
+
+    // When a regular 29 second interval passes after playback starts
+    // Advance fake time by 29 seconds to trigger the interval timer
+    await page.evaluate(() => {
+      window.advanceFakeTime(29000); // Advance by 29 seconds
+    });
+
+    // Then the playlist track and position should be updated in localStorage
+    const playlistStates = await page.evaluate(() => {
+      const stored = localStorage.getItem('youtube_playlist_states');
+      return stored ? JSON.parse(stored) : {};
+    });
+
+    // Verify that the auto-save feature worked correctly
+    expect(playlistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF']).toBeDefined();
+    expect(playlistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF'].videoIndex).toBe(1);
+    expect(playlistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF'].playbackTime).toBe(30);
+
+    // The auto-save feature is working correctly as evidenced by the localStorage content above
+
+    // Restore original timer functions
+    await page.evaluate(() => {
+      window.setTimeout = window.originalSetTimeout;
+      window.setInterval = window.originalSetInterval;
+      window.clearTimeout = window.originalClearTimeout;
+      window.clearInterval = window.originalClearInterval;
+    });
+  });
+});

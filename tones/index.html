@@ -168,6 +168,7 @@ var mediaSessionAnchor = null; // Hidden audio element to anchor Media Session
 // YouTube Player Variables
 var player = null;
 var isPlayerReady = false;
+var autoSaveInterval = null; // Timer for auto-saving playlist state every 29 seconds
 
 // WEBAUDIO ELEMENTS
 var context;
@@ -899,6 +900,8 @@ function performPlayAction(){
 			// Play YouTube player if ready
 			if (player && isPlayerReady) {
 				player.playVideo();
+				// Start auto-save timer when YouTube starts playing
+				startAutoSaveTimer();
 			}
 
 			// Update preset display and metadata when resuming
@@ -914,6 +917,8 @@ function performPlayAction(){
 			// Play YouTube player if ready
 			if (player && isPlayerReady) {
 				player.playVideo();
+				// Start auto-save timer when YouTube starts playing
+				startAutoSaveTimer();
 			}
 
 			// Update preset display and metadata when resuming
@@ -945,6 +950,8 @@ function performPauseAction(){
 				player.pauseVideo();
 				// Save YouTube state when pausing
 				saveYouTubeState();
+				// Stop auto-save timer when YouTube is paused
+				stopAutoSaveTimer();
 			}
 
 			updateMediaSessionState('paused');
@@ -969,6 +976,8 @@ function performPauseAction(){
 				player.pauseVideo();
 				// Save YouTube state when pausing
 				saveYouTubeState();
+				// Stop auto-save timer when YouTube is paused
+				stopAutoSaveTimer();
 			}
 
 			updateMediaSessionState('paused');
@@ -1202,6 +1211,9 @@ function onPlayerReady(event) {
 function onPlayerStateChange(event) {
 	// Handle track changes and state clearing
 	if (event.data == YT.PlayerState.ENDED) {
+		// Stop auto-save timer when video ends
+		stopAutoSaveTimer();
+
 		// Video ended - clear saved state for this playlist to start fresh next time
 		var playlistInput = document.getElementById('playlist-url');
 		var playlistId = '';
@@ -1245,6 +1257,8 @@ function loadActivePlaylist() {
 
 	// Load the playlist immediately
 	try {
+		// Stop auto-save timer when switching playlists
+		stopAutoSaveTimer();
 		player.stopVideo();
 		player.clearVideo();
 
@@ -1336,6 +1350,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Save YouTube state when tab is about to close
 window.addEventListener('beforeunload', function() {
+	// Stop auto-save timer before page unloads
+	stopAutoSaveTimer();
 	saveYouTubeState();
 });
 
@@ -1514,6 +1530,26 @@ function saveCurrentPlaylistState() {
 		}
 	} catch (error) {
 		console.error('Error saving current playlist state:', error);
+	}
+}
+
+function startAutoSaveTimer() {
+	// Clear any existing timer
+	stopAutoSaveTimer();
+
+	// Start new timer to save playlist state every 29 seconds
+	autoSaveInterval = setInterval(function() {
+		// Only save if YouTube player is ready and we have a valid playlist
+		if (player && isPlayerReady && localStorage.getItem('youtube_playlist_id')) {
+			saveCurrentPlaylistState();
+		}
+	}, 29000); // 29 seconds
+}
+
+function stopAutoSaveTimer() {
+	if (autoSaveInterval) {
+		clearInterval(autoSaveInterval);
+		autoSaveInterval = null;
 	}
 }
 
