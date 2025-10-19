@@ -506,7 +506,123 @@ test.describe('Keyboard Shortcuts', () => {
   });
 });
 
-test.describe('YouTube Playlist Persistence', () => {
+test.describe('YouTube Playlist State Persistence', () => {
+  test('should save playlist state when switching between playlists via URL input', async ({ page }) => {
+    // Given the user has loaded a playlist and is playing at video index 2, time 45 seconds
+    await page.goto('/');
+
+    // Set up first playlist
+    await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
+    await page.waitForTimeout(200);
+
+    // Handle dialog for first playlist
+    page.once('dialog', async dialog => {
+      await dialog.accept('Original Playlist');
+    });
+    await page.click('#save-playlist-btn');
+    await page.waitForTimeout(100);
+
+    // Start playing a preset to simulate active state
+    await page.click('#preset-0-headphones');
+
+    // Mock YouTube player state for original playlist
+    await page.evaluate(() => {
+      if (window.player) {
+        window.player.getPlaylistIndex = () => 2;
+        window.player.getCurrentTime = () => 45;
+      }
+    });
+
+    // When the user switches to a new playlist by entering a new URL and pressing Enter
+    await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLNEW123456789');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(100);
+
+    // Then the original playlist state should be saved
+    const playlistStates = await page.evaluate(() => {
+      const stored = localStorage.getItem('youtube_playlist_states');
+      return stored ? JSON.parse(stored) : {};
+    });
+
+    expect(playlistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF']).toBeDefined();
+    expect(playlistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF'].videoIndex).toBe(2);
+    expect(playlistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF'].playbackTime).toBe(45);
+  });
+
+  test('should save playlist state when switching between two existing playlists', async ({ page }) => {
+    // Given the user has two existing playlists and is currently playing the second one
+    await page.goto('/');
+
+    // Set up first playlist
+    await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
+    await page.waitForTimeout(200);
+
+    // Handle dialog for first playlist
+    page.once('dialog', async dialog => {
+      await dialog.accept('First Playlist');
+    });
+    await page.click('#save-playlist-btn');
+    await page.waitForTimeout(100);
+
+    // Start playing a preset
+    await page.click('#preset-0-headphones');
+
+    // Mock YouTube player state for first playlist
+    await page.evaluate(() => {
+      if (window.player) {
+        window.player.getPlaylistIndex = () => 1;
+        window.player.getCurrentTime = () => 30;
+      }
+    });
+
+    // Switch to second playlist (using existing playlist from recent playlists)
+    await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLSECOND123456');
+    await page.waitForTimeout(100);
+
+    // Handle dialog for second playlist
+    page.once('dialog', async dialog => {
+      await dialog.accept('Second Playlist');
+    });
+    await page.click('#save-playlist-btn');
+    await page.waitForTimeout(100);
+
+    // Mock YouTube player state for second playlist (currently playing)
+    await page.evaluate(() => {
+      if (window.player) {
+        window.player.getPlaylistIndex = () => 3;
+        window.player.getCurrentTime = () => 60;
+      }
+    });
+
+    // When the user clicks on the first playlist in recent playlists to switch back
+    await page.click('.recent-playlist-item .playlist-link');
+    await page.waitForTimeout(100);
+
+    // Then the second playlist state should be saved
+    const playlistStates = await page.evaluate(() => {
+      const stored = localStorage.getItem('youtube_playlist_states');
+      return stored ? JSON.parse(stored) : {};
+    });
+
+    expect(playlistStates['PLSECOND123456']).toBeDefined();
+    expect(playlistStates['PLSECOND123456'].videoIndex).toBe(3);
+    expect(playlistStates['PLSECOND123456'].playbackTime).toBe(60);
+
+    // And when switching back to the second playlist, it should restore the saved state
+    await page.click('.recent-playlist-item:nth-child(2) .playlist-link');
+    await page.waitForTimeout(100);
+
+    // Verify that the first playlist state is also saved when switching back
+    const finalPlaylistStates = await page.evaluate(() => {
+      const stored = localStorage.getItem('youtube_playlist_states');
+      return stored ? JSON.parse(stored) : {};
+    });
+
+    expect(finalPlaylistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF']).toBeDefined();
+    expect(finalPlaylistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF'].videoIndex).toBe(1);
+    expect(finalPlaylistStates['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF'].playbackTime).toBe(30);
+  });
+
   test('should save playlist state when tab is closed', async ({ page, context }) => {
     // Given the YouTube player is playing
     await page.goto('/');

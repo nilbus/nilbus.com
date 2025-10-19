@@ -6,7 +6,6 @@ Needs
 Bugs
 ----
 
-- Reloading the page and switching the active playlist via link aren't saving the playback state, though pause does.
 - Slow YouTube iframe blocks rendering.
 
 Features
