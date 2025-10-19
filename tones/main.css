@@ -6,6 +6,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Titillium+Web&display=swap');
 
 /* ===========================================
+   WAKE LOCK STATUS
+   =========================================== */
+
+.wake-lock-status {
+	position: fixed;
+	top: 10px;
+	right: 10px;
+	background: rgba(0, 0, 0, 0.7);
+	color: white;
+	padding: 8px 12px;
+	border-radius: 20px;
+	font-size: 12px;
+	font-family: "Titillium Web";
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+}
+
+.wake-lock-status #wake-lock-icon {
+	font-size: 14px;
+}
+
+.wake-lock-status #wake-lock-text {
+	font-weight: 500;
+}
+
+/* ===========================================
    BASE STYLES
    =========================================== */
 

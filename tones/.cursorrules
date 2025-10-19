@@ -1,0 +1,16 @@
+# Cursor Rules for BrainAural Project
+
+## Test Files
+- When running Playwright tests, always use CI-compatible commands:
+  - Use `npx playwright test --reporter=line` for concise output
+  - Use `npx playwright test --reporter=line --max-failures=0` to see all failures
+  - Never use interactive reporters like `--reporter=html` in CI environments
+  - Tests should complete without requiring manual intervention
+  - Use `--timeout` flags if needed for slower environments
+  - Prefer `--reporter=json` for programmatic processing of results
+
+## General Development
+- Use absolute paths when possible for tool calls
+- Run commands in the application container using `dox-do` prefix when applicable
+- Prefer editing existing files over creating new ones
+- Always check for linting errors after making changes
