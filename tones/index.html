@@ -1283,17 +1283,32 @@ function onPlayerStateChange(event) {
 		// Stop auto-save timer when video ends
 		stopAutoSaveTimer();
 
-		// Video ended - clear saved state for this playlist to start fresh next time
-		var playlistInput = document.getElementById('playlist-url');
-		var playlistId = '';
-		if (playlistInput && playlistInput.value) {
-			playlistId = extractPlaylistId(playlistInput.value) || '';
-		}
+		// Check if this is the last video in the playlist
+		var currentIndex = player.getPlaylistIndex();
+		var playlist = player.getPlaylist();
+		var isLastVideo = (currentIndex === playlist.length - 1);
 
-		if (playlistId) {
-			var playlistStates = JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}');
-			delete playlistStates[playlistId];
-			localStorage.setItem('youtube_playlist_states', JSON.stringify(playlistStates));
+		if (isLastVideo) {
+			// This is the last video - restart playlist from beginning
+			var playlistInput = document.getElementById('playlist-url');
+			var playlistId = '';
+			if (playlistInput && playlistInput.value) {
+				playlistId = extractPlaylistId(playlistInput.value) || '';
+			}
+
+			if (playlistId) {
+				// Clear saved state for this playlist to start fresh
+				var playlistStates = JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}');
+				delete playlistStates[playlistId];
+				localStorage.setItem('youtube_playlist_states', JSON.stringify(playlistStates));
+
+				// Restart playlist from the beginning
+				player.loadPlaylist({
+					'listType': 'playlist',
+					'list': playlistId,
+					'index': 0
+				});
+			}
 		}
 	}
 }
