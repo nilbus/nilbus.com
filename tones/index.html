@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <!-- saved from url=(0214)https://brainaural.com/play.php?mod0=42&car0=240&lvl0=70&iso0=100&bin0=0&noi0=0&bil0=0&fm0=0&mod1=22&car1=220&lvl1=65&iso1=100&bin1=0&noi1=0&bil1=0&fm1=0&mod2=10&car2=180&lvl2=50&iso2=100&bin2=0&noi2=0&bil2=0&fm2=0 -->
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" ml-update="aware"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style>body {transition: opacity ease-in 0.2s; }
-body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relative; }
-</style>
-	<link rel="stylesheet" href="./Brainaural_files/jquery-ui.css">
-	<link href="./Brainaural_files/main.css" rel="stylesheet" type="text/css">
-	<script src="./Brainaural_files/jquery.min.js"></script>
-	<script src="./Brainaural_files/jquery-ui.min.js"></script>
-	<script src="./Brainaural_files/jquery.ui.touch-punch.min.js"></script>
-	<script src="./Brainaural_files/mousetrap.min.js"></script>
-	<script src="./preset_data.js"></script>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" ml-update="aware"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<link rel="stylesheet" href="jquery-ui.css">
+	<link href="main.css" rel="stylesheet" type="text/css">
+	<script src="jquery.min.js"></script>
+	<script src="jquery-ui.min.js"></script>
+	<script src="jquery.ui.touch-punch.min.js"></script>
+	<script src="mousetrap.min.js"></script>
+	<script src="preset_data.js"></script>
 	<script>
 		function initializeYouTubePlayer() {
 			// Check if the target element exists
@@ -68,20 +66,20 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 	<meta name="keywords" content="brainwaves entrainment, alpha, beta, theta, gamma, binaural beats, isochronic tones, nonaural beats, bilateral, white noise, focus, study, relax, anxiety, stress, meditation, sleep, dream, lucid dreaming">
 	<meta name="description" content="What Are Brainwaves? Does Entrainement Work? Find out for yourself! Now with free audio file download.">
 	<meta name="author" content="Dr. Ir. Stéphane Pigeon">
-	<link rel="apple-touch-icon" sizes="180x180" href="./Brainaural_files/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="./Brainaural_files/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="./Brainaural_files/favicon-16x16.png">
-	<link rel="manifest" href="./Brainaural_files/manifest.json">
-	<link rel="mask-icon" href="./Brainaural_files/safari-pinned-tab.svg" color="#0077aa">
+	<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+	<link rel="manifest" href="manifest.json">
+	<link rel="mask-icon" href="safari-pinned-tab.svg" color="#0077aa">
 	<meta name="theme-color" content="#0077aa">
 
 	<!-- Social -->
-	<link rel="image_src" href="./Brainaural_files/socialPreview.jpg">
+	<link rel="image_src" href="socialPreview.jpg">
 	<meta name="twitter:card" content="summary_large_image">
 	<meta name="twitter:site" content="@audiosampling">
 	<meta name="twitter:title" content="The Ultimate Brainwave Generator">
 	<meta name="twitter:description" content="What Are Brainwaves? Does Entrainement Work? Find out for yourself. Online &amp; Free.">
-	<meta name="twitter:image:src" content="./Brainaural_files/socialPreview.jpg">
+	<meta name="twitter:image:src" content="socialPreview.jpg">
 
 </head>
 
@@ -92,10 +90,10 @@ body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relati
 <div class="anchor" id="player"></div>
 
 <div class="tile1">
-	<a href="#" class="nounderline"><div id="title"><img src="./Brainaural_files/ba_logo.png" class="logo"> <span class="black">brain</span><span class="white">aural</span><span class="reg">®</span></div></a>
+	<a href="#" class="nounderline"><div id="title"><img src="ba_logo.png" class="logo"> <span class="black">brain</span><span class="white">aural</span><span class="reg">®</span></div></a>
 <div id="subtitle"><span class="white">Ultimate</span> <span class="black">Brainwaves</span></div>	<div class="ctrSection">
-		<img src="./Brainaural_files/mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" alt="">
-		<img src="./Brainaural_files/link.png" class="ctrlImg" onclick="toURL()" alt="">
+		<img src="mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" alt="">
+		<img src="link.png" class="ctrlImg" onclick="toURL()" alt="">
 </div>
 
 
@@ -168,6 +166,7 @@ var mediaSessionAnchor = null; // Hidden audio element to anchor Media Session
 // YouTube Player Variables
 var player = null;
 var isPlayerReady = false;
+var autoSaveInterval = null; // Timer for auto-saving playlist state every 29 seconds
 
 // WEBAUDIO ELEMENTS
 var context;
@@ -469,7 +468,7 @@ function generatePresetButtons() {
 		speakersButton.id = `preset-${index}-speakers`;
 		speakersButton.onclick = () => selectPreset(preset, 'speakers');
 		speakersButton.innerHTML = `
-			<img src="./Brainaural_files/speaker1.png" class="preset-icon">
+			<img src="speaker1.png" class="preset-icon">
 			<span class="preset-name">${preset.name}</span>
 		`;
 
@@ -479,7 +478,7 @@ function generatePresetButtons() {
 		headphonesButton.id = `preset-${index}-headphones`;
 		headphonesButton.onclick = () => selectPreset(preset, 'headphones');
 		headphonesButton.innerHTML = `
-			<img src="./Brainaural_files/headphones.png" class="preset-icon">
+			<img src="headphones.png" class="preset-icon">
 			<span class="preset-name">${preset.name}</span>
 		`;
 
@@ -899,6 +898,8 @@ function performPlayAction(){
 			// Play YouTube player if ready
 			if (player && isPlayerReady) {
 				player.playVideo();
+				// Start auto-save timer when YouTube starts playing
+				startAutoSaveTimer();
 			}
 
 			// Update preset display and metadata when resuming
@@ -914,6 +915,8 @@ function performPlayAction(){
 			// Play YouTube player if ready
 			if (player && isPlayerReady) {
 				player.playVideo();
+				// Start auto-save timer when YouTube starts playing
+				startAutoSaveTimer();
 			}
 
 			// Update preset display and metadata when resuming
@@ -945,6 +948,8 @@ function performPauseAction(){
 				player.pauseVideo();
 				// Save YouTube state when pausing
 				saveYouTubeState();
+				// Stop auto-save timer when YouTube is paused
+				stopAutoSaveTimer();
 			}
 
 			updateMediaSessionState('paused');
@@ -969,6 +974,8 @@ function performPauseAction(){
 				player.pauseVideo();
 				// Save YouTube state when pausing
 				saveYouTubeState();
+				// Stop auto-save timer when YouTube is paused
+				stopAutoSaveTimer();
 			}
 
 			updateMediaSessionState('paused');
@@ -1051,8 +1058,8 @@ function updateMediaSessionMetadata(presetName = 'Ultimate Brainwaves') {
 		artist: 'nilbus.com',
 		album: 'Brainaural Sets',
 		artwork: [
-			{ src: './Brainaural_files/ba_logo.png', sizes: '192x192', type: 'image/png' },
-			{ src: './Brainaural_files/ba_logo.png', sizes: '512x512', type: 'image/png' }
+			{ src: 'ba_logo.png', sizes: '192x192', type: 'image/png' },
+			{ src: 'ba_logo.png', sizes: '512x512', type: 'image/png' }
 		]
 	});
 }
@@ -1202,6 +1209,9 @@ function onPlayerReady(event) {
 function onPlayerStateChange(event) {
 	// Handle track changes and state clearing
 	if (event.data == YT.PlayerState.ENDED) {
+		// Stop auto-save timer when video ends
+		stopAutoSaveTimer();
+
 		// Video ended - clear saved state for this playlist to start fresh next time
 		var playlistInput = document.getElementById('playlist-url');
 		var playlistId = '';
@@ -1245,6 +1255,8 @@ function loadActivePlaylist() {
 
 	// Load the playlist immediately
 	try {
+		// Stop auto-save timer when switching playlists
+		stopAutoSaveTimer();
 		player.stopVideo();
 		player.clearVideo();
 
@@ -1323,6 +1335,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	// Add Enter key event listener
 	playlistInput.addEventListener('keypress', function(event) {
 		if (event.key === 'Enter') {
+			saveCurrentPlaylistState();
 			loadActivePlaylist();
 		}
 	});
@@ -1335,6 +1348,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Save YouTube state when tab is about to close
 window.addEventListener('beforeunload', function() {
+	// Stop auto-save timer before page unloads
+	stopAutoSaveTimer();
 	saveYouTubeState();
 });
 
@@ -1516,7 +1531,29 @@ function saveCurrentPlaylistState() {
 	}
 }
 
+function startAutoSaveTimer() {
+	// Clear any existing timer
+	stopAutoSaveTimer();
+
+	// Start new timer to save playlist state every 29 seconds
+	autoSaveInterval = setInterval(function() {
+		// Only save if YouTube player is ready and we have a valid playlist
+		if (player && isPlayerReady && localStorage.getItem('youtube_playlist_id')) {
+			saveCurrentPlaylistState();
+		}
+	}, 29000); // 29 seconds
+}
+
+function stopAutoSaveTimer() {
+	if (autoSaveInterval) {
+		clearInterval(autoSaveInterval);
+		autoSaveInterval = null;
+	}
+}
+
 function loadPlaylistFromRecent(playlist) {
+	saveCurrentPlaylistState();
+
 	// Set the input field and load the playlist
 	document.getElementById('playlist-url').value = playlist.url;
 	loadActivePlaylist();
