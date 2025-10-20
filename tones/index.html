@@ -465,6 +465,10 @@ function generatePresetButtons() {
 	const container = document.getElementById('preset-buttons-container');
 	container.innerHTML = '';
 
+	function upcaseFirstLetter(string) {
+		return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+	}
+
 	PRESET_TONES.forEach((preset, index) => {
 		const row = document.createElement('div');
 		row.className = 'preset-row';
@@ -489,8 +493,14 @@ function generatePresetButtons() {
 			<span class="preset-name">${preset.name}</span>
 		`;
 
+		// Purposes text spanning both columns
+		const purposesDiv = document.createElement('div');
+		purposesDiv.className = 'preset-purposes-row';
+		purposesDiv.innerHTML = `<span class="preset-purposes">${upcaseFirstLetter(preset.layers.map(layer => layer.purpose).join(', '))}</span>`;
+
 		row.appendChild(speakersButton);
 		row.appendChild(headphonesButton);
+		row.appendChild(purposesDiv);
 		container.appendChild(row);
 	});
 }

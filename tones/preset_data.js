@@ -1,4 +1,3 @@
-// Preset tone configurations parsed from CSV
 const PRESET_TONES = [
   {
     name: "Focused, Sustainable Thinking",
