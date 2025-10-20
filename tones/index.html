@@ -92,8 +92,8 @@
 <div class="tile1">
 	<a href="#" class="nounderline"><div id="title"><img src="ba_logo.png" class="logo"> <span class="black">brain</span><span class="white">aural</span><span class="reg">®</span></div></a>
 <div id="subtitle"><span class="white">Ultimate</span> <span class="black">Brainwaves</span></div>	<div class="ctrSection">
-		<img src="mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" alt="">
-		<img src="link.png" class="ctrlImg" onclick="toURL()" alt="">
+		<img src="mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" title="Mute">
+		<img src="link.png" class="ctrlImg" onclick="toURL()" title="Tweak at Brainaural.com">
 </div>
 
 <!-- Screen Wake Lock Status -->
@@ -1183,7 +1183,7 @@ async function ensureAudioPlaying() {
 }
 
 function toURL(bRender){
-	var url='#';
+	var url='https://brainaural.com/play.php?';
 		url+="mod0="+MOD[0];
 		url+="&car0="+CARRIER[0];
 		url+="&noi0="+NOISE[0];
