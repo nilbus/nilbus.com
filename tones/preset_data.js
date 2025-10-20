@@ -73,10 +73,10 @@ const PRESET_TONES = [
   {
     name: "HFDO Surrender",
     layers: [
-      { freq: 5.5, carrier: 150, type: "isochronic", vol: "80", purpose: "Pelvic sensory mapping, interoception" },
-      { freq: 7.83, carrier: 210, type: "isochronic", vol: "35", purpose: "Awareness anchor, cortical-limbic bridge" },
-      { freq: 2.5, carrier: 100, type: "isochronic", vol: "100", purpose: "Parasympathetic surrender, body melting" },
-      { freq: 0.5, carrier: 80, type: "isochronic", vol: "95", purpose: "Primal embodiment, energetic wave support" }
+      { freq: 5.5, carrier: 417, type: "isochronic", vol: "80", purpose: "Pelvic sensory mapping, interoception" },
+      { freq: 7.83, carrier: 210.42, type: "isochronic", vol: "50", purpose: "Awareness anchor, cortical-limbic bridge" },
+      { freq: 2.5, carrier: 157.43, type: "isochronic", vol: "100", purpose: "Parasympathetic surrender, body melting" },
+      { freq: 0.5, carrier: 396, type: "isochronic", vol: "60", purpose: "Primal embodiment, energetic wave support" }
     ]
   }
 ];
