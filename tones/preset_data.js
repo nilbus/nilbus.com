@@ -1,6 +1,6 @@
 const PRESET_TONES = [
   {
-    name: "Focused, Sustainable Thinking",
+    name: "Focused & Sustainable Work",
     layers: [
       { freq: 42, carrier: 240, type: "isochronic", vol: "70", purpose: "Cognitive sharpness" },
       { freq: 22, carrier: 220, type: "binaural", vol: "80/65", purpose: "Mental energy" },
@@ -32,7 +32,7 @@ const PRESET_TONES = [
     ]
   },
   {
-    name: "Zen Debug Mode",
+    name: "Relaxed Productivity Flow",
     layers: [
       { freq: 14, carrier: 250, type: "isochronic", vol: "60", purpose: "Steady analytical focus" },
       { freq: 10, carrier: 230, type: "binaural", vol: "65/50", purpose: "Relaxed clarity and mental ease" },
