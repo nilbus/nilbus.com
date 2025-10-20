@@ -465,6 +465,10 @@ function generatePresetButtons() {
 	const container = document.getElementById('preset-buttons-container');
 	container.innerHTML = '';
 
+	function upcaseFirstLetter(string) {
+		return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+	}
+
 	PRESET_TONES.forEach((preset, index) => {
 		const row = document.createElement('div');
 		row.className = 'preset-row';
@@ -489,8 +493,14 @@ function generatePresetButtons() {
 			<span class="preset-name">${preset.name}</span>
 		`;
 
+		// Purposes text spanning both columns
+		const purposesDiv = document.createElement('div');
+		purposesDiv.className = 'preset-purposes-row';
+		purposesDiv.innerHTML = `<span class="preset-purposes">${upcaseFirstLetter(preset.layers.map(layer => layer.purpose).join(', '))}</span>`;
+
 		row.appendChild(speakersButton);
 		row.appendChild(headphonesButton);
+		row.appendChild(purposesDiv);
 		container.appendChild(row);
 	});
 }
@@ -1259,18 +1269,15 @@ function onPlayerReady(event) {
 	if (savedState && savedState.playlistId && savedPlaylistId === savedState.playlistId) {
 		// We have saved state and playlist ID matches - restore position and track
 		// Load the specific video from the playlist with startSeconds parameter
-		player.loadPlaylist({
+		player.cuePlaylist({
 			'listType': 'playlist',
 			'list': savedState.playlistId,
 			'index': savedState.videoIndex,
 			'startSeconds': savedState.playbackTime
 		});
-
-		// Pause the video after loading (it will start at the correct position)
-		player.pauseVideo();
 	} else if (savedPlaylistId) {
-		// No saved state but we have a playlist ID - load the playlist
-		player.loadPlaylist({
+		// No saved state but we have a playlist ID - cue the playlist
+		player.cuePlaylist({
 			'listType': 'playlist',
 			'list': savedPlaylistId
 		});
@@ -1286,17 +1293,32 @@ function onPlayerStateChange(event) {
 		// Stop auto-save timer when video ends
 		stopAutoSaveTimer();
 
-		// Video ended - clear saved state for this playlist to start fresh next time
-		var playlistInput = document.getElementById('playlist-url');
-		var playlistId = '';
-		if (playlistInput && playlistInput.value) {
-			playlistId = extractPlaylistId(playlistInput.value) || '';
-		}
+		// Check if this is the last video in the playlist
+		var currentIndex = player.getPlaylistIndex();
+		var playlist = player.getPlaylist();
+		var isLastVideo = (currentIndex === playlist.length - 1);
 
-		if (playlistId) {
-			var playlistStates = JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}');
-			delete playlistStates[playlistId];
-			localStorage.setItem('youtube_playlist_states', JSON.stringify(playlistStates));
+		if (isLastVideo) {
+			// This is the last video - restart playlist from beginning
+			var playlistInput = document.getElementById('playlist-url');
+			var playlistId = '';
+			if (playlistInput && playlistInput.value) {
+				playlistId = extractPlaylistId(playlistInput.value) || '';
+			}
+
+			if (playlistId) {
+				// Clear saved state for this playlist to start fresh
+				var playlistStates = JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}');
+				delete playlistStates[playlistId];
+				localStorage.setItem('youtube_playlist_states', JSON.stringify(playlistStates));
+
+				// Restart playlist from the beginning
+				player.loadPlaylist({
+					'listType': 'playlist',
+					'list': playlistId,
+					'index': 0
+				});
+			}
 		}
 	}
 }
@@ -1338,17 +1360,15 @@ function loadActivePlaylist() {
 		var savedState = loadYouTubeState(playlistId);
 
 		if (savedState && savedState.playlistId === playlistId) {
-			// Load with saved position and track
+			// Load with saved position and track (autoplay when switching playlists)
 			player.loadPlaylist({
 				'listType': 'playlist',
 				'list': playlistId,
 				'index': savedState.videoIndex,
 				'startSeconds': savedState.playbackTime
 			});
-			// Pause after loading to restore position
-			player.pauseVideo();
 		} else {
-			// No saved state, load normally
+			// No saved state, load normally (autoplay when switching playlists)
 			player.loadPlaylist({
 				'listType': 'playlist',
 				'list': playlistId

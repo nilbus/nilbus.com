@@ -182,6 +182,9 @@ test.beforeEach(async ({ page }) => {
       loadPlaylist: (config) => {
         window.mockCalls.youtube.push(`loadPlaylist: ${JSON.stringify(config)}`);
       },
+      cuePlaylist: (config) => {
+        window.mockCalls.youtube.push(`cuePlaylist: ${JSON.stringify(config)}`);
+      },
       playVideo: () => {
         window.mockCalls.youtube.push('playVideo');
       },

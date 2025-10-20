@@ -1,7 +1,6 @@
-// Preset tone configurations parsed from CSV
 const PRESET_TONES = [
   {
-    name: "Focused, Sustainable Thinking",
+    name: "Focused & Sustainable Work",
     layers: [
       { freq: 42, carrier: 240, type: "isochronic", vol: "70", purpose: "Cognitive sharpness" },
       { freq: 22, carrier: 220, type: "binaural", vol: "80/65", purpose: "Mental energy" },
@@ -33,7 +32,7 @@ const PRESET_TONES = [
     ]
   },
   {
-    name: "Zen Debug Mode",
+    name: "Relaxed Productivity Flow",
     layers: [
       { freq: 14, carrier: 250, type: "isochronic", vol: "60", purpose: "Steady analytical focus" },
       { freq: 10, carrier: 230, type: "binaural", vol: "65/50", purpose: "Relaxed clarity and mental ease" },
@@ -74,10 +73,10 @@ const PRESET_TONES = [
   {
     name: "HFDO Surrender",
     layers: [
-      { freq: 5.5, carrier: 150, type: "isochronic", vol: "80", purpose: "Pelvic sensory mapping, interoception" },
-      { freq: 7.83, carrier: 210, type: "isochronic", vol: "35", purpose: "Awareness anchor, cortical-limbic bridge" },
-      { freq: 2.5, carrier: 100, type: "isochronic", vol: "100", purpose: "Parasympathetic surrender, body melting" },
-      { freq: 0.5, carrier: 80, type: "isochronic", vol: "95", purpose: "Primal embodiment, energetic wave support" }
+      { freq: 5.5, carrier: 417, type: "isochronic", vol: "80", purpose: "Pelvic sensory mapping, interoception" },
+      { freq: 7.83, carrier: 210.42, type: "isochronic", vol: "50", purpose: "Awareness anchor, cortical-limbic bridge" },
+      { freq: 2.5, carrier: 157.43, type: "isochronic", vol: "100", purpose: "Parasympathetic surrender, body melting" },
+      { freq: 0.5, carrier: 396, type: "isochronic", vol: "60", purpose: "Primal embodiment, energetic wave support" }
     ]
   }
 ];

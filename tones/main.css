@@ -317,14 +317,14 @@ blockquote {
 .preset-grid {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
 	margin: 20px 0;
 }
 
 .preset-row {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 10px;
+	grid-template-rows: auto auto;
+	margin-bottom: 15px;
 }
 
 .preset-button {
@@ -369,6 +369,21 @@ blockquote {
 	font-weight: 500;
 	font-size: 14px;
 	line-height: 1.2;
+}
+
+.preset-purposes-row {
+	grid-column: 1 / 3;
+	grid-row: 2;
+	text-align: center;
+	margin-top: 0;
+}
+
+.preset-purposes {
+	font-size: 11px;
+	line-height: 1.3;
+	opacity: 0.8;
+	font-style: italic;
+	color: rgba(255, 255, 255, 0.9);
 }
 
 /* ===========================================
@@ -510,7 +525,6 @@ blockquote {
 	/* Preset Grid Mobile Styles */
 	.preset-row {
 		grid-template-columns: 1fr 1fr;
-		gap: 8px;
 	}
 
 	.preset-button {
@@ -526,6 +540,15 @@ blockquote {
 
 	.preset-name {
 		font-size: 12px;
+	}
+
+	.preset-purposes-row {
+		padding: 6px 10px;
+		margin-top: -3px;
+	}
+
+	.preset-purposes {
+		font-size: 10px;
 	}
 
 	/* YouTube Section Mobile Styles */
