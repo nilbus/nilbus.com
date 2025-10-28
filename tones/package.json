@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Automated test suite for Brainaural SPA",
   "scripts": {
-    "server": "npx http-server -p 8080 -c-1",
+    "server": "npx http-server -p ${PORT:-8080} -c-1",
     "test": "playwright test --reporter=line",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
