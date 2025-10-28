@@ -1,0 +1,4 @@
+test-results/
+node_modules/
+playwright-report/
+.cursor/rules/deploy.mdc

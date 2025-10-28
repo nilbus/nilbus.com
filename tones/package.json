@@ -1,0 +1,20 @@
+{
+  "name": "brainaural-test-suite",
+  "version": "1.0.0",
+  "description": "Automated test suite for Brainaural SPA",
+  "scripts": {
+    "server": "npx http-server -p ${PORT:-8080} -c-1",
+    "test": "playwright test --reporter=line",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:ci": "playwright test --reporter=line --workers=1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "http-server": "^14.1.1"
+  },
+  "keywords": ["playwright", "testing", "brainaural"],
+  "author": "",
+  "license": "MIT"
+}
