@@ -14,3 +14,12 @@
 - Run commands in the application container using `dox-do` prefix when applicable
 - Prefer editing existing files over creating new ones
 - Always check for linting errors after making changes
+
+## Testing
+Run the app server via `npm run server`, optionally setting PORT via env var.
+This command properly handles the static files including JavaScript modules.
+When working in a worktree, set PORT to a number from 00000 to 235959 based on the current time,
+e.g. 10:24:5x pm + 10000 = 22245 + 10000 = port 32245.
+Retry with a subsequent number if the port is in use when the server attempts to start.
+
+Test changes via browser at http://localhost:$PORT/
