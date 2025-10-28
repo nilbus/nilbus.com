@@ -1030,14 +1030,12 @@ async function requestWakeLock() {
 
 	try {
 		wakeLock = await navigator.wakeLock.request('screen');
-		console.log('Screen Wake Lock is active');
 
 		// Show wake lock status indicator
 		showWakeLockStatus();
 
 		// Listen for release events
 		wakeLock.addEventListener('release', () => {
-			console.log('Screen Wake Lock was released');
 			hideWakeLockStatus();
 		});
 	} catch (err) {
@@ -1050,7 +1048,6 @@ function releaseWakeLock() {
 	if (wakeLock) {
 		wakeLock.release();
 		wakeLock = null;
-		console.log('Screen Wake Lock released');
 		hideWakeLockStatus();
 	}
 }
