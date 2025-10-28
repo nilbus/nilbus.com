@@ -354,6 +354,85 @@ test.describe('Preset Selection and Audio Initialization', () => {
   });
 });
 
+test.describe('Preset Button Toggle', () => {
+  test('should mute when clicking already-active preset button', async ({ page }) => {
+    // Given a preset is playing (audio context resumed, preset button has 'active' class)
+    await page.goto('/');
+    await page.click('#preset-0-headphones');
+
+    // Verify the button is active
+    await expect(page.locator('#preset-0-headphones')).toHaveClass(/active/);
+    await expect(page.locator('#mute')).not.toHaveClass(/superactive/);
+
+    // When the user clicks the same preset button again
+    await page.click('#preset-0-headphones');
+
+    // Then the audio context suspends, mute button gains 'superactive' class, and preset button loses 'active' class
+    await expect(page.locator('#mute')).toHaveClass(/superactive/);
+    await expect(page.locator('#preset-0-headphones')).not.toHaveClass(/active/);
+
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.audioContext).toContain('suspend');
+  });
+
+  test('should work with speakers button toggle', async ({ page }) => {
+    // Given a preset is playing with speakers output
+    await page.goto('/');
+    await page.click('#preset-0-speakers');
+
+    // Verify the button is active
+    await expect(page.locator('#preset-0-speakers')).toHaveClass(/active/);
+
+    // When the user clicks the same preset button again
+    await page.click('#preset-0-speakers');
+
+    // Then the audio is muted and button is deactivated
+    await expect(page.locator('#mute')).toHaveClass(/superactive/);
+    await expect(page.locator('#preset-0-speakers')).not.toHaveClass(/active/);
+  });
+
+  test('should not toggle when clicking a different preset', async ({ page }) => {
+    // Given one preset is playing
+    await page.goto('/');
+    await page.click('#preset-0-headphones');
+
+    // Verify the first preset is active
+    await expect(page.locator('#preset-0-headphones')).toHaveClass(/active/);
+
+    // When the user clicks a different preset button
+    await page.click('#preset-1-headphones');
+
+    // Then the new preset becomes active and old preset is deactivated (not muted)
+    await expect(page.locator('#preset-0-headphones')).not.toHaveClass(/active/);
+    await expect(page.locator('#preset-1-headphones')).toHaveClass(/active/);
+    await expect(page.locator('#mute')).not.toHaveClass(/superactive/);
+  });
+
+  test('should toggle between active and inactive multiple times', async ({ page }) => {
+    // Given we start with no preset selected
+    await page.goto('/');
+
+    // First click: activate the preset
+    await page.click('#preset-0-headphones');
+    await expect(page.locator('#preset-0-headphones')).toHaveClass(/active/);
+
+    // Second click: deactivate (mute)
+    await page.click('#preset-0-headphones');
+    await expect(page.locator('#preset-0-headphones')).not.toHaveClass(/active/);
+    await expect(page.locator('#mute')).toHaveClass(/superactive/);
+
+    // Third click: reactivate
+    await page.click('#preset-0-headphones');
+    await expect(page.locator('#preset-0-headphones')).toHaveClass(/active/);
+    await expect(page.locator('#mute')).not.toHaveClass(/superactive/);
+
+    // Fourth click: deactivate again
+    await page.click('#preset-0-headphones');
+    await expect(page.locator('#preset-0-headphones')).not.toHaveClass(/active/);
+    await expect(page.locator('#mute')).toHaveClass(/superactive/);
+  });
+});
+
 test.describe('Play/Pause Toggle', () => {
   test('should pause when mute button clicked', async ({ page }) => {
     // Given a preset is playing (audio context resumed, mute button not 'superactive')

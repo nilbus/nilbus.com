@@ -65,18 +65,18 @@ const PRESET_TONES = [
   {
     name: "Primal Drop",
     layers: [
-      { freq: 6.3, carrier: 210.42, type: "isochronic", vol: "75", purpose: "Trance focus" },
-      { freq: 2.5, carrier: 157.43, type: "isochronic", vol: "70", purpose: "Surrender and body sensitivity" },
-      { freq: 0.2, carrier: 396, type: "isochronic", vol: "60", purpose: "Deep primal embodiment" }
+      { freq: 6.3, carrier: "210.42/157.43", type: "isochronic", vol: "75", purpose: "Trance focus" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "70", purpose: "Surrender and body sensitivity" },
+      { freq: 0.2, carrier: "396/210.42", type: "isochronic", vol: "60", purpose: "Deep primal embodiment" }
     ]
   },
   {
     name: "HFDO Surrender",
     layers: [
-      { freq: 5.5, carrier: 417, type: "isochronic", vol: "80", purpose: "Pelvic sensory mapping, interoception" },
-      { freq: 7.83, carrier: 210.42, type: "isochronic", vol: "50", purpose: "Awareness anchor, cortical-limbic bridge" },
-      { freq: 2.5, carrier: 157.43, type: "isochronic", vol: "100", purpose: "Parasympathetic surrender, body melting" },
-      { freq: 0.5, carrier: 396, type: "isochronic", vol: "60", purpose: "Primal embodiment, energetic wave support" }
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "80/60", purpose: "Pelvic sensory mapping, interoception" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "50/70", purpose: "Awareness anchor, cortical-limbic bridge" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "100/80", purpose: "Parasympathetic surrender, body melting" },
+      { freq: 0.5, carrier: "396/175.35", type: "isochronic", vol: "60/70", purpose: "Primal embodiment, energetic wave support" }
     ]
   }
 ];
@@ -90,10 +90,20 @@ function generatePresetParams(preset, outputType) {
 
     // Common parameters for all layers
     params[`mod${i}`] = layer.freq;
-    params[`car${i}`] = layer.carrier;
     params[`noi${i}`] = 0;
     params[`bil${i}`] = 0;
     params[`fm${i}`] = 0;
+
+    // Carrier frequency handling
+    const carrierStr = String(layer.carrier);
+    if (carrierStr.includes('/')) {
+      // Split carrier frequency for headphones/speakers
+      const [carH, carS] = carrierStr.split('/').map(Number);
+      params[`car${i}`] = outputType === 'headphones' ? carH : carS;
+    } else {
+      // Single carrier frequency value
+      params[`car${i}`] = Number(layer.carrier);
+    }
 
     // Volume handling
     if (layer.vol.includes('/')) {

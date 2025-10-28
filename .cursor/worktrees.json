@@ -1,0 +1,7 @@
+{
+  "setup-worktree": [
+    "npm install",
+    "mkdir -p .cursor/rules",
+    "cp $ROOT_WORKTREE_PATH/.cursor/rules/deploy.mdc .cursor/rules/"
+  ]
+}

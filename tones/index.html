@@ -93,7 +93,7 @@
 	<a href="#" class="nounderline"><div id="title"><img src="ba_logo.png" class="logo"> <span class="black">brain</span><span class="white">aural</span><span class="reg">®</span></div></a>
 <div id="subtitle"><span class="white">Ultimate</span> <span class="black">Brainwaves</span></div>	<div class="ctrSection">
 		<img src="mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" title="Mute">
-		<img src="link.png" class="ctrlImg" onclick="toURL()" title="Tweak at Brainaural.com">
+		<img src="link.png" class="ctrlImg" onclick="openBrainaural()" title="Tweak at Brainaural.com">
 </div>
 
 <!-- Screen Wake Lock Status -->
@@ -506,6 +506,13 @@ function generatePresetButtons() {
 }
 
 function selectPreset(preset, outputType) {
+	// Check if clicking the same preset that's already active and playing
+	if (currentPreset === preset && currentOutputType === outputType && !bPaused) {
+		// Toggle off: mute and deactivate
+		performPauseAction();
+		return;
+	}
+
 	// Initialize audio context on first user interaction
 	if (!bAUDIO_INITIALIZED) {
 		initializeAudio();
@@ -1180,6 +1187,15 @@ async function ensureAudioPlaying() {
 		// If context is running but we're in paused state, play
 		await performPlayAction();
 	}
+}
+
+function openBrainaural() {
+	// If audio is playing, mute it before opening the link
+	if (!bPaused) {
+		performPauseAction();
+	}
+	// Open the URL
+	toURL();
 }
 
 function toURL(bRender){
