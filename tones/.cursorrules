@@ -1,4 +1,4 @@
-# Cursor Rules for BrainAural Project
+# Cursor Rules for Brainaural Tones Project
 
 ## Test Files
 - When running Playwright tests, always use CI-compatible commands:
