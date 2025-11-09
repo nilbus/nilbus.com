@@ -1,3 +1,63 @@
+/*
+**Goal** Generate scientifically-informed, purpose-driven binaural and isochronic tone sets that
+address specific cognitive, emotional, or physiological states through precise frequency
+entrainment protocols.
+
+**Return format** Output must be a valid JavaScript object matching this structure exactly:
+```json { name: "Descriptive State Name", layers: [ { freq: [number], carrier: [number or
+"num1/num2"], type: "binaural" or "isochronic", vol: "[num]" or "[num1/num2]", purpose: "Brief
+physiological/cognitive effect" }, … ] } ```
+
+**Warnings** - Binaural layers require split volume notation (e.g., "80/65") where the higher
+value is for binaural delivery and lower value maintains equivalent pulsing power when converted
+to isochronic-only playback - Isochronic-only layers use single volume values unless designed for
+dual-carrier speaker optimization - Erotic or intimacy-focused tone sets must use dual-carrier
+isochronic format with split volumes (format: "carrier1/carrier2" and "vol1/vol2") to accommodate
+both quality speaker systems (lower frequencies, lower volumes) and shower/mobile phone speakers
+(higher frequencies, higher volumes that cut through ambient noise) - Layer volumes create
+emphasis hierarchy - adjust relative volumes to weight the dominant intended effect - Frequency
+ranges must align with established brainwave entrainment research: Delta (0.5-4 Hz), Theta (4-8
+Hz), Alpha (8-14 Hz), Beta (14-30 Hz), Gamma (30-100 Hz) - Carrier frequencies should be audible
+(typically 150-400 Hz range) and harmonically compatible within each set - Default to 1 binaural
+layer per set unless using all isochronic layers would demonstrably enhance the specific
+entrainment goal - Avoid frequency conflicts that could create dissonant beating patterns or
+cancel intended entrainment effects - Avoid multiple simultaneous binaural layers; use at most one
+binaural layer per preset; make additional entrainment layers isochronic to prevent perceptual
+interference and degraded entrainment - Purpose descriptions must be concise, physiologically
+accurate, and specific to the layer's contribution to the overall state
+
+**Context** The assistant is an expert in psychoacoustics, brainwave entrainment, neuroscience,
+and frequency-based consciousness modulation. Tone sets leverage binaural beats (frequency
+difference between ears) and isochronic tones (evenly-spaced pulses) to guide brainwave states
+toward desired cognitive, emotional, or somatic outcomes.
+
+Binaural beats require headphones and create the entrainment frequency through interhemispheric
+processing of the carrier frequency difference. Isochronic tones work through any speaker by
+directly pulsing at the target frequency. The split-volume system for binaural layers accounts
+for the perceptual intensity difference between delivery methods while maintaining consistent
+entrainment power and layer balance when users switch between headphone and speaker playback.
+
+For tone sets addressing intimacy, arousal, or erotic states, every tone should be isochronic and
+have different carriers (e.g. "417/210.42"), the former for use in the shower with tones that
+shine through the background noise better on a mobile phone speaker, and the latter for nice
+speakers with lower-frequency tones and lower volumes compared to the former.
+
+The assistant should draw upon knowledge of: brainwave frequency correlates to mental states,
+autonomic nervous system regulation through entrainment, the role of specific frequency bands in
+cognitive performance, the interaction between multiple simultaneous entrainment frequencies,
+solfeggio frequencies and their purported effects, Schumann resonance (7.83 Hz), and the
+physiological mechanisms of arousal, relaxation, focus, and altered states.
+
+When crafting new tone sets, consider the synergistic interaction between layers, the progression
+of entrainment effects, and any contraindications for specific frequency combinations. Optimize
+for the specific use case while maintaining the technical constraints of the playback system
+architecture.
+
+Science-supported is preferred, but where scientific support is weak, anecdotal support is
+acceptable, including for purpose-driven carrier tones that reportedly are good for specific
+purposes (e.g. love tones). Use harmonics in carrier tones. const PRESET_TONES = [
+*/
+
 const PRESET_TONES = [
   {
     name: "Focused & Sustainable Work",
@@ -65,18 +125,18 @@ const PRESET_TONES = [
   {
     name: "Primal Drop",
     layers: [
-      { freq: 6.3, carrier: "210.42/157.43", type: "isochronic", vol: "75", purpose: "Trance focus" },
-      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "70", purpose: "Surrender and body sensitivity" },
-      { freq: 0.2, carrier: "396/210.42", type: "isochronic", vol: "60", purpose: "Deep primal embodiment" }
+      { freq: 6.3, carrier: "210.42/157.43", type: "isochronic", vol: "75/38", purpose: "Trance focus" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "70/35", purpose: "Surrender and body sensitivity" },
+      { freq: 0.2, carrier: "396/210.42", type: "isochronic", vol: "60/30", purpose: "Deep primal embodiment" }
     ]
   },
   {
     name: "HFDO Surrender",
     layers: [
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "80/60", purpose: "Pelvic sensory mapping, interoception" },
-      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "50/70", purpose: "Awareness anchor, cortical-limbic bridge" },
-      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "100/80", purpose: "Parasympathetic surrender, body melting" },
-      { freq: 0.5, carrier: "396/175.35", type: "isochronic", vol: "60/70", purpose: "Primal embodiment, energetic wave support" }
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "80/30", purpose: "Pelvic sensory mapping, interoception" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "50/35", purpose: "Awareness anchor, cortical-limbic bridge" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "100/40", purpose: "Parasympathetic surrender, body melting" },
+      { freq: 0.5, carrier: "396/175.35", type: "isochronic", vol: "60/35", purpose: "Primal embodiment, energetic wave support" }
     ]
   }
 ];
