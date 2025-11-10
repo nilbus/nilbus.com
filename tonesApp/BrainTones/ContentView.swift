@@ -265,8 +265,13 @@ struct ContentView: View {
 
     private var backgroundGradient: some View {
         LinearGradient(
-            gradient: Gradient(colors: [Color.black, Color.accentPrimary.opacity(0.7), Color.black]),
-            startPoint: .topLeading,
+            colors: [
+                Color(red: 0.02, green: 0.01, blue: 0.07),
+                Color(red: 0.16, green: 0.04, blue: 0.12),
+                Color.accentPrimary.opacity(0.85),
+                Color(red: 0.05, green: 0.01, blue: 0.07)
+            ],
+            startPoint: .top,
             endPoint: .bottomTrailing
         )
         .ignoresSafeArea()
@@ -406,8 +411,8 @@ private struct ControlButton: View {
 }
 
 private extension Color {
-    static let accentPrimary = Color(red: 0.0, green: 0.478, blue: 0.745)
-    static let accentSecondary = Color(red: 0.7, green: 0.3, blue: 0.9)
+    static let accentPrimary = Color(red: 0.82, green: 0.24, blue: 0.38)
+    static let accentSecondary = Color(red: 0.54, green: 0.2, blue: 0.56)
 }
 
 private extension ContentView {
