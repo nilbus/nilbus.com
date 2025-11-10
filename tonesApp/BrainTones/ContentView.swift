@@ -346,17 +346,15 @@ private struct PresetModeButton: View {
     var body: some View {
         Button(action: action) {
             VStack {
-                Spacer()
                 Image(iconName)
                     .resizable()
                     .renderingMode(.template)
                     .scaledToFit()
                     .frame(width: 32, height: 32)
                     .foregroundColor(.white)
-                Spacer()
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 76)
+            .padding(.vertical, 10)
             .background(background)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
