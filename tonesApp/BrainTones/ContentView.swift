@@ -8,15 +8,15 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let isCompact = geometry.isCompact
+            let horizontalPadding: CGFloat = geometry.size.width < 520 ? 16 : 32
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
                     headerSection
-                    presetsSection(isCompact: isCompact)
+                    presetsSection
                     youtubeSection
                 }
-                .padding(.horizontal, geometry.isCompact ? 16 : 32)
+                .padding(.horizontal, horizontalPadding)
                 .padding(.vertical, 24)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -79,7 +79,7 @@ struct ContentView: View {
         }
     }
 
-    private func presetsSection(isCompact: Bool) -> some View {
+    private var presetsSection: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Tone Presets")
                 .font(.system(size: 22, weight: .semibold))
@@ -89,7 +89,6 @@ struct ContentView: View {
                 ForEach(viewModel.presets) { preset in
                     PresetRow(
                         preset: preset,
-                        isCompact: isCompact,
                         isHeadphonesActive: isActive(preset: preset, mode: .headphones),
                         isSpeakersActive: isActive(preset: preset, mode: .speakers),
                         activate: { mode in
@@ -281,31 +280,33 @@ struct ContentView: View {
 
 private struct PresetRow: View {
     let preset: Preset
-    let isCompact: Bool
     let isHeadphonesActive: Bool
     let isSpeakersActive: Bool
     let activate: (OutputMode) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Group {
-                if isCompact {
-                    VStack(spacing: 12) {
-                        speakersButton
-                        headphonesButton
-                    }
-                } else {
-                    HStack(spacing: 16) {
-                        speakersButton
-                        headphonesButton
-                    }
-                }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(preset.name)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+
+                Text(preset.combinedPurposes)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.65))
+                    .italic()
             }
 
-            Text(preset.combinedPurposes)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white.opacity(0.65))
-                .padding(.leading, 6)
+            LazyVGrid(
+                columns: [
+                    GridItem(.adaptive(minimum: 160), spacing: 16, alignment: .top)
+                ],
+                alignment: .leading,
+                spacing: 16
+            ) {
+                speakersButton
+                headphonesButton
+            }
         }
     }
 
@@ -339,30 +340,18 @@ private struct PresetModeButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            VStack {
+                Spacer()
                 Image(iconName)
                     .resizable()
+                    .renderingMode(.template)
                     .scaledToFit()
-                    .frame(width: 30, height: 30)
-                    .padding(6)
-                    .background(Color.white.opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .lineLimit(2)
-                        .foregroundColor(.white)
-                    Text(modeLabel.uppercased())
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(Color.white.opacity(0.65))
-                        .tracking(1.1)
-                }
-
+                    .frame(width: 32, height: 32)
+                    .foregroundColor(.white)
                 Spacer()
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .frame(height: 76)
             .background(background)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
@@ -370,7 +359,9 @@ private struct PresetModeButton: View {
                     .stroke(isActive ? Color.white.opacity(0.7) : Color.white.opacity(0.2), lineWidth: isActive ? 2 : 1)
             )
             .shadow(color: Color.black.opacity(0.25), radius: isActive ? 10 : 5, x: 0, y: 6)
+            .accessibilityLabel(Text("\(title) \(modeLabel)"))
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .buttonStyle(.plain)
     }
 
@@ -411,12 +402,6 @@ private struct ControlButton: View {
         .background(background)
         .clipShape(Circle())
         .shadow(color: Color.black.opacity(0.25), radius: 6, x: 0, y: 3)
-    }
-}
-
-private extension GeometryProxy {
-    var isCompact: Bool {
-        size.width < 600
     }
 }
 
