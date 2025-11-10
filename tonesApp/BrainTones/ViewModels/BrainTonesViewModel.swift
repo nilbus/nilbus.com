@@ -15,19 +15,19 @@ final class BrainTonesViewModel: ObservableObject {
     private let presetStore: PresetStore
     private let settings: SettingsStore
     private let engine: ToneEngine
-    private let nowPlaying: NowPlayingManager
+    private let playbackCoordinator: MediaPlaybackCoordinator
     private var cancellables: Set<AnyCancellable> = []
 
     init(
         presetStore: PresetStore = .shared,
         settings: SettingsStore = .shared,
         engine: ToneEngine = .shared,
-        nowPlaying: NowPlayingManager = .shared
+        playbackCoordinator: MediaPlaybackCoordinator? = nil
     ) {
         self.presetStore = presetStore
         self.settings = settings
         self.engine = engine
-        self.nowPlaying = nowPlaying
+        self.playbackCoordinator = playbackCoordinator ?? MediaPlaybackCoordinator.shared
         outputMode = settings.outputMode
 
         presetStore.$presets
@@ -40,31 +40,24 @@ final class BrainTonesViewModel: ObservableObject {
 
         presets = presetStore.presets
         restoreSelectionIfNeeded(from: presets)
-        configureRemoteCommands()
-        updateNowPlaying(isPlaying: false)
+        registerWithCoordinator()
+        self.playbackCoordinator.tonesStateDidChange(isPlaying: isPlaying, presetName: selectedPreset?.name)
     }
 
     func togglePlayPause() {
         guard let preset = selectedPreset else {
-            if let first = presets.first {
-                activatePreset(first, mode: outputMode)
-            }
+            guard let first = presets.first else { return }
+            playbackCoordinator.setTonesDesired(true)
+            activatePreset(first, mode: outputMode)
             return
         }
 
         if engine.isRunning {
-            engine.pause()
-            isPlaying = false
-            updateNowPlaying(isPlaying: false)
+            playbackCoordinator.setTonesDesired(false)
+            pausePlayback()
         } else {
-            do {
-                try engine.configure(preset: preset, mode: outputMode)
-                try engine.start()
-                isPlaying = true
-                updateNowPlaying(isPlaying: true)
-            } catch {
-                print("Failed to resume playback: \\(error)")
-            }
+            playbackCoordinator.setTonesDesired(true)
+            startPlayback(with: preset, mode: outputMode, updateSelection: false)
         }
 
         settings.lastPresetName = preset.name
@@ -78,78 +71,82 @@ final class BrainTonesViewModel: ObservableObject {
 
         if isSamePreset, !modeChanged {
             if engine.isRunning {
-                engine.pause()
-                isPlaying = false
-                updateNowPlaying(isPlaying: false)
+                playbackCoordinator.setTonesDesired(false)
+                pausePlayback()
             } else {
-                do {
-                    try engine.configure(preset: preset, mode: mode)
-                    try engine.start()
-                    isPlaying = true
-                    updateNowPlaying(isPlaying: true)
-                } catch {
-                    print("Failed to resume preset: \\(error)")
-                }
+                playbackCoordinator.setTonesDesired(true)
+                startPlayback(with: preset, mode: mode, updateSelection: false)
             }
             return
         }
 
+        playbackCoordinator.setTonesDesired(true)
+        startPlayback(with: preset, mode: mode, updateSelection: true)
+    }
+
+    private func startPlayback(with preset: Preset, mode: OutputMode, updateSelection: Bool) {
         do {
             try engine.configure(preset: preset, mode: mode)
             try engine.start()
-            selectedPreset = preset
+            if updateSelection {
+                selectedPreset = preset
+            }
             isPlaying = true
             settings.lastPresetName = preset.name
-            updateNowPlaying(isPlaying: true)
+            playbackCoordinator.tonesStateDidChange(isPlaying: true, presetName: preset.name)
         } catch {
-            print("Failed to configure tone engine: \\(error)")
+            print("Failed to start preset: \(error)")
         }
+    }
+
+    private func pausePlayback() {
+        guard engine.isRunning else {
+            playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: selectedPreset?.name)
+            return
+        }
+        engine.pause()
+        isPlaying = false
+        playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: selectedPreset?.name)
     }
 
     private func restoreSelectionIfNeeded(from presets: [Preset]) {
-        if let name = settings.lastPresetName,
-           let restored = presets.first(where: { $0.name == name }) {
-            selectedPreset = restored
-            do {
-                try engine.configure(preset: restored, mode: outputMode)
-            } catch {
-                print("Failed to restore preset: \\(error)")
-            }
-            updateNowPlaying(isPlaying: false)
+        guard let name = settings.lastPresetName,
+              let restored = presets.first(where: { $0.name == name }) else { return }
+
+        selectedPreset = restored
+        do {
+            try engine.configure(preset: restored, mode: outputMode)
+        } catch {
+            print("Failed to restore preset: \(error)")
         }
+        playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: restored.name)
     }
 
-    private func configureRemoteCommands() {
-        nowPlaying.configureRemoteCommands(
-            onPlay: { [weak self] in
-                Task { @MainActor in self?.handleRemotePlay() }
-            },
-            onPause: { [weak self] in
-                Task { @MainActor in self?.handleRemotePause() }
-            }
+    private func registerWithCoordinator() {
+        playbackCoordinator.registerToneControls(
+            play: { [weak self] in Task { @MainActor in self?.handleCoordinatorPlay() } },
+            pause: { [weak self] in Task { @MainActor in self?.handleCoordinatorPause() } }
         )
     }
 
-    private func handleRemotePlay() {
-        guard let preset = selectedPreset else { return }
-        do {
-            try engine.configure(preset: preset, mode: outputMode)
-            try engine.start()
-            isPlaying = true
-            updateNowPlaying(isPlaying: true)
-        } catch {
-            print("Remote play failed: \\(error)")
+    private func handleCoordinatorPlay() {
+        if let preset = selectedPreset {
+            startPlayback(with: preset, mode: outputMode, updateSelection: false)
+            return
+        }
+
+        if let lastName = settings.lastPresetName,
+           let restored = presets.first(where: { $0.name == lastName }) {
+            startPlayback(with: restored, mode: outputMode, updateSelection: true)
+            return
+        }
+
+        if let first = presets.first {
+            startPlayback(with: first, mode: outputMode, updateSelection: true)
         }
     }
 
-    private func handleRemotePause() {
-        guard engine.isRunning else { return }
-        engine.pause()
-        isPlaying = false
-        updateNowPlaying(isPlaying: false)
-    }
-
-    private func updateNowPlaying(isPlaying: Bool) {
-        nowPlaying.update(presetName: selectedPreset?.name, isPlaying: isPlaying)
+    private func handleCoordinatorPause() {
+        pausePlayback()
     }
 }

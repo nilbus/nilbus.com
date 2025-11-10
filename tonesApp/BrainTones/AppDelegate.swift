@@ -9,12 +9,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     private func configureAudioSession() {
-        let session = AVAudioSession.sharedInstance()
-        do {
-            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers, .allowBluetooth, .allowBluetoothA2DP])
-            try session.setActive(true)
-        } catch {
-            print("Failed to configure audio session: \\(error)")
-        }
+        AudioSessionManager.configureForPlayback()
     }
 }

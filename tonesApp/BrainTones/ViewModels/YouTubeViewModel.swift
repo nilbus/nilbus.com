@@ -12,10 +12,17 @@ final class YouTubeViewModel: ObservableObject {
     @Published var startIndex: Int = 0
     @Published var startTime: Double = 0
     @Published var isPlayerReady = false
-    @Published var isPlayerPlaying = false
+    @Published var isPlayerPlaying = false {
+        didSet {
+            if isPlayerPlaying != oldValue {
+                playbackCoordinator.setYouTubeDesired(isPlayerPlaying)
+            }
+        }
+    }
 
     private let service: YouTubeServicing
     private let settings: SettingsStore
+    private let playbackCoordinator: MediaPlaybackCoordinator
     private var cancellables: Set<AnyCancellable> = []
     private var autoSaveTimer: Timer?
     private var lastKnownPlayback: PlaylistPlaybackState?
@@ -23,17 +30,27 @@ final class YouTubeViewModel: ObservableObject {
     init(
         service: YouTubeServicing = YouTubeService(apiKey: YouTubeConfig.apiKey),
         settings: SettingsStore = .shared,
+        playbackCoordinator: MediaPlaybackCoordinator? = nil,
         autoRestore: Bool = true
     ) {
         self.service = service
         self.settings = settings
+        self.playbackCoordinator = playbackCoordinator ?? MediaPlaybackCoordinator.shared
         playlistURL = settings.currentPlaylistURL?.absoluteString ?? ""
         activePlaylistId = settings.currentPlaylistId
+        recentPlaylists = settings.recentPlaylists
 
         settings.$recentPlaylists
             .receive(on: DispatchQueue.main)
             .assign(to: \.recentPlaylists, on: self)
             .store(in: &cancellables)
+
+        settings.$currentPlaylistId
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.activePlaylistId, on: self)
+            .store(in: &cancellables)
+
+        registerWithCoordinator()
 
         if autoRestore {
             Task { [weak self] in
@@ -47,7 +64,7 @@ final class YouTubeViewModel: ObservableObject {
     }
 
     func restoreExistingPlaylist() async {
-        guard let playlistId = activePlaylistId else { return }
+        guard let playlistId = settings.currentPlaylistId ?? activePlaylistId else { return }
         do {
             isLoading = true
             let playlist = try await service.fetchPlaylist(id: playlistId)
@@ -85,10 +102,13 @@ final class YouTubeViewModel: ObservableObject {
         case .playing:
             isPlayerPlaying = true
             startAutoSaveTimer()
-        case .paused, .buffering:
+        case .paused:
             isPlayerPlaying = false
             stopAutoSaveTimer()
             persistPlaybackState(index: index, time: time)
+        case .buffering:
+            isPlayerPlaying = true
+            startAutoSaveTimer()
         case .ended:
             isPlayerPlaying = false
             stopAutoSaveTimer()
@@ -96,6 +116,13 @@ final class YouTubeViewModel: ObservableObject {
         default:
             break
         }
+
+        playbackCoordinator.youtubeStateDidChange(
+            isPlaying: isPlayerPlaying,
+            playlistTitle: currentPlaylist?.title,
+            index: index,
+            time: time
+        )
     }
 
     func playerProgress(index: Int, time: Double, duration: Double) {
@@ -113,6 +140,22 @@ final class YouTubeViewModel: ObservableObject {
 }
 
 private extension YouTubeViewModel {
+    func registerWithCoordinator() {
+        playbackCoordinator.registerYouTubeControls(
+            play: { [weak self] in Task { @MainActor in self?.forcePlayFromCoordinator() } },
+            pause: { [weak self] in Task { @MainActor in self?.forcePauseFromCoordinator() } }
+        )
+    }
+
+    func forcePlayFromCoordinator() {
+        guard currentPlaylist != nil else { return }
+        isPlayerPlaying = true
+    }
+
+    func forcePauseFromCoordinator() {
+        isPlayerPlaying = false
+    }
+
     func loadPlaylist(withId playlistId: String, urlString: String) async {
         guard !playlistId.isEmpty else {
             errorMessage = YouTubeError.invalidPlaylistId.errorDescription
@@ -136,10 +179,11 @@ private extension YouTubeViewModel {
 
     func applyLoadedPlaylist(_ playlist: YouTubePlaylist, shouldAutoplay: Bool) {
         stopAutoSaveTimer()
-        persistLatestPlayback()
+        persistLatestPlayback(excluding: playlist.id)
         currentPlaylist = playlist
         activePlaylistId = playlist.id
         isPlayerPlaying = shouldAutoplay
+        playbackCoordinator.setYouTubeDesired(shouldAutoplay)
         errorMessage = nil
 
         if let savedState = settings.playlistState(for: playlist.id) {
@@ -151,6 +195,13 @@ private extension YouTubeViewModel {
             startTime = 0
             lastKnownPlayback = PlaylistPlaybackState(playlistId: playlist.id, videoIndex: 0, playbackTime: 0)
         }
+
+        playbackCoordinator.youtubeStateDidChange(
+            isPlaying: shouldAutoplay,
+            playlistTitle: playlist.title,
+            index: startIndex,
+            time: startTime
+        )
     }
 
     func startAutoSaveTimer() {
@@ -170,6 +221,12 @@ private extension YouTubeViewModel {
 
     func persistLatestPlayback() {
         guard let state = lastKnownPlayback else { return }
+        settings.updatePlaylistState(state)
+    }
+
+    func persistLatestPlayback(excluding playlistId: String) {
+        guard let state = lastKnownPlayback else { return }
+        guard state.playlistId != playlistId else { return }
         settings.updatePlaylistState(state)
     }
 
