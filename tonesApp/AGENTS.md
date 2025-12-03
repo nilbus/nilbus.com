@@ -22,7 +22,7 @@ Thanks for helping on this project. Here’s how to build and run the Brain Tone
 
 ## Notes
 - The iOS bundle identifier (`com.nilbus.BrainTones`) is already signed with the owner’s Apple ID. Do not change signing settings.
-- The app depends on the embedded YouTube player; verify audio presets and playlist playback on the physical device.
+- The app now ships with native S3 playlists; verify tone + music playback on the physical device.
 - If `xcodebuild` warns that the device is locked or busy, unlock it and rerun the commands.
 
 Please document any deviations or known issues in your PR/commit notes to keep the workflow smooth for the next agent.

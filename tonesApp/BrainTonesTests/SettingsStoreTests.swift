@@ -28,17 +28,47 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(newStore.outputMode, .speakers)
     }
 
-    func testPlaylistStatePersistence() {
+    func testMusicPlaybackStatePersistence() {
         let defaults = UserDefaults(suiteName: suiteName)!
         let store = SettingsStore(defaults: defaults)
-        let state = PlaylistPlaybackState(playlistId: "abc", videoIndex: 2, playbackTime: 42.5)
-        store.updatePlaylistState(state)
+        let state = MusicPlaybackState(playlistId: "focus", trackIndex: 3, playbackTime: 42.5)
+        store.updatePlaybackState(state)
 
-        guard let persisted = store.playlistState(for: "abc") else {
+        guard let persisted = store.playbackState(for: "focus") else {
             return XCTFail("Expected persisted state for playlist")
         }
 
-        XCTAssertEqual(persisted.videoIndex, state.videoIndex)
+        XCTAssertEqual(persisted.trackIndex, state.trackIndex)
         XCTAssertEqual(persisted.playbackTime, state.playbackTime, accuracy: 0.01)
+
+        store.removePlaybackState(for: "focus")
+        XCTAssertNil(store.playbackState(for: "focus"))
+    }
+
+    func testRecentPlaylistCustomNamePersistence() {
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let store = SettingsStore(defaults: defaults)
+
+        store.updateRecentPlaylist(id: "focus", customName: "Deep Work Mix")
+        XCTAssertEqual(store.recentPlaylists.count, 1)
+        XCTAssertEqual(store.recentPlaylists.first?.playlistId, "focus")
+        XCTAssertEqual(store.recentPlaylists.first?.customName, "Deep Work Mix")
+
+        store.updateRecentPlaylist(id: "focus", customName: nil)
+        XCTAssertNil(store.recentPlaylists.first?.customName)
+
+        store.removeRecentPlaylist(withId: "focus")
+        XCTAssertTrue(store.recentPlaylists.isEmpty)
+    }
+
+    func testCachedTrackFileNamesPersist() {
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let store = SettingsStore(defaults: defaults)
+
+        store.updateCachedFileName("alliespaces-track-01.mp3", for: "track-01")
+        XCTAssertEqual(store.cachedFileName(for: "track-01"), "alliespaces-track-01.mp3")
+
+        store.removeCachedFileName(for: "track-01")
+        XCTAssertNil(store.cachedFileName(for: "track-01"))
     }
 }

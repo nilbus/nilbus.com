@@ -14,14 +14,13 @@
 		AAAAAAA1111111100000021 /* ToneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000022 /* ToneEngine.swift */; };
 		AAAAAAA1111111100000023 /* ToneLayerNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000024 /* ToneLayerNode.swift */; };
 		AAAAAAA1111111100000027 /* BrainTonesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000026 /* BrainTonesViewModel.swift */; };
-		AAAAAAA111111110000002D /* YouTubeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000002B /* YouTubeModels.swift */; };
-		AAAAAAA1111111100000030 /* YouTubeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000002F /* YouTubeService.swift */; };
-		AAAAAAA1111111100000032 /* YouTubePlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000031 /* YouTubePlayerView.swift */; };
-		AAAAAAA1111111100000034 /* YouTubeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000033 /* YouTubeConfig.swift */; };
-		AAAAAAA1111111100000036 /* YouTubeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000035 /* YouTubeViewModel.swift */; };
+		AAAAAAA1111111100000060 /* MusicCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000065 /* MusicCatalog.swift */; };
+		AAAAAAA1111111100000061 /* TrackDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000066 /* TrackDownloadManager.swift */; };
+		AAAAAAA1111111100000062 /* MusicPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000067 /* MusicPlaybackController.swift */; };
+		AAAAAAA1111111100000063 /* MusicPlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000068 /* MusicPlayerViewModel.swift */; };
+		AAAAAAA111111110000006C /* Color+Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000006B /* Color+Theme.swift */; };
 		AAAAAAA1111111100000038 /* NowPlayingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000037 /* NowPlayingManager.swift */; };
-		AAAAAAA1111111100000040 /* YTPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000046 /* YTPlayerView.m */; };
-		AAAAAAA1111111100000049 /* YTPlayerView-iframe-player.html in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000048 /* YTPlayerView-iframe-player.html */; };
+		AAAAAAA1111111100000064 /* music_playlists.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000069 /* music_playlists.json */; };
 		AAAAAAA1111111100000050 /* AudioSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000051 /* AudioSessionManager.swift */; };
 		AAAAAAA1111111100000052 /* MediaPlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000053 /* MediaPlaybackCoordinator.swift */; };
 		BB0000000000000000000001 /* BrainTonesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000000A /* BrainTonesApp.swift */; };
@@ -30,7 +29,7 @@
 		BB0000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000000D /* Assets.xcassets */; };
 		BB0000000000000000000101 /* PresetLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000011 /* PresetLibraryTests.swift */; };
 		BB0000000000000000000102 /* SettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000012 /* SettingsStoreTests.swift */; };
-		BB0000000000000000000103 /* YouTubeViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000013 /* YouTubeViewModelTests.swift */; };
+		BB0000000000000000000103 /* MusicPlayerViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000013 /* MusicPlayerViewModelTests.swift */; };
 		BB0000000000000000000104 /* ToneEngineIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000014 /* ToneEngineIntegrationTests.swift */; };
 		BB0000000000000000000105 /* presets.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000015 /* presets.json */; };
 /* End PBXBuildFile section */
@@ -58,22 +57,21 @@
 		AAAAAAA1111111100000022 /* ToneEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneEngine.swift; sourceTree = "<group>"; };
 		AAAAAAA1111111100000024 /* ToneLayerNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneLayerNode.swift; sourceTree = "<group>"; };
 		AAAAAAA1111111100000026 /* BrainTonesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainTonesViewModel.swift; sourceTree = "<group>"; };
-		AAAAAAA111111110000002B /* YouTubeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeModels.swift; sourceTree = "<group>"; };
-		AAAAAAA111111110000002F /* YouTubeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeService.swift; sourceTree = "<group>"; };
-		AAAAAAA1111111100000031 /* YouTubePlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubePlayerView.swift; sourceTree = "<group>"; };
-		AAAAAAA1111111100000033 /* YouTubeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeConfig.swift; sourceTree = "<group>"; };
-		AAAAAAA1111111100000035 /* YouTubeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeViewModel.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000065 /* MusicCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicCatalog.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000066 /* TrackDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackDownloadManager.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000067 /* MusicPlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlaybackController.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000068 /* MusicPlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerViewModel.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000069 /* music_playlists.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = music_playlists.json; sourceTree = "<group>"; };
+		AAAAAAA111111110000006B /* Color+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Theme.swift"; sourceTree = "<group>"; };
 		AAAAAAA1111111100000037 /* NowPlayingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingManager.swift; sourceTree = "<group>"; };
 		AAAAAAA1111111100000045 /* BrainTones-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BrainTones-Bridging-Header.h"; sourceTree = "<group>"; };
-		AAAAAAA1111111100000046 /* YTPlayerView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = YTPlayerView.m; sourceTree = "<group>"; };
-		AAAAAAA1111111100000047 /* YTPlayerView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = YTPlayerView.h; sourceTree = "<group>"; };
-		AAAAAAA1111111100000048 /* YTPlayerView-iframe-player.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "YTPlayerView-iframe-player.html"; sourceTree = "<group>"; };
+		BB0000000000000000000013 /* MusicPlayerViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerViewModelTests.swift; sourceTree = "<group>"; };
 		AAAAAAA1111111100000051 /* AudioSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionManager.swift; sourceTree = "<group>"; };
 		AAAAAAA1111111100000053 /* MediaPlaybackCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackCoordinator.swift; sourceTree = "<group>"; };
 		AAAAAAAA1111111100000003 /* BrainTones.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BrainTones.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB0000000000000000000011 /* PresetLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetLibraryTests.swift; sourceTree = "<group>"; };
 		BB0000000000000000000012 /* SettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreTests.swift; sourceTree = "<group>"; };
-		BB0000000000000000000013 /* YouTubeViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeViewModelTests.swift; sourceTree = "<group>"; };
+		BB0000000000000000000013 /* MusicPlayerViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerViewModelTests.swift; sourceTree = "<group>"; };
 		BB0000000000000000000014 /* ToneEngineIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneEngineIntegrationTests.swift; sourceTree = "<group>"; };
 		BB0000000000000000000016 /* BrainTonesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BrainTonesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -102,13 +100,14 @@
 				AAAAAAA111111110000000A /* BrainTonesApp.swift */,
 				AAAAAAA111111110000000C /* AppDelegate.swift */,
 				AAAAAAA111111110000000B /* ContentView.swift */,
+				AAAAAAA111111110000006B /* Color+Theme.swift */,
 				AAAAAAA111111110000001A /* Models */,
 				AAAAAAA111111110000001C /* Stores */,
 				AAAAAAA1111111100000028 /* ViewModels */,
 				AAAAAAA1111111100000025 /* AudioEngine */,
 				AAAAAAA1111111100000039 /* Media */,
 				AAAAAAA1111111100000053 /* MediaPlaybackCoordinator.swift */,
-				AAAAAAA111111110000002E /* YouTube */,
+				AAAAAAA111111110000006A /* Music */,
 				AAAAAAA1111111100000016 /* Resources */,
 				AAAAAAA111111110000000D /* Assets.xcassets */,
 				AAAAAAA111111110000000E /* Info.plist */,
@@ -122,7 +121,7 @@
 			isa = PBXGroup;
 			children = (
 				AAAAAAA1111111100000015 /* presets.json */,
-				AAAAAAA1111111100000048 /* YTPlayerView-iframe-player.html */,
+				AAAAAAA1111111100000069 /* music_playlists.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -157,22 +156,9 @@
 			isa = PBXGroup;
 			children = (
 				AAAAAAA1111111100000026 /* BrainTonesViewModel.swift */,
-				AAAAAAA1111111100000035 /* YouTubeViewModel.swift */,
+				AAAAAAA1111111100000068 /* MusicPlayerViewModel.swift */,
 			);
 			path = ViewModels;
-			sourceTree = "<group>";
-		};
-		AAAAAAA111111110000002E /* YouTube */ = {
-			isa = PBXGroup;
-			children = (
-				AAAAAAA111111110000002B /* YouTubeModels.swift */,
-				AAAAAAA111111110000002F /* YouTubeService.swift */,
-				AAAAAAA1111111100000033 /* YouTubeConfig.swift */,
-				AAAAAAA1111111100000031 /* YouTubePlayerView.swift */,
-				AAAAAAA1111111100000047 /* YTPlayerView.h */,
-				AAAAAAA1111111100000046 /* YTPlayerView.m */,
-			);
-			path = YouTube;
 			sourceTree = "<group>";
 		};
 		AAAAAAA1111111100000039 /* Media */ = {
@@ -181,6 +167,16 @@
 				AAAAAAA1111111100000037 /* NowPlayingManager.swift */,
 			);
 			path = Media;
+			sourceTree = "<group>";
+		};
+		AAAAAAA111111110000006A /* Music */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA1111111100000065 /* MusicCatalog.swift */,
+				AAAAAAA1111111100000066 /* TrackDownloadManager.swift */,
+				AAAAAAA1111111100000067 /* MusicPlaybackController.swift */,
+			);
+			path = Music;
 			sourceTree = "<group>";
 		};
 		AAAAAAA1111111100000042 /* Products */ = {
@@ -206,7 +202,7 @@
 			children = (
 				BB0000000000000000000011 /* PresetLibraryTests.swift */,
 				BB0000000000000000000012 /* SettingsStoreTests.swift */,
-				BB0000000000000000000013 /* YouTubeViewModelTests.swift */,
+				BB0000000000000000000013 /* MusicPlayerViewModelTests.swift */,
 				BB0000000000000000000014 /* ToneEngineIntegrationTests.swift */,
 			);
 			path = BrainTonesTests;
@@ -290,7 +286,7 @@
 			files = (
 				BB0000000000000000000004 /* Assets.xcassets in Resources */,
 				AAAAAAA1111111100000017 /* presets.json in Resources */,
-				AAAAAAA1111111100000049 /* YTPlayerView-iframe-player.html in Resources */,
+				AAAAAAA1111111100000064 /* music_playlists.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,20 +307,19 @@
 			files = (
 				BB0000000000000000000001 /* BrainTonesApp.swift in Sources */,
 				BB0000000000000000000002 /* ContentView.swift in Sources */,
+				AAAAAAA111111110000006C /* Color+Theme.swift in Sources */,
 				BB0000000000000000000003 /* AppDelegate.swift in Sources */,
 				AAAAAAA1111111100000019 /* Preset.swift in Sources */,
 				AAAAAAA111111110000001D /* SettingsStore.swift in Sources */,
 				AAAAAAA1111111100000020 /* PresetStore.swift in Sources */,
 				AAAAAAA1111111100000021 /* ToneEngine.swift in Sources */,
 				AAAAAAA1111111100000023 /* ToneLayerNode.swift in Sources */,
-				AAAAAAA111111110000002D /* YouTubeModels.swift in Sources */,
-				AAAAAAA1111111100000030 /* YouTubeService.swift in Sources */,
-				AAAAAAA1111111100000032 /* YouTubePlayerView.swift in Sources */,
-				AAAAAAA1111111100000034 /* YouTubeConfig.swift in Sources */,
-				AAAAAAA1111111100000036 /* YouTubeViewModel.swift in Sources */,
+				AAAAAAA1111111100000060 /* MusicCatalog.swift in Sources */,
+				AAAAAAA1111111100000061 /* TrackDownloadManager.swift in Sources */,
+				AAAAAAA1111111100000062 /* MusicPlaybackController.swift in Sources */,
+				AAAAAAA1111111100000063 /* MusicPlayerViewModel.swift in Sources */,
 				AAAAAAA1111111100000027 /* BrainTonesViewModel.swift in Sources */,
 				AAAAAAA1111111100000038 /* NowPlayingManager.swift in Sources */,
-				AAAAAAA1111111100000040 /* YTPlayerView.m in Sources */,
 				AAAAAAA1111111100000050 /* AudioSessionManager.swift in Sources */,
 				AAAAAAA1111111100000052 /* MediaPlaybackCoordinator.swift in Sources */,
 			);
@@ -336,7 +331,7 @@
 			files = (
 				BB0000000000000000000101 /* PresetLibraryTests.swift in Sources */,
 				BB0000000000000000000102 /* SettingsStoreTests.swift in Sources */,
-				BB0000000000000000000103 /* YouTubeViewModelTests.swift in Sources */,
+				BB0000000000000000000103 /* MusicPlayerViewModelTests.swift in Sources */,
 				BB0000000000000000000104 /* ToneEngineIntegrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

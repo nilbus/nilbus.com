@@ -1,25 +1,34 @@
 import Foundation
+
 @MainActor
 final class MediaPlaybackCoordinator {
     static let shared = MediaPlaybackCoordinator()
 
     private let nowPlayingManager: NowPlayingManager
+
     private var tonePlayHandler: (() -> Void)?
     private var tonePauseHandler: (() -> Void)?
-    private var youtubePlayHandler: (() -> Void)?
-    private var youtubePauseHandler: (() -> Void)?
+
+    private var musicPlayHandler: (() -> Void)?
+    private var musicPauseHandler: (() -> Void)?
+    private var musicSkipForwardHandler: (() -> Void)?
+    private var musicSkipBackwardHandler: (() -> Void)?
+    private var musicSeekHandler: ((TimeInterval) -> Void)?
 
     private(set) var isTonesPlaying = false
-    private(set) var isYouTubePlaying = false
+    private(set) var isMusicPlaying = false
 
     private var desiredTonesPlaying = false
-    private var desiredYouTubePlaying = false
+    private var desiredMusicPlaying = false
 
     private var pendingToneIntent: Bool?
-    private var pendingYouTubeIntent: Bool?
+    private var pendingMusicIntent: Bool?
 
     private var currentPresetName: String?
     private var currentPlaylistTitle: String?
+    private var currentTrackTitle: String?
+    private var currentTrackDuration: TimeInterval?
+    private var currentTrackPosition: TimeInterval = 0
 
     private init(nowPlayingManager: NowPlayingManager = .shared) {
         self.nowPlayingManager = nowPlayingManager
@@ -33,10 +42,32 @@ final class MediaPlaybackCoordinator {
         tonePauseHandler = pause
     }
 
-    func registerYouTubeControls(play: @escaping () -> Void, pause: @escaping () -> Void) {
-        youtubePlayHandler = play
-        youtubePauseHandler = pause
+    func registerMusicControls(
+        play: @escaping () -> Void,
+        pause: @escaping () -> Void,
+        skipForward: @escaping () -> Void,
+        skipBackward: @escaping () -> Void,
+        seek: @escaping (TimeInterval) -> Void
+    ) {
+        musicPlayHandler = play
+        musicPauseHandler = pause
+        musicSkipForwardHandler = skipForward
+        musicSkipBackwardHandler = skipBackward
+        musicSeekHandler = seek
+        nowPlayingManager.updateHandlers(
+            onSkipForward: { [weak self] in
+                Task { @MainActor in self?.musicSkipForwardHandler?() }
+            },
+            onSkipBackward: { [weak self] in
+                Task { @MainActor in self?.musicSkipBackwardHandler?() }
+            },
+            onSeek: { [weak self] position in
+                Task { @MainActor in self?.musicSeekHandler?(position) }
+            }
+        )
     }
+
+    // MARK: - Desired State
 
     func setTonesDesired(_ desired: Bool) {
         if pendingToneIntent != nil {
@@ -46,11 +77,11 @@ final class MediaPlaybackCoordinator {
         }
     }
 
-    func setYouTubeDesired(_ desired: Bool) {
-        if pendingYouTubeIntent != nil {
-            pendingYouTubeIntent = desired
+    func setMusicDesired(_ desired: Bool) {
+        if pendingMusicIntent != nil {
+            pendingMusicIntent = desired
         } else {
-            desiredYouTubePlaying = desired
+            desiredMusicPlaying = desired
         }
     }
 
@@ -74,21 +105,27 @@ final class MediaPlaybackCoordinator {
         updateNowPlaying()
     }
 
-    func youtubeStateDidChange(
+    func musicStateDidChange(
         isPlaying: Bool,
         playlistTitle: String?,
-        index: Int,
-        time: Double
+        trackTitle: String?,
+        position: TimeInterval,
+        duration: TimeInterval?
     ) {
-        if let pending = pendingYouTubeIntent {
-            desiredYouTubePlaying = pending
-            pendingYouTubeIntent = nil
+        if let pending = pendingMusicIntent {
+            desiredMusicPlaying = pending
+            pendingMusicIntent = nil
         }
 
-        isYouTubePlaying = isPlaying
+        isMusicPlaying = isPlaying
         if let playlistTitle {
             currentPlaylistTitle = playlistTitle
         }
+        if let trackTitle {
+            currentTrackTitle = trackTitle
+        }
+        currentTrackPosition = position
+        currentTrackDuration = duration
 
         if isPlaying {
             AudioSessionManager.configureForPlayback()
@@ -102,27 +139,30 @@ final class MediaPlaybackCoordinator {
 
     func playAll(rememberIntent: Bool = false) {
         if rememberIntent {
-            // Use previously stored intents; nothing to change here because setTonesDesired/setYouTubeDesired should already hold them
+            // Use previously stored intents; nothing to change here because setTonesDesired/setMusicDesired should already hold them
         }
+
         if desiredTonesPlaying {
             tonePlayHandler?()
         }
-        if desiredYouTubePlaying {
-            youtubePlayHandler?()
+
+        if desiredMusicPlaying {
+            musicPlayHandler?()
         }
     }
 
     func pauseAll(rememberIntent: Bool = false) {
         if rememberIntent {
             pendingToneIntent = desiredTonesPlaying
-            pendingYouTubeIntent = desiredYouTubePlaying
+            pendingMusicIntent = desiredMusicPlaying
         }
+
         tonePauseHandler?()
-        youtubePauseHandler?()
+        musicPauseHandler?()
     }
 
     func togglePlayPause() {
-        if isTonesPlaying || isYouTubePlaying {
+        if isTonesPlaying || isMusicPlaying {
             pauseAll(rememberIntent: true)
         } else {
             playAll(rememberIntent: true)
@@ -151,33 +191,36 @@ final class MediaPlaybackCoordinator {
     // MARK: - Metadata
 
     private func updateNowPlaying() {
-        let title: String?
-
-        if isTonesPlaying || desiredTonesPlaying {
-            title = currentPresetName ?? "Brain Tones"
-        } else if isYouTubePlaying || desiredYouTubePlaying {
-            title = currentPlaylistTitle ?? currentPresetName ?? "YouTube Playlist"
-        } else {
-            title = currentPresetName ?? currentPlaylistTitle
-        }
-
-        nowPlayingManager.update(presetName: title, isPlaying: isTonesPlaying || isYouTubePlaying)
+        nowPlayingManager.update(
+            presetName: currentPresetName,
+            playlistTitle: currentPlaylistTitle,
+            trackTitle: currentTrackTitle,
+            trackDuration: currentTrackDuration,
+            trackPosition: currentTrackPosition,
+            isPlaying: isTonesPlaying || isMusicPlaying
+        )
     }
 
 #if DEBUG
     func resetForTesting() {
         tonePlayHandler = nil
         tonePauseHandler = nil
-        youtubePlayHandler = nil
-        youtubePauseHandler = nil
+        musicPlayHandler = nil
+        musicPauseHandler = nil
+        musicSkipForwardHandler = nil
+        musicSkipBackwardHandler = nil
+        musicSeekHandler = nil
         isTonesPlaying = false
-        isYouTubePlaying = false
+        isMusicPlaying = false
         desiredTonesPlaying = false
-        desiredYouTubePlaying = false
+        desiredMusicPlaying = false
         pendingToneIntent = nil
-        pendingYouTubeIntent = nil
+        pendingMusicIntent = nil
         currentPresetName = nil
         currentPlaylistTitle = nil
+        currentTrackTitle = nil
+        currentTrackDuration = nil
+        currentTrackPosition = 0
     }
 #endif
 }
