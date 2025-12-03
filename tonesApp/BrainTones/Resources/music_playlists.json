@@ -1,0 +1,77 @@
+{
+  "playlists": [
+    {
+      "id": "alliespaces",
+      "title": "AllieSpaces",
+      "defaultStartIndex": 0,
+      "tracks": [
+        {
+          "id": "alliespaces-track-01",
+          "title": "Chillout Ambient",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/1+Chillout+Ambient.mp3"
+        },
+        {
+          "id": "alliespaces-track-02",
+          "title": "Allie's Dream",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/2+Allie's+Dream.mp3"
+        },
+        {
+          "id": "alliespaces-track-03",
+          "title": "The Dream of an AI Mind",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/3+The+dream+of+an+AI+Mind.mp3"
+        },
+        {
+          "id": "alliespaces-track-04",
+          "title": "Relaxing Yoga",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/4+Relaxing+Yoga.mp3"
+        },
+        {
+          "id": "alliespaces-track-05",
+          "title": "Waves",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/5+Waves.mp3"
+        },
+        {
+          "id": "alliespaces-track-06",
+          "title": "Astronaut",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/6+Astronaut.mp3"
+        },
+        {
+          "id": "alliespaces-track-07",
+          "title": "Rain",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/7+Rain.mp3"
+        },
+        {
+          "id": "alliespaces-track-08",
+          "title": "ADHD",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/8+ADHD.mp3"
+        },
+        {
+          "id": "alliespaces-track-09",
+          "title": "Quiet Depths",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/9+Quiet+Depths.mp3"
+        },
+        {
+          "id": "alliespaces-track-10",
+          "title": "Focus Rain",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/10+Focus+Rain.mp3"
+        },
+        {
+          "id": "alliespaces-track-11",
+          "title": "Distant Planet",
+          "duration": null,
+          "remoteURL": "https://nilbus-podcasts.s3.us-east-2.amazonaws.com/AllieSpaces/11+Distant+Planet.mp3"
+        }
+      ]
+    }
+  ]
+}

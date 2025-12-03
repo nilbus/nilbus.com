@@ -92,11 +92,11 @@ const PRESET_TONES = [
     ]
   },
   {
-    name: "Relaxed Productivity Flow",
+    name: "Relaxed, Productive Creativity",
     layers: [
       { freq: 14, carrier: 250, type: "isochronic", vol: "60", purpose: "Steady analytical focus" },
       { freq: 10, carrier: 230, type: "binaural", vol: "65/50", purpose: "Relaxed clarity and mental ease" },
-      { freq: 6.5, carrier: 200, type: "isochronic", vol: "50", purpose: "Creative flow and pattern recognition" }
+      { freq: 7.5, carrier: 200, type: "isochronic", vol: "45", purpose: "Creative flow and pattern recognition" }
     ]
   },
   {
@@ -123,12 +123,12 @@ const PRESET_TONES = [
     ]
   },
   {
-    name: "Primal Drop",
+    name: "Primal Pairing",
     layers: [
-      { freq: 6.3, carrier: "210.42/157.43", type: "isochronic", vol: "75/38", purpose: "Trance focus" },
-      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "70/35", purpose: "Surrender and body sensitivity" },
-      { freq: 0.2, carrier: "396/210.42", type: "isochronic", vol: "60/30", purpose: "Deep primal embodiment" }
-    ]
+      { freq: 7.5, carrier: "210.42/180", type: "isochronic", vol: "70/60", purpose: "Arousal focus and trance entry" },
+      { freq: 2.4, carrier: "157.43/144", type: "isochronic", vol: "90/60", purpose: "Pelvic interoception & sensitivity" },
+      { freq: 0.8, carrier: "315/216", type: "isochronic", vol: "55/30", purpose: "Full-body surrender waves and cresting support" }
+  ]
   },
   {
     name: "HFDO Surrender",

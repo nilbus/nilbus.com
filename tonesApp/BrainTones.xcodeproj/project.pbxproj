@@ -1,0 +1,587 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AAAAAAA1111111100000017 /* presets.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000015 /* presets.json */; };
+		AAAAAAA1111111100000019 /* Preset.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000018 /* Preset.swift */; };
+		AAAAAAA111111110000001D /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000001B /* SettingsStore.swift */; };
+		AAAAAAA1111111100000020 /* PresetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000001F /* PresetStore.swift */; };
+		AAAAAAA1111111100000021 /* ToneEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000022 /* ToneEngine.swift */; };
+		AAAAAAA1111111100000023 /* ToneLayerNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000024 /* ToneLayerNode.swift */; };
+		AAAAAAA1111111100000027 /* BrainTonesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000026 /* BrainTonesViewModel.swift */; };
+		AAAAAAA1111111100000060 /* MusicCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000065 /* MusicCatalog.swift */; };
+		AAAAAAA1111111100000061 /* TrackDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000066 /* TrackDownloadManager.swift */; };
+		AAAAAAA1111111100000062 /* MusicPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000067 /* MusicPlaybackController.swift */; };
+		AAAAAAA1111111100000063 /* MusicPlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000068 /* MusicPlayerViewModel.swift */; };
+		AAAAAAA111111110000006C /* Color+Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000006B /* Color+Theme.swift */; };
+		AAAAAAA1111111100000038 /* NowPlayingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000037 /* NowPlayingManager.swift */; };
+		AAAAAAA1111111100000064 /* music_playlists.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000069 /* music_playlists.json */; };
+		AAAAAAA1111111100000050 /* AudioSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000051 /* AudioSessionManager.swift */; };
+		AAAAAAA1111111100000052 /* MediaPlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000053 /* MediaPlaybackCoordinator.swift */; };
+		BB0000000000000000000001 /* BrainTonesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000000A /* BrainTonesApp.swift */; };
+		BB0000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000000B /* ContentView.swift */; };
+		BB0000000000000000000003 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000000C /* AppDelegate.swift */; };
+		BB0000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAA111111110000000D /* Assets.xcassets */; };
+		BB0000000000000000000101 /* PresetLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000011 /* PresetLibraryTests.swift */; };
+		BB0000000000000000000102 /* SettingsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000012 /* SettingsStoreTests.swift */; };
+		BB0000000000000000000103 /* MusicPlayerViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000013 /* MusicPlayerViewModelTests.swift */; };
+		BB0000000000000000000104 /* ToneEngineIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000014 /* ToneEngineIntegrationTests.swift */; };
+		BB0000000000000000000105 /* presets.json in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAA1111111100000015 /* presets.json */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BB000000000000000000001F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AAAAAAAA1111111100000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AAAAAAAA1111111100000002;
+			remoteInfo = BrainTones;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		AAAAAAA111111110000000A /* BrainTonesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainTonesApp.swift; sourceTree = "<group>"; };
+		AAAAAAA111111110000000B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AAAAAAA111111110000000C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AAAAAAA111111110000000D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AAAAAAA111111110000000E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AAAAAAA1111111100000015 /* presets.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = presets.json; sourceTree = "<group>"; };
+		AAAAAAA1111111100000018 /* Preset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preset.swift; sourceTree = "<group>"; };
+		AAAAAAA111111110000001B /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		AAAAAAA111111110000001F /* PresetStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetStore.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000022 /* ToneEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneEngine.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000024 /* ToneLayerNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneLayerNode.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000026 /* BrainTonesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainTonesViewModel.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000065 /* MusicCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicCatalog.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000066 /* TrackDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackDownloadManager.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000067 /* MusicPlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlaybackController.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000068 /* MusicPlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerViewModel.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000069 /* music_playlists.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = music_playlists.json; sourceTree = "<group>"; };
+		AAAAAAA111111110000006B /* Color+Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Theme.swift"; sourceTree = "<group>"; };
+		AAAAAAA1111111100000037 /* NowPlayingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingManager.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000045 /* BrainTones-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BrainTones-Bridging-Header.h"; sourceTree = "<group>"; };
+		BB0000000000000000000013 /* MusicPlayerViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerViewModelTests.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000051 /* AudioSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionManager.swift; sourceTree = "<group>"; };
+		AAAAAAA1111111100000053 /* MediaPlaybackCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlaybackCoordinator.swift; sourceTree = "<group>"; };
+		AAAAAAAA1111111100000003 /* BrainTones.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BrainTones.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB0000000000000000000011 /* PresetLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetLibraryTests.swift; sourceTree = "<group>"; };
+		BB0000000000000000000012 /* SettingsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStoreTests.swift; sourceTree = "<group>"; };
+		BB0000000000000000000013 /* MusicPlayerViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerViewModelTests.swift; sourceTree = "<group>"; };
+		BB0000000000000000000014 /* ToneEngineIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToneEngineIntegrationTests.swift; sourceTree = "<group>"; };
+		BB0000000000000000000016 /* BrainTonesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BrainTonesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AAAAAAAA1111111100000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB0000000000000000000019 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AAAAAAA1111111100000008 /* BrainTones */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA111111110000000A /* BrainTonesApp.swift */,
+				AAAAAAA111111110000000C /* AppDelegate.swift */,
+				AAAAAAA111111110000000B /* ContentView.swift */,
+				AAAAAAA111111110000006B /* Color+Theme.swift */,
+				AAAAAAA111111110000001A /* Models */,
+				AAAAAAA111111110000001C /* Stores */,
+				AAAAAAA1111111100000028 /* ViewModels */,
+				AAAAAAA1111111100000025 /* AudioEngine */,
+				AAAAAAA1111111100000039 /* Media */,
+				AAAAAAA1111111100000053 /* MediaPlaybackCoordinator.swift */,
+				AAAAAAA111111110000006A /* Music */,
+				AAAAAAA1111111100000016 /* Resources */,
+				AAAAAAA111111110000000D /* Assets.xcassets */,
+				AAAAAAA111111110000000E /* Info.plist */,
+				AAAAAAA1111111100000045 /* BrainTones-Bridging-Header.h */,
+				AAAAAAA1111111100000051 /* AudioSessionManager.swift */,
+			);
+			path = BrainTones;
+			sourceTree = "<group>";
+		};
+		AAAAAAA1111111100000016 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA1111111100000015 /* presets.json */,
+				AAAAAAA1111111100000069 /* music_playlists.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		AAAAAAA111111110000001A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA1111111100000018 /* Preset.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AAAAAAA111111110000001C /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA111111110000001B /* SettingsStore.swift */,
+				AAAAAAA111111110000001F /* PresetStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		AAAAAAA1111111100000025 /* AudioEngine */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA1111111100000022 /* ToneEngine.swift */,
+				AAAAAAA1111111100000024 /* ToneLayerNode.swift */,
+			);
+			path = AudioEngine;
+			sourceTree = "<group>";
+		};
+		AAAAAAA1111111100000028 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA1111111100000026 /* BrainTonesViewModel.swift */,
+				AAAAAAA1111111100000068 /* MusicPlayerViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		AAAAAAA1111111100000039 /* Media */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA1111111100000037 /* NowPlayingManager.swift */,
+			);
+			path = Media;
+			sourceTree = "<group>";
+		};
+		AAAAAAA111111110000006A /* Music */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA1111111100000065 /* MusicCatalog.swift */,
+				AAAAAAA1111111100000066 /* TrackDownloadManager.swift */,
+				AAAAAAA1111111100000067 /* MusicPlaybackController.swift */,
+			);
+			path = Music;
+			sourceTree = "<group>";
+		};
+		AAAAAAA1111111100000042 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAA1111111100000003 /* BrainTones.app */,
+				BB0000000000000000000016 /* BrainTonesTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AAAAAAAA1111111100000007 = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAA1111111100000008 /* BrainTones */,
+				BB0000000000000000000010 /* BrainTonesTests */,
+				AAAAAAA1111111100000042 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BB0000000000000000000010 /* BrainTonesTests */ = {
+			isa = PBXGroup;
+			children = (
+				BB0000000000000000000011 /* PresetLibraryTests.swift */,
+				BB0000000000000000000012 /* SettingsStoreTests.swift */,
+				BB0000000000000000000013 /* MusicPlayerViewModelTests.swift */,
+				BB0000000000000000000014 /* ToneEngineIntegrationTests.swift */,
+			);
+			path = BrainTonesTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AAAAAAAA1111111100000002 /* BrainTones */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAAAAAA111111110000000F /* Build configuration list for PBXNativeTarget "BrainTones" */;
+			buildPhases = (
+				AAAAAAAA1111111100000004 /* Sources */,
+				AAAAAAAA1111111100000005 /* Frameworks */,
+				AAAAAAAA1111111100000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BrainTones;
+			productName = BrainTones;
+			productReference = AAAAAAAA1111111100000003 /* BrainTones.app */;
+			productType = "com.apple.product-type.application";
+		};
+		BB0000000000000000000017 /* BrainTonesTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB000000000000000000001B /* Build configuration list for PBXNativeTarget "BrainTonesTests" */;
+			buildPhases = (
+				BB0000000000000000000018 /* Sources */,
+				BB0000000000000000000019 /* Frameworks */,
+				BB000000000000000000001A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BB0000000000000000000020 /* PBXTargetDependency */,
+			);
+			name = BrainTonesTests;
+			productName = BrainTonesTests;
+			productReference = BB0000000000000000000016 /* BrainTonesTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AAAAAAAA1111111100000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					AAAAAAAA1111111100000002 = {
+						CreatedOnToolsVersion = 15.2;
+					};
+				};
+			};
+			buildConfigurationList = AAAAAAA1111111100000010 /* Build configuration list for PBXProject "BrainTones" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AAAAAAAA1111111100000007;
+			productRefGroup = AAAAAAA1111111100000042 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AAAAAAAA1111111100000002 /* BrainTones */,
+				BB0000000000000000000017 /* BrainTonesTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AAAAAAAA1111111100000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB0000000000000000000004 /* Assets.xcassets in Resources */,
+				AAAAAAA1111111100000017 /* presets.json in Resources */,
+				AAAAAAA1111111100000064 /* music_playlists.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB000000000000000000001A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB0000000000000000000105 /* presets.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AAAAAAAA1111111100000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB0000000000000000000001 /* BrainTonesApp.swift in Sources */,
+				BB0000000000000000000002 /* ContentView.swift in Sources */,
+				AAAAAAA111111110000006C /* Color+Theme.swift in Sources */,
+				BB0000000000000000000003 /* AppDelegate.swift in Sources */,
+				AAAAAAA1111111100000019 /* Preset.swift in Sources */,
+				AAAAAAA111111110000001D /* SettingsStore.swift in Sources */,
+				AAAAAAA1111111100000020 /* PresetStore.swift in Sources */,
+				AAAAAAA1111111100000021 /* ToneEngine.swift in Sources */,
+				AAAAAAA1111111100000023 /* ToneLayerNode.swift in Sources */,
+				AAAAAAA1111111100000060 /* MusicCatalog.swift in Sources */,
+				AAAAAAA1111111100000061 /* TrackDownloadManager.swift in Sources */,
+				AAAAAAA1111111100000062 /* MusicPlaybackController.swift in Sources */,
+				AAAAAAA1111111100000063 /* MusicPlayerViewModel.swift in Sources */,
+				AAAAAAA1111111100000027 /* BrainTonesViewModel.swift in Sources */,
+				AAAAAAA1111111100000038 /* NowPlayingManager.swift in Sources */,
+				AAAAAAA1111111100000050 /* AudioSessionManager.swift in Sources */,
+				AAAAAAA1111111100000052 /* MediaPlaybackCoordinator.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB0000000000000000000018 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB0000000000000000000101 /* PresetLibraryTests.swift in Sources */,
+				BB0000000000000000000102 /* SettingsStoreTests.swift in Sources */,
+				BB0000000000000000000103 /* MusicPlayerViewModelTests.swift in Sources */,
+				BB0000000000000000000104 /* ToneEngineIntegrationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BB0000000000000000000020 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AAAAAAAA1111111100000002 /* BrainTones */;
+			targetProxy = BB000000000000000000001F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AAAAAAA1111111100000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AAAAAAA1111111100000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AAAAAAA1111111100000013 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = U6DJ3576BT;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BrainTones/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nilbus.BrainTones;
+				PRODUCT_NAME = BrainTones;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = BrainTones/BrainTones-Bridging-Header.h;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AAAAAAA1111111100000014 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = U6DJ3576BT;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BrainTones/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nilbus.BrainTones;
+				PRODUCT_NAME = BrainTones;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = BrainTones/BrainTones-Bridging-Header.h;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BB000000000000000000001C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = U6DJ3576BT;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nilbus.BrainTonesTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BrainTones.app/BrainTones";
+			};
+			name = Debug;
+		};
+		BB000000000000000000001D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nilbus.BrainTonesTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BrainTones.app/BrainTones";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AAAAAAA111111110000000F /* Build configuration list for PBXNativeTarget "BrainTones" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAAAAA1111111100000013 /* Debug */,
+				AAAAAAA1111111100000014 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAAAAAA1111111100000010 /* Build configuration list for PBXProject "BrainTones" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAAAAA1111111100000011 /* Debug */,
+				AAAAAAA1111111100000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BB000000000000000000001B /* Build configuration list for PBXNativeTarget "BrainTonesTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB000000000000000000001C /* Debug */,
+				BB000000000000000000001D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AAAAAAAA1111111100000001 /* Project object */;
+}
