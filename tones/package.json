@@ -4,11 +4,11 @@
   "description": "Automated test suite for Brainaural SPA",
   "scripts": {
     "server": "npx http-server -p ${PORT:-8080} -c-1",
-    "test": "playwright test --reporter=line",
-    "test:headed": "playwright test --headed",
-    "test:ui": "playwright test --ui",
-    "test:debug": "playwright test --debug",
-    "test:ci": "playwright test --reporter=line --workers=1"
+    "test": "NODE_NO_WARNINGS=1 playwright test --workers=14 --reporter=line",
+    "test:headed": "NODE_NO_WARNINGS=1 playwright test --workers=14 --headed",
+    "test:ui": "NODE_NO_WARNINGS=1 playwright test --workers=14 --ui",
+    "test:debug": "NODE_NO_WARNINGS=1 playwright test --workers=14 --debug",
+    "test:ci": "NODE_NO_WARNINGS=1 playwright test --reporter=line --workers=14"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
