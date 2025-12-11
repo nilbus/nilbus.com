@@ -576,6 +576,62 @@ test.describe('YouTube Playlist Management', () => {
     expect(recentPlaylists.length).toBeGreaterThan(0);
     expect(recentPlaylists[0].title).toBe('Test Playlist');
   });
+
+  test('should start both YouTube player and tones when playlist link tapped while paused', async ({ page }) => {
+    // Given everything is paused (no preset selected, mute button is superactive)
+    await page.goto('/');
+    await expect(page.locator('#mute')).toHaveClass(/superactive/);
+    await expect(page.locator('.preset-button').first()).not.toHaveClass(/active/);
+
+    // Set up a playlist in recent playlists
+    await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+
+    page.on('dialog', async dialog => {
+      await dialog.accept('Test Playlist');
+    });
+    await page.click('#save-playlist-btn');
+    await expect(page.locator('#recent-playlists')).toBeVisible();
+
+    // Clear mock calls to track new activity
+    await page.evaluate(() => {
+      window.mockCalls.audioContext = [];
+      window.mockCalls.youtube = [];
+    });
+
+    // When the user taps a playlist link from recent playlists while everything is paused
+    await page.click('.recent-playlist-item .playlist-link');
+
+    // Wait for the playlist to load, preset to be selected, and audio to start
+    // Note: If no preset is selected, the first preset (speakers) will be selected automatically
+    // Then ensureAudioPlaying() will either initialize audio context (if not initialized)
+    // or resume it (if suspended), and then call performPlayAction() which starts YouTube
+    await page.waitForFunction(() => {
+      const mockCalls = window.mockCalls;
+      const playlistLoaded = mockCalls.youtube.some(call => call.includes('loadPlaylist'));
+      const audioStarted = mockCalls.audioContext.includes('AudioContext constructor') ||
+                          mockCalls.audioContext.includes('resume');
+      const youtubeStarted = mockCalls.youtube.includes('playVideo');
+      return playlistLoaded && (audioStarted || youtubeStarted);
+    }, { timeout: 5000 });
+
+    // Wait for the preset button to become active (selectPreset is async)
+    await expect(page.locator('#preset-0-speakers')).toHaveClass(/active/, { timeout: 5000 });
+
+    // Then both YouTube player and tones should start
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+
+    // Verify YouTube player starts (playVideo is called)
+    expect(mockCallsFromPage.youtube).toContain('playVideo');
+
+    // Verify tones start (either audio context is created or resumed)
+    const audioStarted = mockCallsFromPage.audioContext.includes('AudioContext constructor') ||
+                         mockCallsFromPage.audioContext.includes('resume');
+    expect(audioStarted).toBe(true);
+
+    // Verify the mute button is not superactive (indicating playback has started)
+    await expect(page.locator('#mute')).not.toHaveClass(/superactive/);
+  });
 });
 
 test.describe('YouTube Playlist Persistence', () => {
@@ -1147,13 +1203,11 @@ test.describe('Media Session API - Track Navigation', () => {
     await page.goto('/');
     await page.waitForFunction(() => window.isPlayerReady === true);
     await page.click('#preset-0-headphones');
+    await page.waitForTimeout(500);
 
-    // Mock YouTube player state
+    // Set up playlist ID in localStorage so saveCurrentPlaylistState can save
     await page.evaluate(() => {
-      if (window.player) {
-        window.player.getPlaylistIndex = () => 2;
-        window.player.getCurrentTime = () => 45;
-      }
+      localStorage.setItem('youtube_playlist_id', 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
     });
 
     // When the previoustrack media key action is triggered
@@ -1166,7 +1220,7 @@ test.describe('Media Session API - Track Navigation', () => {
     // Wait a moment for the save to complete
     await page.waitForTimeout(100);
 
-    // Then the playlist state should be saved (getCurrentTime should be called)
+    // Then the playlist state should be saved (previousVideo and getCurrentTime should be called)
     const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
     expect(mockCallsFromPage.youtube).toContain('previousVideo');
     expect(mockCallsFromPage.youtube).toContain('getCurrentTime');
@@ -1177,13 +1231,11 @@ test.describe('Media Session API - Track Navigation', () => {
     await page.goto('/');
     await page.waitForFunction(() => window.isPlayerReady === true);
     await page.click('#preset-0-headphones');
+    await page.waitForTimeout(500);
 
-    // Mock YouTube player state
+    // Set up playlist ID in localStorage so saveCurrentPlaylistState can save
     await page.evaluate(() => {
-      if (window.player) {
-        window.player.getPlaylistIndex = () => 2;
-        window.player.getCurrentTime = () => 45;
-      }
+      localStorage.setItem('youtube_playlist_id', 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
     });
 
     // When the nexttrack media key action is triggered
@@ -1196,7 +1248,7 @@ test.describe('Media Session API - Track Navigation', () => {
     // Wait a moment for the save to complete
     await page.waitForTimeout(100);
 
-    // Then the playlist state should be saved (getCurrentTime should be called)
+    // Then the playlist state should be saved (nextVideo and getCurrentTime should be called)
     const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
     expect(mockCallsFromPage.youtube).toContain('nextVideo');
     expect(mockCallsFromPage.youtube).toContain('getCurrentTime');
@@ -1225,8 +1277,10 @@ test.describe('Media Session API - Track Navigation', () => {
   });
 
   test('should register previoustrack and nexttrack handlers in setupMediaSession', async ({ page }) => {
-    // Given the page is loaded
+    // Given the page is loaded and audio is initialized (which calls setupMediaSession)
     await page.goto('/');
+    // Initialize audio to trigger setupMediaSession
+    await page.click('#preset-0-headphones');
 
     // Wait for Media Session to be set up
     await page.waitForFunction(() => {

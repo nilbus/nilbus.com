@@ -1678,6 +1678,10 @@ function loadPlaylistFromRecent(playlist) {
 	// Set the input field and load the playlist
 	document.getElementById('playlist-url').value = playlist.url;
 	loadActivePlaylist();
+
+	if (bPaused && !currentPreset) {
+		selectPreset(PRESET_TONES[0], 'speakers');
+	}
 }
 
 
