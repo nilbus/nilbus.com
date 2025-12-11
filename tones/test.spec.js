@@ -5,7 +5,8 @@ let mockCalls = {
   audioContext: [],
   youtube: [],
   localStorage: [],
-  wakeLock: []
+  wakeLock: [],
+  mediaSession: []
 };
 
 test.beforeEach(async ({ page }) => {
@@ -15,6 +16,7 @@ test.beforeEach(async ({ page }) => {
     youtube: [],
     localStorage: [],
     wakeLock: [],
+    mediaSession: [],
     disableWakeLock: false
   };
 
@@ -204,6 +206,16 @@ test.beforeEach(async ({ page }) => {
       getCurrentTime: () => {
         window.mockCalls.youtube.push('getCurrentTime');
         return 45; // Mock return value
+      },
+      previousVideo: () => {
+        window.mockCalls.youtube.push('previousVideo');
+      },
+      nextVideo: () => {
+        window.mockCalls.youtube.push('nextVideo');
+      },
+      getPlaylist: () => {
+        window.mockCalls.youtube.push('getPlaylist');
+        return ['video1', 'video2', 'video3', 'video4', 'video5']; // Mock playlist
       }
     };
 
@@ -309,6 +321,37 @@ test.beforeEach(async ({ page }) => {
         return originalLocalStorage.removeItem(key);
       }
     };
+
+    // Mock Media Session API
+    const mediaSessionHandlers = {};
+    const mockMediaSession = {
+      setActionHandler: (action, handler) => {
+        mediaSessionHandlers[action] = handler;
+        if (window.mockCalls) {
+          window.mockCalls.mediaSession = window.mockCalls.mediaSession || [];
+          window.mockCalls.mediaSession.push(`setActionHandler: ${action}`);
+        }
+      },
+      playbackState: 'none',
+      metadata: null,
+      setPositionState: () => {}
+    };
+    // Use defineProperty to ensure 'mediaSession' in navigator returns true
+    try {
+      Object.defineProperty(navigator, 'mediaSession', {
+        value: mockMediaSession,
+        writable: true,
+        configurable: true,
+        enumerable: true
+      });
+    } catch (e) {
+      // Fallback to direct assignment if defineProperty fails
+      navigator.mediaSession = mockMediaSession;
+    }
+    // Also set on window.navigator for compatibility
+    window.navigator.mediaSession = mockMediaSession;
+    // Store handlers globally for tests to access
+    window.mediaSessionHandlers = mediaSessionHandlers;
   }, mockCalls);
 });
 
@@ -1039,5 +1082,173 @@ test.describe('Screen Wake Lock API', () => {
     // Then a new wake lock should be requested
     const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
     expect(mockCallsFromPage.wakeLock).toContain('request: screen');
+  });
+});
+
+test.describe('Media Session API - Track Navigation', () => {
+  test('should handle previoustrack media key and call player.previousVideo()', async ({ page }) => {
+    // Given the YouTube player is ready and audio is initialized (which sets up Media Session)
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    // Initialize audio to set up Media Session handlers
+    await page.click('#preset-0-headphones');
+    // Wait a bit for setupMediaSession to complete
+    await page.waitForTimeout(500);
+
+    // Verify handlers are registered
+    const handlersExist = await page.evaluate(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.previoustrack === 'function';
+    });
+    expect(handlersExist).toBe(true);
+
+    // When the previoustrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+
+    // Then player.previousVideo() should be called
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).toContain('previousVideo');
+  });
+
+  test('should handle nexttrack media key and call player.nextVideo()', async ({ page }) => {
+    // Given the YouTube player is ready and audio is initialized (which sets up Media Session)
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    // Initialize audio to set up Media Session handlers
+    await page.click('#preset-0-headphones');
+    // Wait a bit for setupMediaSession to complete
+    await page.waitForTimeout(500);
+
+    // Verify handlers are registered
+    const handlersExist = await page.evaluate(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.nexttrack === 'function';
+    });
+    expect(handlersExist).toBe(true);
+
+    // When the nexttrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.nexttrack) {
+        window.mediaSessionHandlers.nexttrack();
+      }
+    });
+
+    // Then player.nextVideo() should be called
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).toContain('nextVideo');
+  });
+
+  test('should save playlist state after previous track navigation', async ({ page }) => {
+    // Given the YouTube player is ready and playing
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+
+    // Mock YouTube player state
+    await page.evaluate(() => {
+      if (window.player) {
+        window.player.getPlaylistIndex = () => 2;
+        window.player.getCurrentTime = () => 45;
+      }
+    });
+
+    // When the previoustrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+
+    // Wait a moment for the save to complete
+    await page.waitForTimeout(100);
+
+    // Then the playlist state should be saved (getCurrentTime should be called)
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).toContain('previousVideo');
+    expect(mockCallsFromPage.youtube).toContain('getCurrentTime');
+  });
+
+  test('should save playlist state after next track navigation', async ({ page }) => {
+    // Given the YouTube player is ready and playing
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+
+    // Mock YouTube player state
+    await page.evaluate(() => {
+      if (window.player) {
+        window.player.getPlaylistIndex = () => 2;
+        window.player.getCurrentTime = () => 45;
+      }
+    });
+
+    // When the nexttrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.nexttrack) {
+        window.mediaSessionHandlers.nexttrack();
+      }
+    });
+
+    // Wait a moment for the save to complete
+    await page.waitForTimeout(100);
+
+    // Then the playlist state should be saved (getCurrentTime should be called)
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).toContain('nextVideo');
+    expect(mockCallsFromPage.youtube).toContain('getCurrentTime');
+  });
+
+  test('should not call player methods if player is not ready', async ({ page }) => {
+    // Given the page is loaded but player is not ready
+    await page.goto('/');
+
+    // Set player to null and isPlayerReady to false
+    await page.evaluate(() => {
+      window.player = null;
+      window.isPlayerReady = false;
+    });
+
+    // When the previoustrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+
+    // Then player.previousVideo() should NOT be called
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).not.toContain('previousVideo');
+  });
+
+  test('should register previoustrack and nexttrack handlers in setupMediaSession', async ({ page }) => {
+    // Given the page is loaded
+    await page.goto('/');
+
+    // Wait for Media Session to be set up
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             window.mediaSessionHandlers.previoustrack &&
+             window.mediaSessionHandlers.nexttrack;
+    }, { timeout: 5000 });
+
+    // Then both handlers should be registered
+    const handlersRegistered = await page.evaluate(() => {
+      return {
+        previoustrack: typeof window.mediaSessionHandlers.previoustrack === 'function',
+        nexttrack: typeof window.mediaSessionHandlers.nexttrack === 'function'
+      };
+    });
+
+    expect(handlersRegistered.previoustrack).toBe(true);
+    expect(handlersRegistered.nexttrack).toBe(true);
+
+    // Verify Media Session API was called
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.mediaSession).toContain('setActionHandler: previoustrack');
+    expect(mockCallsFromPage.mediaSession).toContain('setActionHandler: nexttrack');
   });
 });

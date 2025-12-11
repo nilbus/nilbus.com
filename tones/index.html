@@ -1114,6 +1114,20 @@ function setupMediaSession() {
 		}
 	});
 
+	navigator.mediaSession.setActionHandler('previoustrack', () => {
+		if (player && isPlayerReady) {
+			player.previousVideo();
+			saveCurrentPlaylistState();
+		}
+	});
+
+	navigator.mediaSession.setActionHandler('nexttrack', () => {
+		if (player && isPlayerReady) {
+			player.nextVideo();
+			saveCurrentPlaylistState();
+		}
+	});
+
 	// Set initial playback state based on current audio state
 	const initialState = bPaused ? 'paused' : 'playing';
 	navigator.mediaSession.playbackState = initialState;
