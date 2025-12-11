@@ -8,7 +8,7 @@
     "test:headed": "NODE_NO_WARNINGS=1 playwright test --workers=14 --headed",
     "test:ui": "NODE_NO_WARNINGS=1 playwright test --workers=14 --ui",
     "test:debug": "NODE_NO_WARNINGS=1 playwright test --workers=14 --debug",
-    "test:ci": "NODE_NO_WARNINGS=1 playwright test --reporter=line --workers=14"
+    "test:ci": "NODE_NO_WARNINGS=1 CI=true playwright test --workers=14 --reporter=line"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",

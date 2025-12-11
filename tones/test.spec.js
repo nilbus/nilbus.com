@@ -997,8 +997,13 @@ test.describe('YouTube Playlist Auto-Save Feature', () => {
       }
     });
 
-    // Wait a moment for the save to complete
-    await page.waitForTimeout(100);
+    // Wait for the save to complete by checking localStorage
+    await page.waitForFunction(() => {
+      const stored = localStorage.getItem('youtube_playlist_states');
+      if (!stored) return false;
+      const states = JSON.parse(stored);
+      return states['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF'] !== undefined;
+    }, { timeout: 2000 });
 
     // Then the playlist track and position should be updated in localStorage
     const playlistStates = await page.evaluate(() => {
@@ -1175,8 +1180,11 @@ test.describe('Media Session API - Track Navigation', () => {
     await page.waitForFunction(() => window.isPlayerReady === true);
     // Initialize audio to set up Media Session handlers
     await page.click('#preset-0-headphones');
-    // Wait a bit for setupMediaSession to complete
-    await page.waitForTimeout(500);
+    // Wait for setupMediaSession to complete by checking handlers are registered
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.previoustrack === 'function';
+    }, { timeout: 5000 });
 
     // Verify handlers are registered
     const handlersExist = await page.evaluate(() => {
@@ -1203,8 +1211,11 @@ test.describe('Media Session API - Track Navigation', () => {
     await page.waitForFunction(() => window.isPlayerReady === true);
     // Initialize audio to set up Media Session handlers
     await page.click('#preset-0-headphones');
-    // Wait a bit for setupMediaSession to complete
-    await page.waitForTimeout(500);
+    // Wait for setupMediaSession to complete by checking handlers are registered
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.nexttrack === 'function';
+    }, { timeout: 5000 });
 
     // Verify handlers are registered
     const handlersExist = await page.evaluate(() => {
@@ -1258,7 +1269,11 @@ test.describe('Media Session API - Track Navigation', () => {
     await page.goto('/');
     await page.waitForFunction(() => window.isPlayerReady === true);
     await page.click('#preset-0-headphones');
-    await page.waitForTimeout(500);
+    // Wait for Media Session handlers to be set up
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.nexttrack === 'function';
+    }, { timeout: 5000 });
 
     // Set up playlist ID in localStorage so saveCurrentPlaylistState can save
     await page.evaluate(() => {
@@ -1272,8 +1287,12 @@ test.describe('Media Session API - Track Navigation', () => {
       }
     });
 
-    // Wait a moment for the save to complete
-    await page.waitForTimeout(100);
+    // Wait for the save to complete by checking mock calls
+    await page.waitForFunction(() => {
+      const mockCalls = window.mockCalls;
+      return mockCalls.youtube.includes('nextVideo') &&
+             mockCalls.youtube.includes('getCurrentTime');
+    }, { timeout: 2000 });
 
     // Then the playlist state should be saved (nextVideo and getCurrentTime should be called)
     const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
@@ -1377,7 +1396,11 @@ test.describe('Navigation History - Track Position Resumption', () => {
     await page.goto('/');
     await page.waitForFunction(() => window.isPlayerReady === true);
     await page.click('#preset-0-headphones');
-    await page.waitForTimeout(500);
+    // Wait for Media Session handlers to be set up
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.nexttrack === 'function';
+    }, { timeout: 5000 });
 
     // Set up initial state: track 2 at 30 seconds
     await page.evaluate(() => {
