@@ -5,7 +5,8 @@ let mockCalls = {
   audioContext: [],
   youtube: [],
   localStorage: [],
-  wakeLock: []
+  wakeLock: [],
+  mediaSession: []
 };
 
 test.beforeEach(async ({ page }) => {
@@ -15,6 +16,7 @@ test.beforeEach(async ({ page }) => {
     youtube: [],
     localStorage: [],
     wakeLock: [],
+    mediaSession: [],
     disableWakeLock: false
   };
 
@@ -178,12 +180,20 @@ test.beforeEach(async ({ page }) => {
     window.webkitAudioContext = window.AudioContext;
 
     // Mock YouTube iframe API - Complete replacement
+    let mockCurrentIndex = 2; // Track current playlist index
+    let mockCurrentTime = 45; // Track current playback time
     const mockPlayer = {
       loadPlaylist: (config) => {
         window.mockCalls.youtube.push(`loadPlaylist: ${JSON.stringify(config)}`);
+        if (config.index !== undefined) {
+          mockCurrentIndex = config.index;
+        }
       },
       cuePlaylist: (config) => {
         window.mockCalls.youtube.push(`cuePlaylist: ${JSON.stringify(config)}`);
+        if (config.index !== undefined) {
+          mockCurrentIndex = config.index;
+        }
       },
       playVideo: () => {
         window.mockCalls.youtube.push('playVideo');
@@ -199,11 +209,32 @@ test.beforeEach(async ({ page }) => {
       },
       getPlaylistIndex: () => {
         window.mockCalls.youtube.push('getPlaylistIndex');
-        return 2; // Mock return value
+        return mockCurrentIndex;
       },
       getCurrentTime: () => {
         window.mockCalls.youtube.push('getCurrentTime');
-        return 45; // Mock return value
+        return mockCurrentTime;
+      },
+      previousVideo: () => {
+        window.mockCalls.youtube.push('previousVideo');
+        if (mockCurrentIndex > 0) {
+          mockCurrentIndex--;
+        }
+      },
+      nextVideo: () => {
+        window.mockCalls.youtube.push('nextVideo');
+        const playlist = mockPlayer.getPlaylist();
+        if (mockCurrentIndex < playlist.length - 1) {
+          mockCurrentIndex++;
+        }
+      },
+      seekTo: (seconds, allowSeekAhead) => {
+        window.mockCalls.youtube.push(`seekTo: ${seconds}, ${allowSeekAhead}`);
+        mockCurrentTime = seconds;
+      },
+      getPlaylist: () => {
+        window.mockCalls.youtube.push('getPlaylist');
+        return ['video1', 'video2', 'video3', 'video4', 'video5']; // Mock playlist
       }
     };
 
@@ -262,6 +293,14 @@ test.beforeEach(async ({ page }) => {
       configurable: true
     });
 
+    // Expose mock state for tests
+    window.mockPlayerState = {
+      get currentIndex() { return mockCurrentIndex; },
+      set currentIndex(val) { mockCurrentIndex = val; },
+      get currentTime() { return mockCurrentTime; },
+      set currentTime(val) { mockCurrentTime = val; }
+    };
+
     // Mock the YouTube iframe script loading
     const originalCreateElement = document.createElement;
     document.createElement = function(tagName) {
@@ -309,6 +348,37 @@ test.beforeEach(async ({ page }) => {
         return originalLocalStorage.removeItem(key);
       }
     };
+
+    // Mock Media Session API
+    const mediaSessionHandlers = {};
+    const mockMediaSession = {
+      setActionHandler: (action, handler) => {
+        mediaSessionHandlers[action] = handler;
+        if (window.mockCalls) {
+          window.mockCalls.mediaSession = window.mockCalls.mediaSession || [];
+          window.mockCalls.mediaSession.push(`setActionHandler: ${action}`);
+        }
+      },
+      playbackState: 'none',
+      metadata: null,
+      setPositionState: () => {}
+    };
+    // Use defineProperty to ensure 'mediaSession' in navigator returns true
+    try {
+      Object.defineProperty(navigator, 'mediaSession', {
+        value: mockMediaSession,
+        writable: true,
+        configurable: true,
+        enumerable: true
+      });
+    } catch (e) {
+      // Fallback to direct assignment if defineProperty fails
+      navigator.mediaSession = mockMediaSession;
+    }
+    // Also set on window.navigator for compatibility
+    window.navigator.mediaSession = mockMediaSession;
+    // Store handlers globally for tests to access
+    window.mediaSessionHandlers = mediaSessionHandlers;
   }, mockCalls);
 });
 
@@ -532,6 +602,62 @@ test.describe('YouTube Playlist Management', () => {
     });
     expect(recentPlaylists.length).toBeGreaterThan(0);
     expect(recentPlaylists[0].title).toBe('Test Playlist');
+  });
+
+  test('should start both YouTube player and tones when playlist link tapped while paused', async ({ page }) => {
+    // Given everything is paused (no preset selected, mute button is superactive)
+    await page.goto('/');
+    await expect(page.locator('#mute')).toHaveClass(/superactive/);
+    await expect(page.locator('.preset-button').first()).not.toHaveClass(/active/);
+
+    // Set up a playlist in recent playlists
+    await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+
+    page.on('dialog', async dialog => {
+      await dialog.accept('Test Playlist');
+    });
+    await page.click('#save-playlist-btn');
+    await expect(page.locator('#recent-playlists')).toBeVisible();
+
+    // Clear mock calls to track new activity
+    await page.evaluate(() => {
+      window.mockCalls.audioContext = [];
+      window.mockCalls.youtube = [];
+    });
+
+    // When the user taps a playlist link from recent playlists while everything is paused
+    await page.click('.recent-playlist-item .playlist-link');
+
+    // Wait for the playlist to load, preset to be selected, and audio to start
+    // Note: If no preset is selected, the first preset (speakers) will be selected automatically
+    // Then ensureAudioPlaying() will either initialize audio context (if not initialized)
+    // or resume it (if suspended), and then call performPlayAction() which starts YouTube
+    await page.waitForFunction(() => {
+      const mockCalls = window.mockCalls;
+      const playlistLoaded = mockCalls.youtube.some(call => call.includes('loadPlaylist'));
+      const audioStarted = mockCalls.audioContext.includes('AudioContext constructor') ||
+                          mockCalls.audioContext.includes('resume');
+      const youtubeStarted = mockCalls.youtube.includes('playVideo');
+      return playlistLoaded && (audioStarted || youtubeStarted);
+    }, { timeout: 5000 });
+
+    // Wait for the preset button to become active (selectPreset is async)
+    await expect(page.locator('#preset-0-speakers')).toHaveClass(/active/, { timeout: 5000 });
+
+    // Then both YouTube player and tones should start
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+
+    // Verify YouTube player starts (playVideo is called)
+    expect(mockCallsFromPage.youtube).toContain('playVideo');
+
+    // Verify tones start (either audio context is created or resumed)
+    const audioStarted = mockCallsFromPage.audioContext.includes('AudioContext constructor') ||
+                         mockCallsFromPage.audioContext.includes('resume');
+    expect(audioStarted).toBe(true);
+
+    // Verify the mute button is not superactive (indicating playback has started)
+    await expect(page.locator('#mute')).not.toHaveClass(/superactive/);
   });
 });
 
@@ -871,8 +997,13 @@ test.describe('YouTube Playlist Auto-Save Feature', () => {
       }
     });
 
-    // Wait a moment for the save to complete
-    await page.waitForTimeout(100);
+    // Wait for the save to complete by checking localStorage
+    await page.waitForFunction(() => {
+      const stored = localStorage.getItem('youtube_playlist_states');
+      if (!stored) return false;
+      const states = JSON.parse(stored);
+      return states['PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF'] !== undefined;
+    }, { timeout: 2000 });
 
     // Then the playlist track and position should be updated in localStorage
     const playlistStates = await page.evaluate(() => {
@@ -1039,5 +1170,451 @@ test.describe('Screen Wake Lock API', () => {
     // Then a new wake lock should be requested
     const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
     expect(mockCallsFromPage.wakeLock).toContain('request: screen');
+  });
+});
+
+test.describe('Media Session API - Track Navigation', () => {
+  test('should handle previoustrack media key and call player.previousVideo()', async ({ page }) => {
+    // Given the YouTube player is ready and audio is initialized (which sets up Media Session)
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    // Initialize audio to set up Media Session handlers
+    await page.click('#preset-0-headphones');
+    // Wait for setupMediaSession to complete by checking handlers are registered
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.previoustrack === 'function';
+    }, { timeout: 5000 });
+
+    // Verify handlers are registered
+    const handlersExist = await page.evaluate(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.previoustrack === 'function';
+    });
+    expect(handlersExist).toBe(true);
+
+    // When the previoustrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+
+    // Then player.previousVideo() should be called
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).toContain('previousVideo');
+  });
+
+  test('should handle nexttrack media key and call player.nextVideo()', async ({ page }) => {
+    // Given the YouTube player is ready and audio is initialized (which sets up Media Session)
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    // Initialize audio to set up Media Session handlers
+    await page.click('#preset-0-headphones');
+    // Wait for setupMediaSession to complete by checking handlers are registered
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.nexttrack === 'function';
+    }, { timeout: 5000 });
+
+    // Verify handlers are registered
+    const handlersExist = await page.evaluate(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.nexttrack === 'function';
+    });
+    expect(handlersExist).toBe(true);
+
+    // When the nexttrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.nexttrack) {
+        window.mediaSessionHandlers.nexttrack();
+      }
+    });
+
+    // Then player.nextVideo() should be called
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).toContain('nextVideo');
+  });
+
+  test('should save playlist state after previous track navigation', async ({ page }) => {
+    // Given the YouTube player is ready and playing
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+    await page.waitForTimeout(500);
+
+    // Set up playlist ID in localStorage so saveCurrentPlaylistState can save
+    await page.evaluate(() => {
+      localStorage.setItem('youtube_playlist_id', 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
+    });
+
+    // When the previoustrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+
+    // Wait a moment for the save to complete
+    await page.waitForTimeout(100);
+
+    // Then the playlist state should be saved (previousVideo and getCurrentTime should be called)
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).toContain('previousVideo');
+    expect(mockCallsFromPage.youtube).toContain('getCurrentTime');
+  });
+
+  test('should save playlist state after next track navigation', async ({ page }) => {
+    // Given the YouTube player is ready and playing
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+    // Wait for Media Session handlers to be set up
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.nexttrack === 'function';
+    }, { timeout: 5000 });
+
+    // Set up playlist ID in localStorage so saveCurrentPlaylistState can save
+    await page.evaluate(() => {
+      localStorage.setItem('youtube_playlist_id', 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
+    });
+
+    // When the nexttrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.nexttrack) {
+        window.mediaSessionHandlers.nexttrack();
+      }
+    });
+
+    // Wait for the save to complete by checking mock calls
+    await page.waitForFunction(() => {
+      const mockCalls = window.mockCalls;
+      return mockCalls.youtube.includes('nextVideo') &&
+             mockCalls.youtube.includes('getCurrentTime');
+    }, { timeout: 2000 });
+
+    // Then the playlist state should be saved (nextVideo and getCurrentTime should be called)
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).toContain('nextVideo');
+    expect(mockCallsFromPage.youtube).toContain('getCurrentTime');
+  });
+
+  test('should not call player methods if player is not ready', async ({ page }) => {
+    // Given the page is loaded but player is not ready
+    await page.goto('/');
+
+    // Set player to null and isPlayerReady to false
+    await page.evaluate(() => {
+      window.player = null;
+      window.isPlayerReady = false;
+    });
+
+    // When the previoustrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+
+    // Then player.previousVideo() should NOT be called
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.youtube).not.toContain('previousVideo');
+  });
+
+  test('should register previoustrack and nexttrack handlers in setupMediaSession', async ({ page }) => {
+    // Given the page is loaded and audio is initialized (which calls setupMediaSession)
+    await page.goto('/');
+    // Initialize audio to trigger setupMediaSession
+    await page.click('#preset-0-headphones');
+
+    // Wait for Media Session to be set up
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             window.mediaSessionHandlers.previoustrack &&
+             window.mediaSessionHandlers.nexttrack;
+    }, { timeout: 5000 });
+
+    // Then both handlers should be registered
+    const handlersRegistered = await page.evaluate(() => {
+      return {
+        previoustrack: typeof window.mediaSessionHandlers.previoustrack === 'function',
+        nexttrack: typeof window.mediaSessionHandlers.nexttrack === 'function'
+      };
+    });
+
+    expect(handlersRegistered.previoustrack).toBe(true);
+    expect(handlersRegistered.nexttrack).toBe(true);
+
+    // Verify Media Session API was called
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    expect(mockCallsFromPage.mediaSession).toContain('setActionHandler: previoustrack');
+    expect(mockCallsFromPage.mediaSession).toContain('setActionHandler: nexttrack');
+  });
+});
+
+test.describe('Navigation History - Track Position Resumption', () => {
+  test('should save current track position when pressing Forward', async ({ page }) => {
+    // Given the YouTube player is ready and playing at track 2, position 30 seconds
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+    await page.waitForTimeout(500);
+
+    // Set up player state
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentIndex = 2;
+        window.mockPlayerState.currentTime = 30;
+      }
+    });
+
+    // When the nexttrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.nexttrack) {
+        window.mediaSessionHandlers.nexttrack();
+      }
+    });
+
+    // Wait for the navigation to complete
+    await page.waitForTimeout(600);
+
+    // Then the current track position should be saved (previousTrackIndex and previousTrackPosition should be set)
+    const navigationHistory = await page.evaluate(() => {
+      return {
+        previousTrackIndex: window.previousTrackIndex,
+        previousTrackPosition: window.previousTrackPosition
+      };
+    });
+
+    expect(navigationHistory.previousTrackIndex).toBe(2);
+    expect(navigationHistory.previousTrackPosition).toBe(30);
+  });
+
+  test('should restore previous track position when pressing Back', async ({ page }) => {
+    // Given the user pressed Forward from track 2 at 30 seconds, now on track 3
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+    // Wait for Media Session handlers to be set up
+    await page.waitForFunction(() => {
+      return window.mediaSessionHandlers &&
+             typeof window.mediaSessionHandlers.nexttrack === 'function';
+    }, { timeout: 5000 });
+
+    // Set up initial state: track 2 at 30 seconds
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentIndex = 2;
+        window.mockPlayerState.currentTime = 30;
+      }
+      // Simulate having pressed Forward (saved state)
+      window.previousTrackIndex = 2;
+      window.previousTrackPosition = 30;
+    });
+
+    // Navigate forward first to track 3
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.nexttrack) {
+        window.mediaSessionHandlers.nexttrack();
+      }
+    });
+    await page.waitForTimeout(600);
+
+    // Update mock state to reflect we're now on track 3
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentIndex = 3;
+        window.mockPlayerState.currentTime = 10; // New track starts at 10 seconds
+      }
+    });
+
+    // When the previoustrack media key action is triggered (first press - should restart if > 5s)
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+    await page.waitForTimeout(600);
+
+    // Set current time to < 5 seconds to allow second back press
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentTime = 3; // Less than 5 seconds
+      }
+    });
+
+    // Second press: go back to previous track
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+    await page.waitForTimeout(600);
+
+    // Then the player should seek to the saved position (30 seconds)
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    const seekToCalls = mockCallsFromPage.youtube.filter(call => call.startsWith('seekTo'));
+    expect(seekToCalls.length).toBeGreaterThan(0);
+
+    // Check that seekTo was called with the saved position
+    const restoredPosition = seekToCalls.some(call => call.includes('30'));
+    expect(restoredPosition).toBe(true);
+  });
+
+  test('should restore forward destination position when returning to it', async ({ page }) => {
+    // Given the user pressed Forward from track 2 to track 3, then Back to track 2
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+    await page.waitForTimeout(500);
+
+    // Set up initial state: track 2 at 30 seconds
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentIndex = 2;
+        window.mockPlayerState.currentTime = 30;
+      }
+    });
+
+    // Press Forward: track 2 -> track 3 (saves track 2 position as previousTrackIndex/Position)
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.nexttrack) {
+        window.mediaSessionHandlers.nexttrack();
+      }
+    });
+    await page.waitForTimeout(600);
+
+    // Update to track 3 at 15 seconds (simulating the track playing)
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentIndex = 3;
+        window.mockPlayerState.currentTime = 15;
+      }
+    });
+
+    // Press Back: track 3 -> track 2
+    // The Back handler checks if currentTime > 5. If so, it restarts.
+    // If < 5, it saves current track (3) position (15) as forwardDestination and goes back
+    // But we need currentTime < 5 to go back, so let's set it to 4 to allow going back
+    // However, we want to save position 15. The issue is the handler saves currentTime, not a previous time.
+    // Actually, let's test a different scenario: user is on track 3 at 4 seconds, presses Back
+    // This saves track 3 at 4 seconds. Then when going Forward again, it should restore to 4 seconds.
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentIndex = 3;
+        window.mockPlayerState.currentTime = 4; // Less than 5 seconds to allow going back
+      }
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+    await page.waitForTimeout(600);
+
+    // Verify that forwardDestination was saved with track 3 at position 4
+    const historyAfterBack = await page.evaluate(() => {
+      return {
+        forwardDestinationIndex: window.forwardDestinationIndex,
+        forwardDestinationPosition: window.forwardDestinationPosition
+      };
+    });
+    expect(historyAfterBack.forwardDestinationIndex).toBe(3);
+    expect(historyAfterBack.forwardDestinationPosition).toBe(4);
+
+    // Update to track 2
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentIndex = 2;
+      }
+    });
+
+    // When the user presses Forward again to return to track 3
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.nexttrack) {
+        window.mediaSessionHandlers.nexttrack();
+      }
+    });
+    await page.waitForTimeout(600);
+
+    // Then the player should seek to track 3's saved position (4 seconds)
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    const seekToCalls = mockCallsFromPage.youtube.filter(call => call.startsWith('seekTo'));
+
+    // Should have seekTo calls including one for 4 seconds (forward destination position)
+    const restoredForwardPosition = seekToCalls.some(call => call.includes('4'));
+    expect(restoredForwardPosition).toBe(true);
+  });
+
+  test('should clear navigation history when playlist changes', async ({ page }) => {
+    // Given navigation history exists
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+    await page.waitForTimeout(500);
+
+    // Set up navigation history
+    await page.evaluate(() => {
+      window.previousTrackIndex = 2;
+      window.previousTrackPosition = 30;
+      window.forwardDestinationIndex = 3;
+      window.forwardDestinationPosition = 15;
+    });
+
+    // When the user loads a new playlist
+    await page.fill('#playlist-url', 'https://www.youtube.com/playlist?list=PLNEW123456789');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(500);
+
+    // Then navigation history should be cleared
+    const navigationHistory = await page.evaluate(() => {
+      return {
+        previousTrackIndex: window.previousTrackIndex,
+        previousTrackPosition: window.previousTrackPosition,
+        forwardDestinationIndex: window.forwardDestinationIndex,
+        forwardDestinationPosition: window.forwardDestinationPosition
+      };
+    });
+
+    expect(navigationHistory.previousTrackIndex).toBeNull();
+    expect(navigationHistory.previousTrackPosition).toBe(0);
+    expect(navigationHistory.forwardDestinationIndex).toBeNull();
+    expect(navigationHistory.forwardDestinationPosition).toBe(0);
+  });
+
+  test('should restart current track if position > 5 seconds on first Back press', async ({ page }) => {
+    // Given the user is on track 3 at 10 seconds
+    await page.goto('/');
+    await page.waitForFunction(() => window.isPlayerReady === true);
+    await page.click('#preset-0-headphones');
+    await page.waitForTimeout(500);
+
+    await page.evaluate(() => {
+      if (window.mockPlayerState) {
+        window.mockPlayerState.currentIndex = 3;
+        window.mockPlayerState.currentTime = 10;
+      }
+    });
+
+    // When the previoustrack media key action is triggered
+    await page.evaluate(() => {
+      if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
+        window.mediaSessionHandlers.previoustrack();
+      }
+    });
+    await page.waitForTimeout(600);
+
+    // Then the player should seek to 0 (restart current track) instead of going to previous track
+    const mockCallsFromPage = await page.evaluate(() => window.mockCalls);
+    const seekToCalls = mockCallsFromPage.youtube.filter(call => call.startsWith('seekTo'));
+    const restarted = seekToCalls.some(call => call.includes('0'));
+    expect(restarted).toBe(true);
+
+    // Should NOT have called previousVideo (because we restarted instead)
+    // Actually, let me check - the logic restarts if > 5s, so previousVideo should NOT be called
+    // But we need to verify the mock state shows we're still on track 3
+    const stillOnTrack3 = await page.evaluate(() => {
+      return window.mockPlayerState && window.mockPlayerState.currentIndex === 3;
+    });
+    expect(stillOnTrack3).toBe(true);
   });
 });

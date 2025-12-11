@@ -175,6 +175,12 @@ var player = null;
 var isPlayerReady = false;
 var autoSaveInterval = null; // Timer for auto-saving playlist state every 29 seconds
 
+// Navigation History (in-memory only, for forward/back position resumption)
+var previousTrackIndex = null; // Track index we came from when pressing Forward
+var previousTrackPosition = 0; // Position in that track
+var forwardDestinationIndex = null; // Track index we went forward to (for restoring when going forward again)
+var forwardDestinationPosition = 0; // Position in the forward destination track
+
 // WEBAUDIO ELEMENTS
 var context;
 var oscL=[];
@@ -1114,6 +1120,81 @@ function setupMediaSession() {
 		}
 	});
 
+	navigator.mediaSession.setActionHandler('previoustrack', () => {
+		if (player && isPlayerReady) {
+			var currentTime = player.getCurrentTime();
+			var currentIndex = player.getPlaylistIndex();
+
+			// First press: if more than 5 seconds in, restart current track
+			if (currentTime > 5) {
+				player.seekTo(0, true);
+				saveCurrentPlaylistState();
+				return;
+			}
+
+			// Second press: save current track's position before going back
+			// (so we can restore it if we go forward to this track again)
+			forwardDestinationIndex = currentIndex;
+			forwardDestinationPosition = currentTime;
+
+			// Go to previous track
+			player.previousVideo();
+
+			// After navigation, check if we're returning to a previously visited track
+			// Use setTimeout to wait for YouTube player to load the new track
+			setTimeout(function() {
+				var newIndex = player.getPlaylistIndex();
+				if (previousTrackIndex !== null && newIndex === previousTrackIndex) {
+					// We're returning to the track we came from - restore position
+					player.seekTo(previousTrackPosition, true);
+					// Clear the history after using it
+					previousTrackIndex = null;
+					previousTrackPosition = 0;
+				}
+			}, 500); // Wait for video to load
+
+			saveCurrentPlaylistState();
+		}
+	});
+
+	navigator.mediaSession.setActionHandler('nexttrack', () => {
+		if (player && isPlayerReady) {
+			// Save current track index and position before navigating forward
+			var currentIndex = player.getPlaylistIndex();
+			var currentTime = player.getCurrentTime();
+			previousTrackIndex = currentIndex;
+			previousTrackPosition = currentTime;
+
+			// Save current position of destination track before navigating (if we're returning to it)
+			var nextIndex = currentIndex + 1;
+			var savedDestinationPosition = (forwardDestinationIndex === nextIndex) ? forwardDestinationPosition : 0;
+
+			player.nextVideo();
+
+			// After navigation, restore position if we're returning to a previously visited track
+			// Use setTimeout to wait for YouTube player to load the new track
+			setTimeout(function() {
+				var newIndex = player.getPlaylistIndex();
+
+				// If we're going forward to a track we previously visited (forwardDestinationIndex),
+				// restore its saved position
+				if (forwardDestinationIndex !== null && newIndex === forwardDestinationIndex && savedDestinationPosition > 0) {
+					player.seekTo(savedDestinationPosition, true);
+					// Clear the forward destination after using it
+					forwardDestinationIndex = null;
+					forwardDestinationPosition = 0;
+				} else {
+					// Save the destination track's position for potential future restoration
+					var newTime = player.getCurrentTime();
+					forwardDestinationIndex = newIndex;
+					forwardDestinationPosition = newTime;
+				}
+			}, 500); // Wait for video to load
+
+			saveCurrentPlaylistState();
+		}
+	});
+
 	// Set initial playback state based on current audio state
 	const initialState = bPaused ? 'paused' : 'playing';
 	navigator.mediaSession.playbackState = initialState;
@@ -1352,6 +1433,12 @@ function loadActivePlaylist() {
 		input.classList.add('invalid');
 		return;
 	}
+
+	// Clear navigation history when playlist changes
+	previousTrackIndex = null;
+	previousTrackPosition = 0;
+	forwardDestinationIndex = null;
+	forwardDestinationPosition = 0;
 
 	// Save the new playlist URL and ID to localStorage as source of truth
 	localStorage.setItem('youtube_playlist_url', url);
@@ -1661,9 +1748,19 @@ function stopAutoSaveTimer() {
 function loadPlaylistFromRecent(playlist) {
 	saveCurrentPlaylistState();
 
+	// Clear navigation history when switching playlists
+	previousTrackIndex = null;
+	previousTrackPosition = 0;
+	forwardDestinationIndex = null;
+	forwardDestinationPosition = 0;
+
 	// Set the input field and load the playlist
 	document.getElementById('playlist-url').value = playlist.url;
 	loadActivePlaylist();
+
+	if (bPaused && !currentPreset) {
+		selectPreset(PRESET_TONES[0], 'speakers');
+	}
 }
 
 

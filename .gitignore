@@ -2,4 +2,4 @@ _site/
 test-results/
 node_modules/
 playwright-report/
-.cursor/rules/deploy.mdc
+.cursor/commands/deploy.md
