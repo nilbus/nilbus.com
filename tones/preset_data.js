@@ -123,20 +123,36 @@ const PRESET_TONES = [
     ]
   },
   {
-    name: "Primal Pairing",
+    name: "Edge: Initiation & Buildup",
     layers: [
-      { freq: 7.5, carrier: "210.42/180", type: "isochronic", vol: "70/60", purpose: "Arousal focus and trance entry" },
-      { freq: 2.4, carrier: "157.43/144", type: "isochronic", vol: "90/60", purpose: "Pelvic interoception & sensitivity" },
-      { freq: 0.8, carrier: "315/216", type: "isochronic", vol: "55/30", purpose: "Full-body surrender waves and cresting support" }
-  ]
+      { freq: 10, carrier: "285/174", type: "isochronic", vol: "55/55", purpose: "(5–10 min) Calm arousal, emotional safety, sympathetic braking" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "45/45", purpose: "Cortical-limbic / emotional coherence, relaxed sensual presence" },
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "55/55", purpose: "Early pelvic interoception without emission loading" }
+    ]
+  },
+  {
+    name: "Edge: Contractile Conditioning",
+    layers: [
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "85/85", purpose: "Pelvic sensory amplification, pleasure wave mapping" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "55/55", purpose: "Arousal coherence, emotional containment" },
+      { freq: 2.8, carrier: "157.43/140.28", type: "isochronic", vol: "55/55", purpose: "Parasympathetic biasing without loss of control" }
+    ]
+  },
+  {
+    name: "Edge: Stability for Dry Contractions",
+    layers: [
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "95/95", purpose: "Primary euphoric contraction support without expulsion" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "75/75", purpose: "Parasympathetic dominance" },
+      { freq: 9.5, carrier: "285/174", type: "isochronic", vol: "30/30", purpose: "Cortical presence, prevention of autonomic drop-through" }
+    ]
   },
   {
     name: "HFDO Surrender",
     layers: [
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "80/30", purpose: "Pelvic sensory mapping, interoception" },
-      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "50/35", purpose: "Awareness anchor, cortical-limbic bridge" },
-      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "100/40", purpose: "Parasympathetic surrender, body melting" },
-      { freq: 0.5, carrier: "396/175.35", type: "isochronic", vol: "60/35", purpose: "Primal embodiment, energetic wave support" }
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "80/80", purpose: "Pelvic sensory mapping, interoception" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "50/50", purpose: "Awareness anchor, cortical-limbic bridge" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "90/90", purpose: "Parasympathetic surrender, body melting" },
+      { freq: 0.5, carrier: "396/175.35", type: "isochronic", vol: "60/60", purpose: "Primal embodiment, energetic wave support" }
     ]
   }
 ];
