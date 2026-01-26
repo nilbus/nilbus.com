@@ -4,8 +4,8 @@
 
 **Product Name:** Brain Tones
 **Platform:** iOS (Native Swift/SwiftUI)
-**Version:** 1.0
-**Date:** 2025-01-27
+**Version:** 1.1
+**Date:** 2026-01-25
 
 Brain Tones is an iOS application that generates binaural and isochronic audio tones designed to enhance cognitive states (focus, relaxation, creativity, etc.). The app combines customizable tone presets with curated audio playlists streamed from S3 storage, allowing users to layer brainwave entrainment audio over music or ambient sounds through a unified native audio pipeline.
 
@@ -13,11 +13,11 @@ Brain Tones is an iOS application that generates binaural and isochronic audio t
 
 ### 2.1 Purpose
 Brain Tones enables users to:
-- Generate scientifically-designed audio tones for cognitive enhancement
+- Play scientifically-designed audio tones for cognitive enhancement
 - Combine tones with curated audio playlists for personalized audio experiences
 - Switch between headphones and speaker output modes with optimized parameters
 - Maintain playback state across app sessions
-- Download and cache audio tracks for offline playback
+- Play the tracks offline becuase they are cached
 
 ### 2.2 Target Users
 - Individuals seeking enhanced focus, relaxation, or productivity
@@ -43,10 +43,12 @@ Brain Tones enables users to:
 #### 3.1.2 Preset Selection & Activation
 - **Requirement:** Users can select and activate presets via UI
 - **Behavior:**
-  - Tapping a preset activates it immediately
+  - Tapping a non-active preset activates it immediately
+  - Tapping an active preset acts just as pressing pause
   - Preset selection persists across app launches
   - Last selected preset is restored on app restart
-  - Preset can be activated in either headphones or speakers mode
+  - Each preset's headphones and speakers modes act as distinct presets
+- **Initial Use Default:** On first app launch (no saved preset), the default "last played" preset is the first preset in speakers mode
 
 #### 3.1.3 Preset Display
 - **Requirement:** Presets must display:
@@ -67,8 +69,8 @@ Brain Tones enables users to:
   - **Binaural layers:**
     - Headphones: Full binaural effect (100% binaural level, 0% isochronic)
     - Speakers: Disabled binaural effect (0% binaural level, 100% isochronic)
-  - **Carrier frequencies:** Can differ between modes (e.g., "240/220" format)
-  - **Volume levels:** Can differ between modes (e.g., "80/65" format)
+  - **Carrier frequencies:** Can differ between modes (e.g., "240/220" format = headphones/speakers)
+  - **Volume levels:** Can differ between modes (e.g., "80/65" format = headphones/speakers)
 
 #### 3.2.3 Mode Persistence
 - **Requirement:** Selected output mode must persist in UserDefaults
@@ -93,8 +95,8 @@ Brain Tones enables users to:
 #### 3.3.3 Engine Lifecycle
 - **Requirement:**
   - Engine is shared singleton instance
-  - Configuration does not start playback automatically
-  - Playback must be explicitly started after configuration
+  - Playback does not start automatically on app launch
+  - Playback must be explicitly started by the user
   - Engine state persists during app lifecycle
 
 ### 3.4 Audio Playlist Integration
@@ -104,50 +106,38 @@ Brain Tones enables users to:
   - Playlists are hard-coded in project JSON file (no user-added playlists)
   - Each playlist contains metadata: id, title, track list
   - Tracks reference audio files hosted on Amazon S3
-  - Initial playlist: "AllieSpaces" with 11 tracks
+  - Initial playlist: "AllieSpaces" with 11 tracks (only one playlist for now, but designed for multiple)
 
-#### 3.4.2 Track Data Model
-- **Requirement:** Each track contains:
-  - Unique track ID
-  - Title (inferred from filename if not specified)
-  - Duration (seconds)
-  - Remote URL (S3 URL for MP3 file)
-  - Local cached URL (optional, stored in Library/Caches/)
-
-#### 3.4.3 Playlist Data Model
-- **Requirement:** Each playlist contains:
-  - Unique playlist ID
-  - Title
-  - Array of AudioTrack objects
-  - Default start index (optional, defaults to 0)
-
-#### 3.4.4 Playlist Loading & Display
+#### 3.4.2 Playlist Loading & Display
 - **Requirement:** Loaded playlist must display:
   - Playlist title
   - Track count
-  - List of tracks with titles
+  - List of tracks with titles (inferred from filename if not specified in metadata)
   - Current track indicator
   - Error messages for network failures
 
-#### 3.4.5 Track Download & Caching
+#### 3.4.3 Track Download & Caching
 - **Requirement:** Download management system:
-  - **Storage Location:** Files stored in `Library/Caches/` (not backed up)
-  - **Naming Scheme:** Track ID + hash for cache files
+  - **Storage Location:** Files stored in `Library/Caches/` (not backed up, may be purged by system, not backed up to iCloud)
+  - **Naming Scheme:** Sanitized track ID (with `/` replaced by `-`) + `.mp3` extension
+  - **Fallback:** If local file missing, stream from remote URL
+  - **Playback Priority:** Play from local cache when available; only stream when track is not downloaded. After a playing track's download completes, automatically switch from playing the stream to playing the downloaded file at the same playback location.
   - **Download Strategy:**
     - Current playing track downloads immediately if not cached
-    - Next track in queue downloads after current track completes
-    - Downloads continue sequentially as tracks advance
-  - **Fallback:** If local file missing, stream from remote URL
+    - The next track in the queue downloads (if not already downloaded) after the current track completes its download
+    - Download of the next track continues sequentially as tracks advance
   - **Cache Mapping:** Track ID to local file URL mapping persisted in UserDefaults
+  - **Download Status:** Track download state (not downloaded, downloading, downloaded) exposed for UI display
+  - **Display:** Download state for each track is shown right-aligned on each track in the list. While downloading, a ring progress indicator shows the progress for that track. The download progress ring is NOT also shown next to where the currently playing track name is displayed. Other non-ring icons symbolize "not downloaded" and "downloaded".
 
-#### 3.4.6 Playlist State Management
+#### 3.4.4 Playlist State Management
 - **Requirement:** Each playlist maintains playback state:
   - Current track index (0-based)
   - Playback time within current track (seconds, double precision)
   - State persists per playlist ID
   - Cache state (which tracks are downloaded) persists per playlist
 
-#### 3.4.7 Playback State Persistence
+#### 3.4.5 Playback State Persistence
 - **Requirement:** Playback state must be saved:
   - **On pause:** Immediately save current track index and playback time
   - **During playback:** Auto-save every 29 seconds via timer
@@ -155,7 +145,7 @@ Brain Tones enables users to:
   - **On track end:** Advance to next track, save new state
   - **On app restart:** Restore last active playlist and its saved state
 
-#### 3.4.8 Playlist Restoration
+#### 3.4.6 Playlist Restoration
 - **Requirement:** On app launch:
   - Restore last active playlist ID from settings
   - Load playlist metadata from bundled catalog
@@ -169,8 +159,11 @@ Brain Tones enables users to:
 #### 3.5.1 Dual Playback System
 - **Requirement:** App must coordinate two independent audio sources:
   - **Tones:** Generated audio tones from ToneEngine
-  - **Music:** Audio playlist playback via AVQueuePlayer or AVAudioPlayerNode
+  - **Music:** Audio playlist playback
   - Both sources run through unified AVAudioSession for seamless mixing
+- **Auto-Start Tones:** When music playback is started, the last played tone preset automatically starts playing as well (tones and music play together by default)
+- **Auto-Start Music:** When tones are is started, the last played playlist automatically starts playing as well (tones and music play together by default)
+- **Allow pausing Music without Tones:** The track play/pause button can pause music without pausing tones. (Tones, however, are always present if anything is playing.)
 
 #### 3.5.2 Playback Intent Management
 - **Requirement:** System must track desired playback state:
@@ -180,12 +173,13 @@ Brain Tones enables users to:
 
 #### 3.5.3 Global Playback Controls
 - **Requirement:** Support unified playback control:
-  - **Play All:** Resume both tones and music if they were previously playing
-  - **Pause All:** Pause both sources while remembering intent
-  - **Toggle:** Switch between play and pause states
+  - **Play:** Resume both tones and music if they were previously playing
+  - **Pause All:** Pause both sources while remembering intent—this is triggered by tapping an active tone preset, the global play/pause button, or through external iOS controls
+  - **Pause Music:** Pause the music source; update intent—this is triggered by the in-app visual pause button between the Skip Forward/Back buttons
   - **Skip Forward:** Advance to next track in playlist
   - **Skip Backward:** Return to previous track in playlist
   - **Seek:** Scrub to specific time position in current track
+  - **Toggle:** The Play and Pause Pause Music buttons replace each other, switching based on playback state
 
 #### 3.5.4 External Control Integration
 - **Requirement:** Integrate with iOS media controls:
@@ -204,7 +198,7 @@ Brain Tones enables users to:
 ### 3.6 Settings Persistence
 
 #### 3.6.1 UserDefaults Storage
-- **Requirement:** All settings must persist in UserDefaults:
+- **Requirement:** All settings must persist in UserDefaults, e.g.:
   - `outputMode`: Current output mode (headphones/speakers)
   - `lastPresetName`: Name of last selected preset
   - `currentPlaylistId`: Currently active audio playlist ID
@@ -223,10 +217,8 @@ Brain Tones enables users to:
 
 ### 4.1 Main Screen Layout
 - **Header Section:**
-  - App logo and branding ("brain aural®")
-  - Tagline: "Ultimate Brainwaves"
+  - App logo and branding ("BrainTones")
   - Global play/pause button
-  - Link button to brainaural.com website
 
 - **Tone Presets Section:**
   - Section title: "Tone Presets"
@@ -245,7 +237,6 @@ Brain Tones enables users to:
     - Track count
   - Native player UI:
     - Track title
-    - Download progress indicator (filling ring) during initial download
     - Transport controls: play/pause, skip forward, skip backward
     - Scrubber bar for seeking within track
     - Track list with current track indicator
@@ -254,10 +245,10 @@ Brain Tones enables users to:
 
 ### 4.2 Visual Design
 - **Color Scheme:**
-  - Dark gradient background (purple/black tones)
-  - Accent colors: Primary (#D13D61), Secondary (#8A3390)
+  - Deep black gradient background with subtle dark red undertones
+  - Accent colors: Primary (#E53935, vibrant red), Secondary (#FF8C00, amber/orange glow)
   - White text with opacity variations
-  - Glassmorphism effects for buttons
+  - Glowing ember effects for interactive elements (subtle red/orange particle aesthetic)
 
 - **Typography:**
   - System fonts with weight variations
@@ -272,8 +263,9 @@ Brain Tones enables users to:
   - Grid layout for mode buttons
 
 ### 4.3 Interaction Patterns
-- **Preset Activation:** Tap headphones/speakers button to activate preset
+- **Preset Activation:** Tap headphones/speakers button to activate preset or deactivate the active one
 - **Playback Control:** Tap global play/pause button
+- **Track Playback Control:** Tap playlist play/pause button
 - **Playlist Selection:** Select playlist from catalog
 - **Track Selection:** Tap track in list to jump to that track
 - **Transport Controls:** Use native player controls (play/pause, skip, seek)
@@ -421,7 +413,7 @@ Brain Tones enables users to:
 ## 12. Testing Strategy
 
 ### 12.1 Test Suite Coverage
-Based on the test suite, the following areas are covered:
+The following areas are covered:
 
 1. **PresetLibraryTests:**
    - Preset JSON decoding
@@ -471,6 +463,5 @@ Based on the test suite, the following areas are covered:
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-01-27
-**Author:** Generated from test suite analysis
+**Document Version:** 1.1
+**Last Updated:** 2026-01-25
