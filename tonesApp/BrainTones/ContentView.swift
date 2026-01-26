@@ -3,8 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var tonesViewModel = BrainTonesViewModel()
     @StateObject private var musicViewModel = MusicPlayerViewModel()
-    @Environment(\.openURL) private var openURL
-    @State private var customPlaylistName: String = ""
     @State private var sliderEditing = false
     @State private var pendingSeekTime: TimeInterval = 0
 
@@ -26,14 +24,6 @@ struct ContentView: View {
             .background(backgroundGradient)
         }
         .background(Color.black)
-        .onChange(of: musicViewModel.selectedPlaylist?.id) { newValue in
-            if let id = newValue,
-               let recent = musicViewModel.recentPlaylists.first(where: { $0.id == id }) {
-                customPlaylistName = recent.customName ?? ""
-            } else {
-                customPlaylistName = ""
-            }
-        }
     }
 
     private var headerSection: some View {
@@ -46,18 +36,14 @@ struct ContentView: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 4) {
-                        Text("brain")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.black.opacity(0.85))
-                        Text("aural")
+                        Text("Brain")
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.white)
-                        Text("®")
-                            .font(.system(size: 16, weight: .semibold))
-                            .baselineOffset(10)
-                            .foregroundColor(.white.opacity(0.8))
+                        Text("Tones")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.accentPrimary)
                     }
-                    Text("Ultimate Brainwaves")
+                    Text("Binaural + Isochronic Audio")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white.opacity(0.85))
                 }
@@ -66,19 +52,11 @@ struct ContentView: View {
 
                 HStack(spacing: 16) {
                     ControlButton(
-                        imageName: tonesViewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill",
-                        tint: tonesViewModel.isPlaying ? Color.accentPrimary : Color.white.opacity(0.85),
-                        background: tonesViewModel.isPlaying ? Color.white.opacity(0.15) : Color.white.opacity(0.08)
+                        imageName: isAnyPlaying ? "pause.circle.fill" : "play.circle.fill",
+                        tint: isAnyPlaying ? Color.accentPrimary : Color.white.opacity(0.85),
+                        background: isAnyPlaying ? Color.white.opacity(0.15) : Color.white.opacity(0.08)
                     ) {
-                        tonesViewModel.togglePlayPause()
-                    }
-
-                    ControlButton(
-                        imageName: "link",
-                        tint: Color.white.opacity(0.9),
-                        background: Color.white.opacity(0.08)
-                    ) {
-                        openURL(URL(string: "https://brainaural.com")!)
+                        MediaPlaybackCoordinator.shared.togglePlayPause()
                     }
                 }
             }
@@ -94,6 +72,12 @@ struct ContentView: View {
             Text("Tone Presets")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundColor(.white.opacity(0.9))
+
+            if let error = tonesViewModel.errorMessage {
+                Text(error)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color(red: 1.0, green: 0.45, blue: 0.45))
+            }
 
             LazyVStack(alignment: .leading, spacing: 18) {
                 ForEach(tonesViewModel.presets) { preset in
@@ -165,36 +149,17 @@ struct ContentView: View {
                 }
 
                 Spacer()
-
-                Button {
-                    musicViewModel.addSelectedPlaylistToRecents(customName: customPlaylistName)
-                } label: {
-                    Text("Save to Recents")
-                        .font(.system(size: 14, weight: .semibold))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                        .background(Color.accentPrimary.opacity(0.25))
-                        .foregroundColor(.white)
-                        .clipShape(Capsule())
-                }
             }
 
-            TextField("Custom display name (optional)", text: $customPlaylistName)
-                .padding()
-                .background(Color.white.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .foregroundColor(.white.opacity(0.9))
+            Text("\(playlist.tracks.count) tracks")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white.opacity(0.65))
         }
     }
 
     private var playbackDetails: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center, spacing: 16) {
-                DownloadProgressRing(
-                    progress: musicViewModel.downloadProgress,
-                    isBuffering: musicViewModel.isBuffering
-                )
-                .frame(width: 56, height: 56)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(musicViewModel.currentTrack?.title ?? "Select a track")
                         .font(.system(size: 18, weight: .semibold))
@@ -294,12 +259,13 @@ struct ContentView: View {
             ForEach(Array(playlist.tracks.enumerated()), id: \.1.id) { index, track in
                 let isActive = index == musicViewModel.currentTrackIndex
                 let isDownloaded = musicViewModel.downloadedTrackIds.contains(track.id)
+                let isDownloading = musicViewModel.activeDownloadTrackId == track.id
                 let status: TrackDownloadStatus = {
                     if isDownloaded {
                         return .downloaded
                     }
-                    if isActive, musicViewModel.downloadProgress < 1.0 {
-                        return .downloading(progress: musicViewModel.downloadProgress)
+                    if isDownloading {
+                        return .downloading(progress: musicViewModel.activeDownloadProgress)
                     }
                     return .notDownloaded
                 }()
@@ -367,15 +333,19 @@ struct ContentView: View {
     private var backgroundGradient: some View {
         LinearGradient(
             colors: [
-                Color(red: 0.02, green: 0.01, blue: 0.07),
-                Color(red: 0.16, green: 0.04, blue: 0.12),
-                Color.accentPrimary.opacity(0.85),
-                Color(red: 0.05, green: 0.01, blue: 0.07)
+                Color(red: 0.02, green: 0.0, blue: 0.0),
+                Color(red: 0.12, green: 0.02, blue: 0.02),
+                Color.accentPrimary.opacity(0.65),
+                Color(red: 0.04, green: 0.0, blue: 0.0)
             ],
             startPoint: .top,
             endPoint: .bottomTrailing
         )
         .ignoresSafeArea()
+    }
+
+    private var isAnyPlaying: Bool {
+        tonesViewModel.isPlaying || musicViewModel.isPlaying
     }
 
     private func isActive(preset: Preset, mode: OutputMode) -> Bool {

@@ -4,10 +4,10 @@
 
 **Product Name:** Brain Tones
 **Platform:** iOS (Native Swift/SwiftUI)
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-01-25
 
-Brain Tones is an iOS application that generates binaural and isochronic audio tones designed to enhance cognitive states (focus, relaxation, creativity, etc.). The app combines customizable tone presets with curated audio playlists streamed from S3 storage, allowing users to layer brainwave entrainment audio over music or ambient sounds through a unified native audio pipeline.
+Brain Tones is an iOS application that generates binaural and isochronic audio tones designed to enhance cognitive states (focus, relaxation, creativity, etc.). The app combines tone presets with curated audio playlists streamed from S3 storage, allowing users to layer brainwave entrainment audio over music or ambient sounds through a unified native audio pipeline.
 
 ## 2. Product Overview
 
@@ -104,8 +104,8 @@ Brain Tones enables users to:
 #### 3.4.1 Playlist Catalog
 - **Requirement:** App loads playlists from bundled JSON manifest:
   - Playlists are hard-coded in project JSON file (no user-added playlists)
-  - Each playlist contains metadata: id, title, track list
-  - Tracks reference audio files hosted on Amazon S3
+  - Each playlist contains metadata: id, title, defaultStartIndex, track list
+  - Tracks include id, title, optional duration, and remoteURL (hosted on Amazon S3)
   - Initial playlist: "AllieSpaces" with 11 tracks (only one playlist for now, but designed for multiple)
 
 #### 3.4.2 Playlist Loading & Display
@@ -115,10 +115,11 @@ Brain Tones enables users to:
   - List of tracks with titles (inferred from filename if not specified in metadata)
   - Current track indicator
   - Error messages for network failures
+  - Track duration shown only when available; otherwise omitted
 
 #### 3.4.3 Track Download & Caching
 - **Requirement:** Download management system:
-  - **Storage Location:** Files stored in `Library/Caches/` (not backed up, may be purged by system, not backed up to iCloud)
+  - **Storage Location:** Files stored in `Library/Caches/BrainTonesMusicDownloads/` (not backed up, may be purged by system, not backed up to iCloud)
   - **Naming Scheme:** Sanitized track ID (with `/` replaced by `-`) + `.mp3` extension
   - **Fallback:** If local file missing, stream from remote URL
   - **Playback Priority:** Play from local cache when available; only stream when track is not downloaded. After a playing track's download completes, automatically switch from playing the stream to playing the downloaded file at the same playback location.
@@ -126,7 +127,7 @@ Brain Tones enables users to:
     - Current playing track downloads immediately if not cached
     - The next track in the queue downloads (if not already downloaded) after the current track completes its download
     - Download of the next track continues sequentially as tracks advance
-  - **Cache Mapping:** Track ID to local file URL mapping persisted in UserDefaults
+  - **Cache Mapping:** Track ID to cached file name mapping persisted in UserDefaults
   - **Download Status:** Track download state (not downloaded, downloading, downloaded) exposed for UI display
   - **Display:** Download state for each track is shown right-aligned on each track in the list. While downloading, a ring progress indicator shows the progress for that track. The download progress ring is NOT also shown next to where the currently playing track name is displayed. Other non-ring icons symbolize "not downloaded" and "downloaded".
 
@@ -135,7 +136,8 @@ Brain Tones enables users to:
   - Current track index (0-based)
   - Playback time within current track (seconds, double precision)
   - State persists per playlist ID
-  - Cache state (which tracks are downloaded) persists per playlist
+  - Per-track playback positions persist per track ID (used when selecting a track)
+  - Cache state (which tracks are downloaded) persists per track
 
 #### 3.4.5 Playback State Persistence
 - **Requirement:** Playback state must be saved:
@@ -143,6 +145,7 @@ Brain Tones enables users to:
   - **During playback:** Auto-save every 29 seconds via timer
   - **On playlist switch:** Save outgoing playlist state before loading new one
   - **On track end:** Advance to next track, save new state
+  - **On track selection:** Save outgoing track state before switching
   - **On app restart:** Restore last active playlist and its saved state
 
 #### 3.4.6 Playlist Restoration
@@ -185,15 +188,13 @@ Brain Tones enables users to:
 - **Requirement:** Integrate with iOS media controls:
   - Lock screen controls (play/pause, skip forward/backward, seek)
   - Control Center controls
-  - CarPlay controls (if applicable)
   - Now Playing metadata display
 
 #### 3.5.5 Now Playing Metadata
 - **Requirement:** Display metadata in Now Playing:
-  - **When tones playing:** Show preset name (e.g., "Focused & Sustainable Work")
-  - **When music playing:** Show track title
-  - **When both playing:** Prioritize tones preset name, show track info as subtitle
-  - **When paused:** Show last active content name
+  - **Title:** Uses track title when available; otherwise falls back "Brain Tones"
+  - **Artist:** Preset name
+  - **Album:** Playlist title
 
 ### 3.6 Settings Persistence
 
@@ -203,15 +204,15 @@ Brain Tones enables users to:
   - `lastPresetName`: Name of last selected preset
   - `currentPlaylistId`: Currently active audio playlist ID
   - `playlistStates`: Dictionary mapping playlist IDs to playback states (track index, playback time)
-  - `trackCacheMap`: Dictionary mapping track IDs to local cached file URLs
   - `recentPlaylists`: Array of recent playlist entries (max 20)
+  - `cachedTrackFileNames`: Dictionary mapping track IDs to cached file names
+  - `trackPlaybackPositions`: Dictionary mapping track IDs to last playback positions
 
 #### 3.6.2 Settings Store
 - **Requirement:** Centralized settings management:
   - Observable object for SwiftUI binding
   - Automatic persistence on value changes
   - Codable support for complex types
-  - Thread-safe access
 
 ## 4. User Interface Requirements
 
@@ -229,19 +230,21 @@ Brain Tones enables users to:
     - Speakers activation button
     - Visual active state indicator
 
-- **Audio Playlists Section:**
-  - Section title: "Audio Playlists"
-  - Playlist selection (from bundled catalog)
+- **Music Playlists Section:**
+  - Section title: "Music Playlists"
+  - Playlist selection menu (from bundled catalog)
   - Current playlist info (if loaded):
     - Playlist title
     - Track count
   - Native player UI:
     - Track title
+    - Track number
     - Transport controls: play/pause, skip forward, skip backward
     - Scrubber bar for seeking within track
     - Track list with current track indicator
-  - Recent playlists list (if any)
-  - Error message display for network/download failures
+  - Recent playlists list
+  - Error message display for catalog load failures
+  - Empty-state message if no playlists are available
 
 ### 4.2 Visual Design
 - **Color Scheme:**
@@ -252,6 +255,7 @@ Brain Tones enables users to:
 
 - **Typography:**
   - System fonts with weight variations
+  - Brand wordmark: 28pt bold, tagline: 18pt medium
   - Section titles: 22pt semibold
   - Preset names: 18pt semibold
   - Body text: 14-15pt regular
@@ -287,31 +291,31 @@ Brain Tones enables users to:
   - Real-time audio synthesis
   - Multiple concurrent tone layers per preset
   - Stereo for headphones, mono-compatible for speakers
-- **Music Playback:** AVQueuePlayer or AVAudioPlayerNode
+- **Music Playback:** AVPlayer
   - Sequential track playback with automatic advancement
   - Support for local cached files and remote streaming
-  - Gapless playback
   - Unified AVAudioSession configuration for mixing tones and music
 
 ### 5.3 Data Models
 - **Preset:** Codable struct with layers array
 - **ToneLayer:** Contains frequency, carrier, type, volume, purpose
 - **OutputMode:** Enum (headphones, speakers)
-- **AudioTrack:** Codable struct (id, title, duration, remoteURL, localURL?)
-- **AudioPlaylist:** Codable struct (id, title, tracks: [AudioTrack], defaultStartIndex?)
-- **PlaylistPlaybackState:** Codable struct (playlistId, trackIndex, playbackTime)
-- **RecentPlaylist:** Codable struct (id, title, addedAt)
-- **TrackCacheEntry:** Codable struct (trackId, localURL, downloadedAt)
+- **AudioTrack:** Codable struct (id, title, duration?, remoteURL, localURL?)
+- **AudioPlaylist:** Codable struct (id, title, defaultStartIndex, tracks: [AudioTrack])
+- **MusicPlaybackState:** Codable struct (playlistId, trackIndex, playbackTime)
+- **MusicRecentPlaylist:** Codable struct (playlistId, customName?, lastPlayedAt)
+- **Cached Track Map:** Dictionary (trackId -> cached file name)
+- **Track Playback Positions:** Dictionary (trackId -> playbackTime)
 
 ### 5.4 State Management
 - **ViewModels:** ObservableObject classes
   - `BrainTonesViewModel`: Manages preset selection and tone playback
-  - `MusicPlaylistViewModel`: Manages playlist selection and track display
+  - `MusicPlayerViewModel`: Manages playlist selection and track display
 - **Services:** Singleton classes
   - `MusicCatalogService`: Loads playlist manifests and metadata
-  - `TrackDownloadManager`: Handles track downloads, caching, and progress tracking
+  - `TrackDownloadManager`: Actor handling track downloads, caching, and progress tracking
 - **Controllers:** Classes
-  - `MusicPlaybackController`: Manages AVQueuePlayer/AudioPlayerNode playback, track navigation, seeking
+  - `MusicPlaybackController`: Manages AVPlayer playback, track navigation, seeking
 - **Stores:** ObservableObject classes
   - `PresetStore`: Loads and provides presets
   - `SettingsStore`: Manages persistent settings
@@ -334,20 +338,20 @@ Brain Tones enables users to:
 ## 6. Performance Requirements
 
 ### 6.1 Audio Performance
-- **Latency:** Audio playback must start within 100ms of user action
-- **CPU Usage:** Audio generation must not exceed 10% CPU usage
-- **Battery:** Optimized for extended playback sessions
+- **Latency:** No explicit instrumentation; target is quick start after user action
+- **CPU Usage:** No enforced limits in code
+- **Battery:** Best-effort, no explicit optimization checks
 
 ### 6.2 UI Performance
-- **Frame Rate:** Maintain 60 FPS during scrolling and animations
-- **Load Time:** App must launch and restore state within 2 seconds
-- **Memory:** App must not exceed 100MB memory usage
+- **Frame Rate:** No explicit performance instrumentation
+- **Load Time:** Best-effort, no measured requirement in code
+- **Memory:** No enforced limits in code
 
 ## 7. Error Handling
 
 ### 7.1 Preset Loading Errors
 - **Requirement:** Handle invalid or missing preset JSON gracefully
-- **Behavior:** Display error message, allow app to continue with available presets
+- **Behavior:** Log error to console and continue with an empty preset list (no user-facing error UI)
 
 ### 7.2 Network & Download Errors
 - **Requirement:** Handle network failures, download errors, and invalid playlist data
@@ -355,7 +359,7 @@ Brain Tones enables users to:
   - Display user-friendly error message in playlist section
   - Retry failed downloads automatically
   - Fall back to remote streaming if cached file unavailable
-  - Handle S3 access errors gracefully
+  - Log download and file system errors to console
 
 ### 7.3 Audio Engine Errors
 - **Requirement:** Handle audio session configuration failures and playback errors
@@ -367,11 +371,11 @@ Brain Tones enables users to:
 ## 8. Accessibility Requirements
 
 ### 8.1 VoiceOver Support
-- **Requirement:** All interactive elements must have accessibility labels
-- **Labels:** Descriptive labels for preset buttons (e.g., "Focused & Sustainable Work Headphones")
+- **Requirement:** Key interactive elements have accessibility labels
+- **Labels:** Descriptive labels for preset buttons and download status icons
 
 ### 8.2 Dynamic Type
-- **Requirement:** Text must scale with system font size preferences
+- **Requirement:** No explicit Dynamic Type support beyond standard SwiftUI font usage
 
 ## 9. Success Metrics
 
@@ -379,11 +383,11 @@ Brain Tones enables users to:
 - All test cases pass (100% test suite success rate)
 - Zero crashes during normal usage
 - Settings persist correctly across app restarts
-- Playback state restores accurately
+- Playback state restores accurately for playlists and per-track positions
 
 ### 9.2 User Experience Metrics
-- Preset activation responds immediately (<100ms)
-- Playlist loading completes within 1 second (from bundled catalog)
+- Preset activation responds immediately (best-effort)
+- Playlist loading completes quickly from bundled catalog
 - Track download starts immediately when track selected
 - Playback coordination works seamlessly (tones + music simultaneously)
 - Now Playing metadata displays correctly
@@ -412,56 +416,12 @@ Brain Tones enables users to:
 
 ## 12. Testing Strategy
 
-### 12.1 Test Suite Coverage
-The following areas are covered:
-
-1. **PresetLibraryTests:**
-   - Preset JSON decoding
-   - Parameter variation between output modes
-   - Binaural layer behavior differences
-
-2. **SettingsStoreTests:**
-   - Output mode persistence
-   - Playlist state persistence
-
-3. **ToneEngineIntegrationTests:**
-   - Engine configuration
-   - Playback start/stop lifecycle
-
-4. **MusicPlaylistViewModelTests:**
-   - Playlist catalog loading
-   - Playlist selection and state updates
-   - Recent playlists management
-   - Playback state persistence
-   - Auto-save timer functionality
-   - Playlist restoration
-
-5. **TrackDownloadManagerTests:**
-   - Download initiation and progress tracking
-   - Cache file management
-   - Sequential download queue (current + next track)
-   - Fallback to remote streaming
-   - Cache cleanup on playlist deletion
-
-6. **MusicPlaybackControllerTests:**
-   - Playback start/pause/stop
-   - Track navigation (skip forward/backward)
-   - Seeking within tracks
-   - Playback state reporting
-   - Integration with AVAudioSession
-
-7. **MediaPlaybackCoordinatorTests:**
-   - Simultaneous tones + music playback
-   - Unified play/pause controls
-   - Now Playing metadata updates
-   - External control integration
-
-### 12.2 Test Execution
+### 12.1 Test Execution
 - Tests run on physical iOS device ("Edward")
 - All tests must pass before deployment
 - Test suite executed via Xcode or xcodebuild command line
 
 ---
 
-**Document Version:** 1.1
+**Document Version:** 1.2
 **Last Updated:** 2026-01-25

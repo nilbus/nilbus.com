@@ -89,9 +89,9 @@ final class NowPlayingManager {
             MPNowPlayingInfoPropertyIsLiveStream: false
         ]
 
-        let title = trackTitle ?? presetName ?? "Brain Tones"
-        let artist = playlistTitle ?? "Brainaural"
-        let album = presetName ?? playlistTitle ?? "Brainwave Presets"
+        let title = trackTitle ?? "Brain Tones"
+        let artist = presetName ?? "Brain Tones"
+        let album = playlistTitle ?? "Brain Tones"
 
         info[MPMediaItemPropertyTitle] = title
         info[MPMediaItemPropertyArtist] = artist

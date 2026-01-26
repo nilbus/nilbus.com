@@ -10,7 +10,9 @@ struct MusicPlayerRuntimeState {
     var position: TimeInterval
     var duration: TimeInterval?
     var downloadProgress: Double
+    var downloadingTrackId: String?
     var isBuffering: Bool
+    var errorMessage: String?
 
     static let empty = MusicPlayerRuntimeState(
         playlist: nil,
@@ -20,7 +22,9 @@ struct MusicPlayerRuntimeState {
         position: 0,
         duration: nil,
         downloadProgress: 0,
-        isBuffering: false
+        downloadingTrackId: nil,
+        isBuffering: false,
+        errorMessage: nil
     )
 }
 
@@ -52,8 +56,8 @@ final class MusicPlaybackController: ObservableObject, MusicPlaybackControlling 
     private var timeControlStatusObserver: NSKeyValueObservation?
     private var currentItemStatusObserver: NSKeyValueObservation?
     private var currentPreparationTask: Task<Void, Never>?
-    private var currentDownloadProgressToken: TrackDownloadProgressToken?
-    private var currentDownloadTrackId: String?
+    private var activeDownloadProgressToken: TrackDownloadProgressToken?
+    private var activeDownloadTrackId: String?
     var statePublisher: AnyPublisher<MusicPlayerRuntimeState, Never> {
         $state.eraseToAnyPublisher()
     }
@@ -102,12 +106,13 @@ final class MusicPlaybackController: ObservableObject, MusicPlaybackControlling 
             position: startTime,
             duration: nil,
             downloadProgress: 0,
-            isBuffering: false
+            downloadingTrackId: nil,
+            isBuffering: false,
+            errorMessage: nil
         )
 
         playbackCoordinator.setMusicDesired(autoplay)
         prepareCurrentTrack(seekTime: startTime, autoplay: autoplay)
-        prefetchNextTrack()
     }
 
     func play() {
@@ -218,9 +223,9 @@ private extension MusicPlaybackController {
     }
 
     func clearCurrentDownloadProgressHandler() {
-        guard let trackId = currentDownloadTrackId, let token = currentDownloadProgressToken else { return }
-        currentDownloadTrackId = nil
-        currentDownloadProgressToken = nil
+        guard let trackId = activeDownloadTrackId, let token = activeDownloadProgressToken else { return }
+        activeDownloadTrackId = nil
+        activeDownloadProgressToken = nil
         Task {
             await downloadManager.removeProgressHandler(for: trackId, token: token)
         }
@@ -232,63 +237,40 @@ private extension MusicPlaybackController {
         let track = playlist.tracks[state.trackIndex]
         let trackId = track.id
 
-        clearCurrentDownloadProgressHandler()
-
         currentPreparationTask = Task { [weak self] in
             guard let self else { return }
 
+            await self.cancelActiveDownloadIfNeeded(for: trackId)
+
             let localURL = await self.downloadManager.localURL(for: trackId)
             let playableURL = localURL ?? track.remoteURL
-            let initialDownloadProgress: Double = localURL == nil ? 0 : 1.0
+            let needsDownload = localURL == nil
 
             await MainActor.run {
                 guard self.state.track?.id == trackId else { return }
-                self.updateState(downloadProgress: initialDownloadProgress, notifyCoordinator: false)
+                if needsDownload {
+                    self.updateState(
+                        downloadProgress: 0,
+                        downloadingTrackId: .some(trackId),
+                        errorMessage: .some(nil),
+                        notifyCoordinator: false
+                    )
+                } else {
+                    self.updateState(
+                        downloadProgress: 0,
+                        downloadingTrackId: .some(nil),
+                        errorMessage: .some(nil),
+                        notifyCoordinator: false
+                    )
+                }
                 self.load(url: playableURL, seekTime: seekTime, autoplay: autoplay)
             }
 
-            guard localURL == nil, !Task.isCancelled else { return }
-
-            let (downloadTask, token) = await self.downloadManager.ensureDownload(
-                for: track,
-                progress: { [weak self] progress in
-                    guard let self else { return }
-                    Task { @MainActor in
-                        guard self.state.track?.id == trackId else { return }
-                        self.updateState(downloadProgress: progress, notifyCoordinator: false)
-                    }
-                }
-            )
-
-            await MainActor.run {
-                guard self.state.track?.id == trackId else { return }
-                self.currentDownloadTrackId = trackId
-                self.currentDownloadProgressToken = token
+            if needsDownload {
+                await self.startDownload(for: track, switchToLocal: true)
             }
 
-            do {
-                _ = try await downloadTask.value
-                await MainActor.run {
-                    guard self.state.track?.id == trackId else { return }
-                    self.updateState(downloadProgress: 1.0, notifyCoordinator: false)
-                    if self.currentDownloadTrackId == trackId {
-                        self.currentDownloadTrackId = nil
-                        self.currentDownloadProgressToken = nil
-                    }
-                }
-            } catch {
-                // Playback can continue via streaming; treat the download as not completed.
-                await MainActor.run {
-                    guard self.state.track?.id == trackId else { return }
-                    if self.state.downloadProgress < 1.0 {
-                        self.updateState(downloadProgress: 0, notifyCoordinator: false)
-                    }
-                    if self.currentDownloadTrackId == trackId {
-                        self.currentDownloadTrackId = nil
-                        self.currentDownloadProgressToken = nil
-                    }
-                }
-            }
+            await self.prefetchNextTrack(afterTrackId: trackId)
         }
     }
 
@@ -297,9 +279,24 @@ private extension MusicPlaybackController {
         currentItemStatusObserver?.invalidate()
         currentItemStatusObserver = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
             guard let self else { return }
-            guard item.status == .readyToPlay else { return }
-            Task { @MainActor in
-                self.updateState(duration: self.durationForCurrentItem(), notifyCoordinator: true)
+            switch item.status {
+            case .readyToPlay:
+                Task { @MainActor in
+                    self.updateState(duration: self.durationForCurrentItem(), notifyCoordinator: true)
+                }
+            case .failed:
+                let error = item.error?.localizedDescription ?? "Unknown error"
+                print("Playback item failed: \(error)")
+                Task { @MainActor in
+                    self.player.pause()
+                    self.updateState(
+                        isPlaying: false,
+                        errorMessage: .some("Playback failed. Please try another track."),
+                        notifyCoordinator: true
+                    )
+                }
+            default:
+                break
             }
         }
 
@@ -331,24 +328,119 @@ private extension MusicPlaybackController {
             position: startTime,
             duration: nil,
             downloadProgress: 0,
-            isBuffering: false
+            downloadingTrackId: nil,
+            isBuffering: false,
+            errorMessage: nil
         )
 
         playbackCoordinator.setMusicDesired(autoplay)
         prepareCurrentTrack(seekTime: startTime, autoplay: autoplay)
-        prefetchNextTrack()
     }
 
-    func prefetchNextTrack() {
+    func prefetchNextTrack(afterTrackId trackId: String) async {
         guard
             let playlist = state.playlist,
-            state.trackIndex + 1 < playlist.tracks.count
+            state.track?.id == trackId,
+            state.trackIndex + 1 < playlist.tracks.count,
+            activeDownloadTrackId == nil
         else { return }
 
         let nextTrack = playlist.tracks[state.trackIndex + 1]
-        Task {
-            await downloadManager.prefetch(track: nextTrack)
+        if await downloadManager.localURL(for: nextTrack.id) != nil {
+            return
         }
+
+        await startDownload(for: nextTrack, switchToLocal: false)
+    }
+
+    func cancelActiveDownloadIfNeeded(for trackId: String) async {
+        guard let activeId = activeDownloadTrackId, activeId != trackId else { return }
+        clearCurrentDownloadProgressHandler()
+        await downloadManager.cancelDownload(for: activeId)
+        await MainActor.run {
+            self.updateState(
+                downloadProgress: 0,
+                downloadingTrackId: .some(nil),
+                notifyCoordinator: false
+            )
+        }
+    }
+
+    func startDownload(for track: AudioTrack, switchToLocal: Bool) async {
+        let trackId = track.id
+        let (downloadTask, token) = await downloadManager.ensureDownload(
+            for: track,
+            progress: { [weak self] progress in
+                guard let self else { return }
+                Task { @MainActor in
+                    self.updateState(
+                        downloadProgress: progress,
+                        downloadingTrackId: .some(trackId),
+                        notifyCoordinator: false
+                    )
+                }
+            }
+        )
+
+        await MainActor.run {
+            self.activeDownloadTrackId = trackId
+            self.activeDownloadProgressToken = token
+            self.updateState(
+                downloadProgress: 0,
+                downloadingTrackId: .some(trackId),
+                errorMessage: .some(nil),
+                notifyCoordinator: false
+            )
+        }
+
+        do {
+            let localURL = try await downloadTask.value
+            await MainActor.run {
+                if self.activeDownloadTrackId == trackId {
+                    self.activeDownloadTrackId = nil
+                    self.activeDownloadProgressToken = nil
+                }
+                self.updateState(
+                    downloadProgress: 0,
+                    downloadingTrackId: .some(nil),
+                    notifyCoordinator: false
+                )
+                if switchToLocal {
+                    self.switchToDownloadedFileIfNeeded(trackId: trackId, localURL: localURL)
+                }
+            }
+        } catch {
+            await MainActor.run {
+                if self.activeDownloadTrackId == trackId {
+                    self.activeDownloadTrackId = nil
+                    self.activeDownloadProgressToken = nil
+                }
+                if error is CancellationError {
+                    self.updateState(
+                        downloadProgress: 0,
+                        downloadingTrackId: .some(nil),
+                        notifyCoordinator: false
+                    )
+                    return
+                }
+                self.updateState(
+                    downloadProgress: 0,
+                    downloadingTrackId: .some(nil),
+                    errorMessage: .some("Download failed. We'll keep streaming the track."),
+                    notifyCoordinator: false
+                )
+            }
+        }
+    }
+
+    func switchToDownloadedFileIfNeeded(trackId: String, localURL: URL) {
+        guard state.track?.id == trackId else { return }
+        guard let asset = player.currentItem?.asset as? AVURLAsset,
+              !asset.url.isFileURL else { return }
+        let currentTime = player.currentTime().seconds
+        let seekTime = currentTime.isFinite ? currentTime : state.position
+        let shouldPlay = state.isPlaying
+        load(url: localURL, seekTime: seekTime, autoplay: shouldPlay)
     }
 
     func handleTrackEnded() {
@@ -376,7 +468,9 @@ private extension MusicPlaybackController {
         position: TimeInterval? = nil,
         duration: TimeInterval? = nil,
         downloadProgress: Double? = nil,
+        downloadingTrackId: String?? = nil,
         isBuffering: Bool? = nil,
+        errorMessage: String?? = nil,
         notifyCoordinator: Bool = true
     ) {
         var newState = state
@@ -392,8 +486,14 @@ private extension MusicPlaybackController {
         if let downloadProgress {
             newState.downloadProgress = downloadProgress
         }
+        if let downloadingTrackId {
+            newState.downloadingTrackId = downloadingTrackId
+        }
         if let isBuffering {
             newState.isBuffering = isBuffering
+        }
+        if let errorMessage {
+            newState.errorMessage = errorMessage
         }
         state = newState
 

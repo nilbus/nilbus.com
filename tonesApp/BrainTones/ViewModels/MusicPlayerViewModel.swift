@@ -16,7 +16,8 @@ final class MusicPlayerViewModel: ObservableObject {
     @Published private(set) var currentTrackIndex: Int = 0
     @Published private(set) var isPlaying: Bool = false
     @Published private(set) var isBuffering: Bool = false
-    @Published private(set) var downloadProgress: Double = 0
+    @Published private(set) var activeDownloadProgress: Double = 0
+    @Published private(set) var activeDownloadTrackId: String?
     @Published private(set) var playbackPosition: TimeInterval = 0
     @Published private(set) var playbackDuration: TimeInterval?
     @Published private(set) var errorMessage: String?
@@ -37,6 +38,8 @@ final class MusicPlayerViewModel: ObservableObject {
     private var lastKnownPlayback: MusicPlaybackState?
     private var lastKnownTrackId: String?
     private var lastIsPlaying: Bool = false
+    private var catalogErrorMessage: String?
+    private var downloadErrorMessage: String?
 
     init(
         catalogService: MusicCatalogServicing = MusicCatalogService(),
@@ -67,10 +70,18 @@ final class MusicPlayerViewModel: ObservableObject {
     // MARK: - Public API
 
     func togglePlayback() {
-        controller.togglePlayback()
+        if isPlaying {
+            controller.pause()
+            return
+        }
+
+        guard currentTrack != nil else { return }
+        playbackCoordinator.requestTonePlayback()
+        controller.play()
     }
 
     func play() {
+        playbackCoordinator.requestTonePlayback()
         controller.play()
     }
 
@@ -97,6 +108,7 @@ final class MusicPlayerViewModel: ObservableObject {
         persistLatestPlayback()
         selectedPlaylist = playlist
         settings.currentPlaylistId = playlist.id
+        settings.updateRecentPlaylist(id: playlist.id, customName: nil)
 
         let savedState = settings.playbackState(for: playlist.id)
         let startIndex = savedState?.trackIndex ?? playlist.defaultStartIndex
@@ -108,9 +120,13 @@ final class MusicPlayerViewModel: ObservableObject {
             startTime: startTime,
             autoplay: autoplay
         )
+        if autoplay {
+            playbackCoordinator.requestTonePlayback()
+        }
 
         currentTrackIndex = startIndex
-        downloadProgress = 0
+        activeDownloadProgress = 0
+        activeDownloadTrackId = nil
         playbackPosition = startTime
         playbackDuration = nil
     }
@@ -122,6 +138,7 @@ final class MusicPlayerViewModel: ObservableObject {
         // Tapping the currently selected track should not restart it.
         if index == currentTrackIndex {
             if autoplay, !isPlaying {
+                playbackCoordinator.requestTonePlayback()
                 controller.play()
             }
             return
@@ -132,6 +149,9 @@ final class MusicPlayerViewModel: ObservableObject {
 
         let track = playlist.tracks[index]
         let startTime = settings.playbackPosition(for: track.id) ?? 0
+        if autoplay {
+            playbackCoordinator.requestTonePlayback()
+        }
         controller.selectTrack(at: index, startTime: startTime, autoplay: autoplay)
     }
 
@@ -200,6 +220,8 @@ final class MusicPlayerViewModel: ObservableObject {
             await MainActor.run {
                 self.playlists = playlists
                 self.recentPlaylists = self.buildRecentDisplays(from: self.settings.recentPlaylists)
+                self.catalogErrorMessage = nil
+                self.updateCompositeError()
 
                 if autoRestore, let playlistId = self.settings.currentPlaylistId,
                    let playlist = playlists.first(where: { $0.id == playlistId }) {
@@ -210,7 +232,8 @@ final class MusicPlayerViewModel: ObservableObject {
             }
         } catch {
             await MainActor.run {
-                self.errorMessage = "Failed to load catalog: \(error.localizedDescription)"
+                self.catalogErrorMessage = "Failed to load catalog: \(error.localizedDescription)"
+                self.updateCompositeError()
             }
         }
     }
@@ -218,10 +241,20 @@ final class MusicPlayerViewModel: ObservableObject {
     // MARK: - State Handling
 
     private func handleStateUpdate(_ state: MusicPlayerRuntimeState) {
+        let previousTrackId = lastKnownTrackId
+        let trackDidChange = previousTrackId != nil && previousTrackId != state.track?.id
+        if trackDidChange {
+            persistLatestPlayback()
+        }
+
         if let playlist = state.playlist {
-            selectedPlaylist = playlist
-            currentTrackIndex = state.trackIndex
-            settings.currentPlaylistId = playlist.id
+            if selectedPlaylist?.id != playlist.id {
+                selectedPlaylist = playlist
+                settings.currentPlaylistId = playlist.id
+            }
+            if currentTrackIndex != state.trackIndex {
+                currentTrackIndex = state.trackIndex
+            }
             lastKnownPlayback = MusicPlaybackState(
                 playlistId: playlist.id,
                 trackIndex: state.trackIndex,
@@ -232,9 +265,12 @@ final class MusicPlayerViewModel: ObservableObject {
 
         isPlaying = state.isPlaying
         isBuffering = state.isBuffering
-        downloadProgress = state.downloadProgress
+        activeDownloadProgress = state.downloadProgress
+        activeDownloadTrackId = state.downloadingTrackId
         playbackPosition = state.position
         playbackDuration = state.duration
+        downloadErrorMessage = state.errorMessage
+        updateCompositeError()
 
         if state.isPlaying != lastIsPlaying {
             lastIsPlaying = state.isPlaying
@@ -244,6 +280,10 @@ final class MusicPlayerViewModel: ObservableObject {
                 stopAutoSaveTimer()
                 persistLatestPlayback()
             }
+        }
+
+        if trackDidChange {
+            persistLatestPlayback()
         }
     }
 
@@ -274,10 +314,14 @@ final class MusicPlayerViewModel: ObservableObject {
     // MARK: - Helpers
 
     private func buildRecentDisplays(from entries: [MusicRecentPlaylist]) -> [RecentDisplay] {
-        playlists.compactMap { playlist in
-            guard let entry = entries.first(where: { $0.playlistId == playlist.id }) else { return nil }
+        entries.compactMap { entry in
+            guard let playlist = playlists.first(where: { $0.id == entry.playlistId }) else { return nil }
             return RecentDisplay(playlist: playlist, customName: entry.customName)
         }
+    }
+
+    private func updateCompositeError() {
+        errorMessage = downloadErrorMessage ?? catalogErrorMessage
     }
 }
 

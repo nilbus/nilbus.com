@@ -37,13 +37,6 @@ final actor TrackDownloadManager {
 
         if let downloadsDirectory {
             self.downloadsDirectory = downloadsDirectory
-        } else if let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-            let directory = appSupportURL.appendingPathComponent("BrainTonesMusicDownloads", isDirectory: true)
-            if !fileManager.fileExists(atPath: directory.path) {
-                try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
-            }
-            try? Self.excludeFromBackup(directory)
-            self.downloadsDirectory = directory
         } else if let cachesURL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first {
             let directory = cachesURL.appendingPathComponent("BrainTonesMusicDownloads", isDirectory: true)
             if !fileManager.fileExists(atPath: directory.path) {
@@ -183,6 +176,12 @@ final actor TrackDownloadManager {
         _ = ensureDownload(for: track, progress: nil)
     }
 
+    func cancelDownload(for trackId: String) {
+        guard let active = activeDownloads[trackId] else { return }
+        active.task.cancel()
+        activeDownloads.removeValue(forKey: trackId)
+    }
+
     func removeProgressHandler(for trackId: String, token: TrackDownloadProgressToken) {
         guard var active = activeDownloads[trackId] else { return }
         active.progressHandlers.removeValue(forKey: token)
@@ -238,6 +237,26 @@ private extension TrackDownloadManager {
     }
 
     func download(track: AudioTrack) async throws -> URL {
+        let maxAttempts = 2
+        var lastError: Error?
+
+        for attempt in 1...maxAttempts {
+            do {
+                await sendProgress(0.0, for: track.id, force: true)
+                return try await performDownload(track: track)
+            } catch {
+                lastError = error
+                print("Track download failed (attempt \(attempt)) for \(track.id): \(error)")
+                if attempt < maxAttempts {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                }
+            }
+        }
+
+        throw lastError ?? URLError(.cannotLoadFromNetwork)
+    }
+
+    func performDownload(track: AudioTrack) async throws -> URL {
         let destination = destinationURL(for: track)
 
         if fileManager.fileExists(atPath: destination.path) {
@@ -253,7 +272,12 @@ private extension TrackDownloadManager {
         fileManager.createFile(atPath: tempURL.path, contents: nil, attributes: nil)
 
         let handle = try FileHandle(forWritingTo: tempURL)
-        defer { try? handle.close() }
+        defer {
+            try? handle.close()
+            if fileManager.fileExists(atPath: tempURL.path) {
+                try? fileManager.removeItem(at: tempURL)
+            }
+        }
 
         let (bytes, response) = try await session.bytes(from: track.remoteURL)
         let expectedLength = response.expectedContentLength

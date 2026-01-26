@@ -22,6 +22,40 @@ struct AudioTrack: Identifiable, Codable, Hashable {
         self.remoteURL = remoteURL
         self.localURL = localURL
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        duration = try container.decodeIfPresent(TimeInterval.self, forKey: .duration)
+        remoteURL = try container.decode(URL.self, forKey: .remoteURL)
+        localURL = try container.decodeIfPresent(URL.self, forKey: .localURL)
+
+        if let explicitTitle = try container.decodeIfPresent(String.self, forKey: .title),
+           !explicitTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            title = explicitTitle
+        } else {
+            title = Self.inferTitle(from: remoteURL, fallback: id)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encodeIfPresent(duration, forKey: .duration)
+        try container.encode(remoteURL, forKey: .remoteURL)
+        try container.encodeIfPresent(localURL, forKey: .localURL)
+    }
+}
+
+private extension AudioTrack {
+    static func inferTitle(from url: URL, fallback: String) -> String {
+        let raw = url.deletingPathExtension().lastPathComponent
+        let plusReplaced = raw.replacingOccurrences(of: "+", with: " ")
+        let decoded = plusReplaced.removingPercentEncoding ?? plusReplaced
+        let trimmed = decoded.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? fallback : trimmed
+    }
 }
 
 struct AudioPlaylist: Identifiable, Codable, Hashable {

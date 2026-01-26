@@ -70,18 +70,26 @@ final class MediaPlaybackCoordinator {
     // MARK: - Desired State
 
     func setTonesDesired(_ desired: Bool) {
-        if pendingToneIntent != nil {
-            pendingToneIntent = desired
-        } else {
-            desiredTonesPlaying = desired
-        }
+        guard pendingToneIntent == nil else { return }
+        desiredTonesPlaying = desired
     }
 
     func setMusicDesired(_ desired: Bool) {
-        if pendingMusicIntent != nil {
-            pendingMusicIntent = desired
-        } else {
-            desiredMusicPlaying = desired
+        guard pendingMusicIntent == nil else { return }
+        desiredMusicPlaying = desired
+    }
+
+    func requestTonePlayback() {
+        setTonesDesired(true)
+        if !isTonesPlaying {
+            tonePlayHandler?()
+        }
+    }
+
+    func requestMusicPlayback() {
+        setMusicDesired(true)
+        if !isMusicPlaying {
+            musicPlayHandler?()
         }
     }
 

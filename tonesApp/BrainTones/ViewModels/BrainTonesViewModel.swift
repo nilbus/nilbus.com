@@ -6,6 +6,7 @@ final class BrainTonesViewModel: ObservableObject {
     @Published private(set) var presets: [Preset] = []
     @Published var selectedPreset: Preset?
     @Published var isPlaying: Bool = false
+    @Published var errorMessage: String?
     @Published var outputMode: OutputMode {
         didSet {
             settings.outputMode = outputMode
@@ -48,16 +49,17 @@ final class BrainTonesViewModel: ObservableObject {
         guard let preset = selectedPreset else {
             guard let first = presets.first else { return }
             playbackCoordinator.setTonesDesired(true)
-            activatePreset(first, mode: outputMode)
+            playbackCoordinator.setMusicDesired(true)
+            startPlayback(with: first, mode: outputMode, updateSelection: true, autoStartMusic: true)
             return
         }
 
         if engine.isRunning {
-            playbackCoordinator.setTonesDesired(false)
-            pausePlayback()
+            playbackCoordinator.pauseAll(rememberIntent: true)
         } else {
             playbackCoordinator.setTonesDesired(true)
-            startPlayback(with: preset, mode: outputMode, updateSelection: false)
+            playbackCoordinator.setMusicDesired(true)
+            startPlayback(with: preset, mode: outputMode, updateSelection: false, autoStartMusic: true)
         }
 
         settings.lastPresetName = preset.name
@@ -71,20 +73,21 @@ final class BrainTonesViewModel: ObservableObject {
 
         if isSamePreset, !modeChanged {
             if engine.isRunning {
-                playbackCoordinator.setTonesDesired(false)
-                pausePlayback()
+                playbackCoordinator.pauseAll(rememberIntent: true)
             } else {
                 playbackCoordinator.setTonesDesired(true)
-                startPlayback(with: preset, mode: mode, updateSelection: false)
+                playbackCoordinator.setMusicDesired(true)
+                startPlayback(with: preset, mode: mode, updateSelection: false, autoStartMusic: true)
             }
             return
         }
 
         playbackCoordinator.setTonesDesired(true)
-        startPlayback(with: preset, mode: mode, updateSelection: true)
+        playbackCoordinator.setMusicDesired(true)
+        startPlayback(with: preset, mode: mode, updateSelection: true, autoStartMusic: true)
     }
 
-    private func startPlayback(with preset: Preset, mode: OutputMode, updateSelection: Bool) {
+    private func startPlayback(with preset: Preset, mode: OutputMode, updateSelection: Bool, autoStartMusic: Bool) {
         do {
             try engine.configure(preset: preset, mode: mode)
             try engine.start()
@@ -93,9 +96,16 @@ final class BrainTonesViewModel: ObservableObject {
             }
             isPlaying = true
             settings.lastPresetName = preset.name
+            errorMessage = nil
             playbackCoordinator.tonesStateDidChange(isPlaying: true, presetName: preset.name)
+            if autoStartMusic {
+                playbackCoordinator.requestMusicPlayback()
+            }
         } catch {
             print("Failed to start preset: \(error)")
+            errorMessage = "Unable to start tone playback. Please check your audio output and try again."
+            isPlaying = false
+            playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: selectedPreset?.name)
         }
     }
 
@@ -110,16 +120,30 @@ final class BrainTonesViewModel: ObservableObject {
     }
 
     private func restoreSelectionIfNeeded(from presets: [Preset]) {
-        guard let name = settings.lastPresetName,
-              let restored = presets.first(where: { $0.name == name }) else { return }
+        if let name = settings.lastPresetName,
+           let restored = presets.first(where: { $0.name == name }) {
+            selectedPreset = restored
+            do {
+                try engine.configure(preset: restored, mode: outputMode)
+            } catch {
+                print("Failed to restore preset: \(error)")
+            }
+            playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: restored.name)
+            return
+        }
 
-        selectedPreset = restored
+        guard selectedPreset == nil, let first = presets.first else { return }
+        selectedPreset = first
+        if settings.lastPresetName == nil {
+            settings.lastPresetName = first.name
+            outputMode = .speakers
+        }
         do {
-            try engine.configure(preset: restored, mode: outputMode)
+            try engine.configure(preset: first, mode: outputMode)
         } catch {
             print("Failed to restore preset: \(error)")
         }
-        playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: restored.name)
+        playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: first.name)
     }
 
     private func registerWithCoordinator() {
@@ -131,18 +155,18 @@ final class BrainTonesViewModel: ObservableObject {
 
     private func handleCoordinatorPlay() {
         if let preset = selectedPreset {
-            startPlayback(with: preset, mode: outputMode, updateSelection: false)
+            startPlayback(with: preset, mode: outputMode, updateSelection: false, autoStartMusic: false)
             return
         }
 
         if let lastName = settings.lastPresetName,
            let restored = presets.first(where: { $0.name == lastName }) {
-            startPlayback(with: restored, mode: outputMode, updateSelection: true)
+            startPlayback(with: restored, mode: outputMode, updateSelection: true, autoStartMusic: false)
             return
         }
 
         if let first = presets.first {
-            startPlayback(with: first, mode: outputMode, updateSelection: true)
+            startPlayback(with: first, mode: outputMode, updateSelection: true, autoStartMusic: false)
         }
     }
 
