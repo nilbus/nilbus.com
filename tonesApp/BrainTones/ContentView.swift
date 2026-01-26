@@ -292,11 +292,23 @@ struct ContentView: View {
                 .foregroundColor(.white.opacity(0.85))
 
             ForEach(Array(playlist.tracks.enumerated()), id: \.1.id) { index, track in
+                let isActive = index == musicViewModel.currentTrackIndex
+                let isDownloaded = musicViewModel.downloadedTrackIds.contains(track.id)
+                let status: TrackDownloadStatus = {
+                    if isDownloaded {
+                        return .downloaded
+                    }
+                    if isActive, musicViewModel.downloadProgress < 1.0 {
+                        return .downloading(progress: musicViewModel.downloadProgress)
+                    }
+                    return .notDownloaded
+                }()
+
                 TrackRow(
                     index: index,
                     track: track,
-                    isActive: index == musicViewModel.currentTrackIndex,
-                    downloadProgress: index == musicViewModel.currentTrackIndex ? musicViewModel.downloadProgress : 0,
+                    isActive: isActive,
+                    downloadStatus: status,
                     select: {
                         musicViewModel.selectTrack(at: index, autoplay: true)
                     }
@@ -384,7 +396,7 @@ private struct TrackRow: View {
     let index: Int
     let track: AudioTrack
     let isActive: Bool
-    let downloadProgress: Double
+    let downloadStatus: TrackDownloadStatus
     let select: () -> Void
 
     var body: some View {
@@ -408,14 +420,7 @@ private struct TrackRow: View {
 
                 Spacer()
 
-                if isActive {
-                    DownloadProgressRing(progress: downloadProgress, isBuffering: downloadProgress < 1.0)
-                        .frame(width: 28, height: 28)
-                } else {
-                    Circle()
-                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                        .frame(width: 20, height: 20)
-                }
+                downloadIndicator
             }
             .padding()
             .background(isActive ? Color.accentPrimary.opacity(0.25) : Color.white.opacity(0.05))
@@ -423,19 +428,48 @@ private struct TrackRow: View {
         }
         .buttonStyle(.plain)
     }
+
+    @ViewBuilder
+    private var downloadIndicator: some View {
+        switch downloadStatus {
+        case .downloaded:
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(Color.accentPrimary.opacity(0.95))
+                .accessibilityLabel(Text("Downloaded"))
+
+        case .notDownloaded:
+            Image(systemName: "arrow.down.circle")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.white.opacity(0.55))
+                .accessibilityLabel(Text("Not downloaded"))
+
+        case let .downloading(progress):
+            DownloadProgressRing(progress: progress, isBuffering: false, lineWidth: 3)
+                .frame(width: 22, height: 22)
+                .accessibilityLabel(Text("Downloading"))
+        }
+    }
+}
+
+private enum TrackDownloadStatus: Equatable {
+    case notDownloaded
+    case downloading(progress: Double)
+    case downloaded
 }
 
 private struct DownloadProgressRing: View {
     let progress: Double
     let isBuffering: Bool
+    var lineWidth: CGFloat = 4
 
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.15), lineWidth: 4)
+                .stroke(Color.white.opacity(0.15), lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: CGFloat(max(0, min(1, progress))))
-                .stroke(Color.accentPrimary, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .stroke(Color.accentPrimary, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             if isBuffering {
                 Circle()
@@ -444,7 +478,7 @@ private struct DownloadProgressRing: View {
             }
         }
         .aspectRatio(1, contentMode: .fit)
-        .animation(.easeInOut(duration: 0.3), value: progress)
+        .animation(.linear(duration: 0.12), value: progress)
     }
 }
 

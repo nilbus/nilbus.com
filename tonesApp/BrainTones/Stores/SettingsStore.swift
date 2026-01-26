@@ -48,6 +48,10 @@ final class SettingsStore: ObservableObject {
         didSet { saveCodable(cachedTrackFileNames, for: .cachedTrackFileNames) }
     }
 
+    @Published var trackPlaybackPositions: [String: TimeInterval] {
+        didSet { saveCodable(trackPlaybackPositions, for: .trackPlaybackPositions) }
+    }
+
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
@@ -82,6 +86,13 @@ final class SettingsStore: ObservableObject {
         cachedTrackFileNames = SettingsStore.loadCodable(
             [String: String].self,
             for: .cachedTrackFileNames,
+            decoder: decoder,
+            defaults: defaults
+        ) ?? [:]
+
+        trackPlaybackPositions = SettingsStore.loadCodable(
+            [String: TimeInterval].self,
+            for: .trackPlaybackPositions,
             decoder: decoder,
             defaults: defaults
         ) ?? [:]
@@ -127,6 +138,20 @@ final class SettingsStore: ObservableObject {
     func removeCachedFileName(for trackId: String) {
         cachedTrackFileNames.removeValue(forKey: trackId)
     }
+
+    // MARK: - Per-Track Playback Positions
+
+    func playbackPosition(for trackId: String) -> TimeInterval? {
+        trackPlaybackPositions[trackId]
+    }
+
+    func updatePlaybackPosition(_ position: TimeInterval, for trackId: String) {
+        trackPlaybackPositions[trackId] = position
+    }
+
+    func removePlaybackPosition(for trackId: String) {
+        trackPlaybackPositions.removeValue(forKey: trackId)
+    }
 }
 
 private extension SettingsStore {
@@ -137,6 +162,7 @@ private extension SettingsStore {
         case playlistStates = "brainTones.music.playbackStates"
         case recentPlaylists = "brainTones.music.recentPlaylists"
         case cachedTrackFileNames = "brainTones.music.cachedTrackFileNames"
+        case trackPlaybackPositions = "brainTones.music.trackPlaybackPositions"
     }
 
     func save(_ value: String?, for key: DefaultsKey) {

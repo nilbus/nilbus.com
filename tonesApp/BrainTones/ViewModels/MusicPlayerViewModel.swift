@@ -20,6 +20,7 @@ final class MusicPlayerViewModel: ObservableObject {
     @Published private(set) var playbackPosition: TimeInterval = 0
     @Published private(set) var playbackDuration: TimeInterval?
     @Published private(set) var errorMessage: String?
+    @Published private(set) var downloadedTrackIds: Set<String> = []
 
     var currentTrack: AudioTrack? {
         guard let playlist = selectedPlaylist else { return nil }
@@ -34,6 +35,7 @@ final class MusicPlayerViewModel: ObservableObject {
     private var cancellables: Set<AnyCancellable> = []
     private var autoSaveTimer: Timer?
     private var lastKnownPlayback: MusicPlaybackState?
+    private var lastKnownTrackId: String?
     private var lastIsPlaying: Bool = false
 
     init(
@@ -50,6 +52,7 @@ final class MusicPlayerViewModel: ObservableObject {
 
         observeController()
         observeRecents()
+        observeDownloads()
         registerWithCoordinator()
 
         Task {
@@ -115,8 +118,21 @@ final class MusicPlayerViewModel: ObservableObject {
     func selectTrack(at index: Int, autoplay: Bool = true) {
         guard let playlist = selectedPlaylist else { return }
         guard playlist.tracks.indices.contains(index) else { return }
+
+        // Tapping the currently selected track should not restart it.
+        if index == currentTrackIndex {
+            if autoplay, !isPlaying {
+                controller.play()
+            }
+            return
+        }
+
+        persistLatestPlayback()
         currentTrackIndex = index
-        controller.selectTrack(at: index, startTime: 0, autoplay: autoplay)
+
+        let track = playlist.tracks[index]
+        let startTime = settings.playbackPosition(for: track.id) ?? 0
+        controller.selectTrack(at: index, startTime: startTime, autoplay: autoplay)
     }
 
     func addSelectedPlaylistToRecents(customName: String?) {
@@ -153,6 +169,17 @@ final class MusicPlayerViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] entries in
                 self?.recentPlaylists = self?.buildRecentDisplays(from: entries) ?? []
+            }
+            .store(in: &cancellables)
+    }
+
+    private func observeDownloads() {
+        downloadedTrackIds = Set(settings.cachedTrackFileNames.keys)
+
+        settings.$cachedTrackFileNames
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] entries in
+                self?.downloadedTrackIds = Set(entries.keys)
             }
             .store(in: &cancellables)
     }
@@ -200,6 +227,7 @@ final class MusicPlayerViewModel: ObservableObject {
                 trackIndex: state.trackIndex,
                 playbackTime: state.position
             )
+            lastKnownTrackId = state.track?.id
         }
 
         isPlaying = state.isPlaying
@@ -238,6 +266,9 @@ final class MusicPlayerViewModel: ObservableObject {
     private func persistLatestPlayback() {
         guard let playback = lastKnownPlayback else { return }
         settings.updatePlaybackState(playback)
+        if let trackId = lastKnownTrackId {
+            settings.updatePlaybackPosition(playback.playbackTime, for: trackId)
+        }
     }
 
     // MARK: - Helpers

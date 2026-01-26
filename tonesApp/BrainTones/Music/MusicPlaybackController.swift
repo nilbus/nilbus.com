@@ -49,7 +49,11 @@ final class MusicPlaybackController: ObservableObject, MusicPlaybackControlling 
 
     private var timeObserverToken: Any?
     private var endObserver: NSObjectProtocol?
+    private var timeControlStatusObserver: NSKeyValueObservation?
+    private var currentItemStatusObserver: NSKeyValueObservation?
     private var currentPreparationTask: Task<Void, Never>?
+    private var currentDownloadProgressToken: TrackDownloadProgressToken?
+    private var currentDownloadTrackId: String?
     var statePublisher: AnyPublisher<MusicPlayerRuntimeState, Never> {
         $state.eraseToAnyPublisher()
     }
@@ -77,6 +81,8 @@ final class MusicPlaybackController: ObservableObject, MusicPlaybackControlling 
             if let observer {
                 NotificationCenter.default.removeObserver(observer)
             }
+            self.timeControlStatusObserver?.invalidate()
+            self.currentItemStatusObserver?.invalidate()
             task?.cancel()
         }
     }
@@ -96,7 +102,7 @@ final class MusicPlaybackController: ObservableObject, MusicPlaybackControlling 
             position: startTime,
             duration: nil,
             downloadProgress: 0,
-            isBuffering: true
+            isBuffering: false
         )
 
         playbackCoordinator.setMusicDesired(autoplay)
@@ -164,13 +170,6 @@ final class MusicPlaybackController: ObservableObject, MusicPlaybackControlling 
         player.replaceCurrentItem(with: nil)
         updateState(isPlaying: false, position: 0)
         playbackCoordinator.setMusicDesired(false)
-        playbackCoordinator.musicStateDidChange(
-            isPlaying: false,
-            playlistTitle: state.playlist?.title,
-            trackTitle: state.track?.title,
-            position: state.position,
-            duration: state.duration
-        )
     }
 }
 
@@ -185,6 +184,12 @@ private extension MusicPlaybackController {
             if seconds.isFinite {
                 self.updateState(position: seconds)
             }
+        }
+
+        timeControlStatusObserver = player.observe(\.timeControlStatus, options: [.initial, .new]) { [weak self] player, _ in
+            guard let self else { return }
+            let buffering = player.timeControlStatus == .waitingToPlayAtSpecifiedRate
+            self.updateState(isBuffering: buffering, notifyCoordinator: false)
         }
 
         endObserver = NotificationCenter.default.addObserver(
@@ -206,36 +211,98 @@ private extension MusicPlaybackController {
             NotificationCenter.default.removeObserver(observer)
             endObserver = nil
         }
+        timeControlStatusObserver?.invalidate()
+        timeControlStatusObserver = nil
+        currentItemStatusObserver?.invalidate()
+        currentItemStatusObserver = nil
+    }
+
+    func clearCurrentDownloadProgressHandler() {
+        guard let trackId = currentDownloadTrackId, let token = currentDownloadProgressToken else { return }
+        currentDownloadTrackId = nil
+        currentDownloadProgressToken = nil
+        Task {
+            await downloadManager.removeProgressHandler(for: trackId, token: token)
+        }
     }
 
     func prepareCurrentTrack(seekTime: TimeInterval, autoplay: Bool) {
         currentPreparationTask?.cancel()
         guard let playlist = state.playlist else { return }
         let track = playlist.tracks[state.trackIndex]
+        let trackId = track.id
+
+        clearCurrentDownloadProgressHandler()
 
         currentPreparationTask = Task { [weak self] in
             guard let self else { return }
 
-            let downloadTask = await self.downloadManager.ensureDownload(
+            let localURL = await self.downloadManager.localURL(for: trackId)
+            let playableURL = localURL ?? track.remoteURL
+            let initialDownloadProgress: Double = localURL == nil ? 0 : 1.0
+
+            await MainActor.run {
+                guard self.state.track?.id == trackId else { return }
+                self.updateState(downloadProgress: initialDownloadProgress, notifyCoordinator: false)
+                self.load(url: playableURL, seekTime: seekTime, autoplay: autoplay)
+            }
+
+            guard localURL == nil, !Task.isCancelled else { return }
+
+            let (downloadTask, token) = await self.downloadManager.ensureDownload(
                 for: track,
                 progress: { [weak self] progress in
+                    guard let self else { return }
                     Task { @MainActor in
-                        self?.updateState(downloadProgress: progress, isBuffering: progress < 1.0)
+                        guard self.state.track?.id == trackId else { return }
+                        self.updateState(downloadProgress: progress, notifyCoordinator: false)
                     }
                 }
             )
 
-            let localURL = try? await downloadTask.value
-            let playableURL = localURL ?? track.remoteURL
-
             await MainActor.run {
-                self.load(url: playableURL, seekTime: seekTime, autoplay: autoplay)
+                guard self.state.track?.id == trackId else { return }
+                self.currentDownloadTrackId = trackId
+                self.currentDownloadProgressToken = token
+            }
+
+            do {
+                _ = try await downloadTask.value
+                await MainActor.run {
+                    guard self.state.track?.id == trackId else { return }
+                    self.updateState(downloadProgress: 1.0, notifyCoordinator: false)
+                    if self.currentDownloadTrackId == trackId {
+                        self.currentDownloadTrackId = nil
+                        self.currentDownloadProgressToken = nil
+                    }
+                }
+            } catch {
+                // Playback can continue via streaming; treat the download as not completed.
+                await MainActor.run {
+                    guard self.state.track?.id == trackId else { return }
+                    if self.state.downloadProgress < 1.0 {
+                        self.updateState(downloadProgress: 0, notifyCoordinator: false)
+                    }
+                    if self.currentDownloadTrackId == trackId {
+                        self.currentDownloadTrackId = nil
+                        self.currentDownloadProgressToken = nil
+                    }
+                }
             }
         }
     }
 
     func load(url: URL, seekTime: TimeInterval, autoplay: Bool) {
         let item = AVPlayerItem(url: url)
+        currentItemStatusObserver?.invalidate()
+        currentItemStatusObserver = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
+            guard let self else { return }
+            guard item.status == .readyToPlay else { return }
+            Task { @MainActor in
+                self.updateState(duration: self.durationForCurrentItem(), notifyCoordinator: true)
+            }
+        }
+
         player.replaceCurrentItem(with: item)
 
         if seekTime > 0 {
@@ -250,17 +317,7 @@ private extension MusicPlaybackController {
         updateState(
             isPlaying: autoplay,
             position: seekTime,
-            duration: durationForCurrentItem(),
-            downloadProgress: 1.0,
-            isBuffering: false
-        )
-
-        playbackCoordinator.musicStateDidChange(
-            isPlaying: autoplay,
-            playlistTitle: state.playlist?.title,
-            trackTitle: state.track?.title,
-            position: seekTime,
-            duration: state.duration
+            duration: durationForCurrentItem()
         )
     }
 
@@ -274,7 +331,7 @@ private extension MusicPlaybackController {
             position: startTime,
             duration: nil,
             downloadProgress: 0,
-            isBuffering: true
+            isBuffering: false
         )
 
         playbackCoordinator.setMusicDesired(autoplay)
@@ -319,7 +376,8 @@ private extension MusicPlaybackController {
         position: TimeInterval? = nil,
         duration: TimeInterval? = nil,
         downloadProgress: Double? = nil,
-        isBuffering: Bool? = nil
+        isBuffering: Bool? = nil,
+        notifyCoordinator: Bool = true
     ) {
         var newState = state
         if let isPlaying {
@@ -339,6 +397,7 @@ private extension MusicPlaybackController {
         }
         state = newState
 
+        guard notifyCoordinator else { return }
         playbackCoordinator.musicStateDidChange(
             isPlaying: state.isPlaying,
             playlistTitle: state.playlist?.title,
