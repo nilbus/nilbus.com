@@ -176,7 +176,7 @@ Brain Tones enables users to:
 
 #### 3.5.3 Global Playback Controls
 - **Requirement:** Support unified playback control:
-  - **Play:** Resume both tones and music if they were previously playing
+  - **Play:** Resume the last played tone preset and last played track (at its saved playback position). Both tones and music start together.
   - **Pause All:** Pause both sources while remembering intent—this is triggered by tapping an active tone preset, the global play/pause button, or through external iOS controls
   - **Pause Music:** Pause the music source; update intent—this is triggered by the in-app visual pause button between the Skip Forward/Back buttons
   - **Skip Forward:** Advance to next track in playlist

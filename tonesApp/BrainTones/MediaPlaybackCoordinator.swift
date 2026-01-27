@@ -146,15 +146,18 @@ final class MediaPlaybackCoordinator {
     // MARK: - Global Controls
 
     func playAll(rememberIntent: Bool = false) {
-        if rememberIntent {
-            // Use previously stored intents; nothing to change here because setTonesDesired/setMusicDesired should already hold them
-        }
-
-        if desiredTonesPlaying {
+        // If neither tones nor music have been explicitly desired yet (e.g., first play after app launch),
+        // start both by default. This implements the PRD requirement: "Play: Resume the last played
+        // tone preset and last played track (at its saved playback position). Both tones and music start together."
+        let shouldPlayBothByDefault = !desiredTonesPlaying && !desiredMusicPlaying
+        
+        if shouldPlayBothByDefault || desiredTonesPlaying {
+            desiredTonesPlaying = true
             tonePlayHandler?()
         }
 
-        if desiredMusicPlaying {
+        if shouldPlayBothByDefault || desiredMusicPlaying {
+            desiredMusicPlaying = true
             musicPlayHandler?()
         }
     }
