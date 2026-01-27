@@ -184,7 +184,7 @@ struct ContentView: View {
         VStack(spacing: 6) {
             Slider(
                 value: Binding(
-                    get: { musicViewModel.playbackPosition },
+                    get: { sliderEditing ? pendingSeekTime : musicViewModel.playbackPosition },
                     set: { newValue in
                         if sliderEditing {
                             pendingSeekTime = newValue
