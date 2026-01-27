@@ -243,7 +243,13 @@ final class MusicPlayerViewModel: ObservableObject {
     private func handleStateUpdate(_ state: MusicPlayerRuntimeState) {
         let previousTrackId = lastKnownTrackId
         let trackDidChange = previousTrackId != nil && previousTrackId != state.track?.id
-        if trackDidChange {
+
+        // If a track ended naturally (played to completion), reset its saved position to 0
+        // so it starts from the beginning when selected again.
+        if let endedTrackId = state.naturallyEndedTrackId {
+            settings.updatePlaybackPosition(0, for: endedTrackId)
+        } else if trackDidChange {
+            // Only persist the previous track's position if it didn't end naturally
             persistLatestPlayback()
         }
 
@@ -282,7 +288,7 @@ final class MusicPlayerViewModel: ObservableObject {
             }
         }
 
-        if trackDidChange {
+        if trackDidChange && state.naturallyEndedTrackId == nil {
             persistLatestPlayback()
         }
     }

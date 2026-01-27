@@ -13,6 +13,8 @@ struct MusicPlayerRuntimeState {
     var downloadingTrackId: String?
     var isBuffering: Bool
     var errorMessage: String?
+    /// Set when a track ends naturally (plays to completion), so the ViewModel can reset its saved position.
+    var naturallyEndedTrackId: String?
 
     static let empty = MusicPlayerRuntimeState(
         playlist: nil,
@@ -24,7 +26,8 @@ struct MusicPlayerRuntimeState {
         downloadProgress: 0,
         downloadingTrackId: nil,
         isBuffering: false,
-        errorMessage: nil
+        errorMessage: nil,
+        naturallyEndedTrackId: nil
     )
 }
 
@@ -108,7 +111,8 @@ final class MusicPlaybackController: ObservableObject, MusicPlaybackControlling 
             downloadProgress: 0,
             downloadingTrackId: nil,
             isBuffering: false,
-            errorMessage: nil
+            errorMessage: nil,
+            naturallyEndedTrackId: nil
         )
 
         playbackCoordinator.setMusicDesired(autoplay)
@@ -318,7 +322,7 @@ private extension MusicPlaybackController {
         )
     }
 
-    func updateForTrackChange(index: Int, startTime: TimeInterval, autoplay: Bool) {
+    func updateForTrackChange(index: Int, startTime: TimeInterval, autoplay: Bool, naturallyEndedTrackId: String? = nil) {
         guard let playlist = state.playlist else { return }
         state = MusicPlayerRuntimeState(
             playlist: playlist,
@@ -330,7 +334,8 @@ private extension MusicPlaybackController {
             downloadProgress: 0,
             downloadingTrackId: nil,
             isBuffering: false,
-            errorMessage: nil
+            errorMessage: nil,
+            naturallyEndedTrackId: naturallyEndedTrackId
         )
 
         playbackCoordinator.setMusicDesired(autoplay)
@@ -449,10 +454,15 @@ private extension MusicPlaybackController {
             return
         }
 
+        let endedTrackId = state.track?.id
         let nextIndex = state.trackIndex + 1
         if nextIndex < playlist.tracks.count {
-            updateForTrackChange(index: nextIndex, startTime: 0, autoplay: true)
+            updateForTrackChange(index: nextIndex, startTime: 0, autoplay: true, naturallyEndedTrackId: endedTrackId)
         } else {
+            // Signal that the last track ended naturally before stopping
+            if let endedTrackId {
+                updateState(naturallyEndedTrackId: .some(endedTrackId), notifyCoordinator: false)
+            }
             stopPlayback()
         }
     }
@@ -471,6 +481,7 @@ private extension MusicPlaybackController {
         downloadingTrackId: String?? = nil,
         isBuffering: Bool? = nil,
         errorMessage: String?? = nil,
+        naturallyEndedTrackId: String?? = nil,
         notifyCoordinator: Bool = true
     ) {
         var newState = state
@@ -494,6 +505,9 @@ private extension MusicPlaybackController {
         }
         if let errorMessage {
             newState.errorMessage = errorMessage
+        }
+        if let naturallyEndedTrackId {
+            newState.naturallyEndedTrackId = naturallyEndedTrackId
         }
         state = newState
 
