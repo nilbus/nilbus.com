@@ -4,8 +4,8 @@
 
 **Product Name:** Brain Tones
 **Platform:** iOS (Native Swift/SwiftUI)
-**Version:** 1.2
-**Date:** 2026-01-25
+**Version:** 1.3
+**Date:** 2026-01-27
 
 Brain Tones is an iOS application that generates binaural and isochronic audio tones designed to enhance cognitive states (focus, relaxation, creativity, etc.). The app combines tone presets with curated audio playlists streamed from S3 storage, allowing users to layer brainwave entrainment audio over music or ambient sounds through a unified native audio pipeline.
 
@@ -179,8 +179,12 @@ Brain Tones enables users to:
   - **Play:** Resume the last played tone preset and last played track (at its saved playback position). Both tones and music start together.
   - **Pause All:** Pause both sources while remembering intent—this is triggered by tapping an active tone preset, the global play/pause button, or through external iOS controls
   - **Pause Music:** Pause the music source; update intent—this is triggered by the in-app visual pause button between the Skip Forward/Back buttons
-  - **Skip Forward:** Advance to next track in playlist
-  - **Skip Backward:** Return to previous track in playlist
+  - Standard skip behavior:
+    - **Skip Forward:** Advance to next track in playlist
+    - **Skip Backward:** Return to previous track in playlist
+  - Special skip behavior for presets with a "series" value set in presets.json:
+    - **Skip Forward:** Advance to next preset in the same series; no-op at boundaries
+    - **Skip Backward:** Return to previous preset in the same series; no-op at boundaries
   - **Seek:** Scrub to specific time position in current track
   - **Toggle:** The Play and Pause Pause Music buttons replace each other, switching based on playback state
 
@@ -420,8 +424,3 @@ Brain Tones enables users to:
 - Tests run on physical iOS device ("Edward")
 - All tests must pass before deployment
 - Test suite executed via Xcode or xcodebuild command line
-
----
-
-**Document Version:** 1.2
-**Last Updated:** 2026-01-25

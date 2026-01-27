@@ -90,11 +90,11 @@ final class MusicPlayerViewModel: ObservableObject {
     }
 
     func skipForward() {
-        controller.skipForward()
+        playbackCoordinator.skipForward()
     }
 
     func skipBackward() {
-        controller.skipBackward()
+        playbackCoordinator.skipBackward()
     }
 
     func seek(to time: TimeInterval) {

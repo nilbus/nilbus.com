@@ -87,6 +87,29 @@ final class BrainTonesViewModel: ObservableObject {
         startPlayback(with: preset, mode: mode, updateSelection: true, autoStartMusic: true)
     }
 
+    private enum SeriesSkipDirection {
+        case forward
+        case backward
+    }
+
+    private func handleSeriesSkip(_ direction: SeriesSkipDirection) -> Bool {
+        guard let currentPreset = currentPresetForSeries(),
+              let series = currentPreset.normalizedSeries else { return false }
+
+        let seriesPresets = presets.filter { $0.normalizedSeries == series }
+        guard let currentIndex = seriesPresets.firstIndex(where: { $0.name == currentPreset.name }) else {
+            return true
+        }
+
+        let targetIndex = direction == .forward ? currentIndex + 1 : currentIndex - 1
+        guard seriesPresets.indices.contains(targetIndex) else {
+            return true
+        }
+
+        applySeriesPreset(seriesPresets[targetIndex], shouldPlay: isPlaying)
+        return true
+    }
+
     private func startPlayback(with preset: Preset, mode: OutputMode, updateSelection: Bool, autoStartMusic: Bool) {
         do {
             try engine.configure(preset: preset, mode: mode)
@@ -104,6 +127,32 @@ final class BrainTonesViewModel: ObservableObject {
         } catch {
             print("Failed to start preset: \(error)")
             errorMessage = "Unable to start tone playback. Please check your audio output and try again."
+            isPlaying = false
+            playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: selectedPreset?.name)
+        }
+    }
+
+    private func applySeriesPreset(_ preset: Preset, shouldPlay: Bool) {
+        do {
+            let wasRunning = engine.isRunning
+            try engine.configure(preset: preset, mode: outputMode)
+
+            if shouldPlay {
+                if !engine.isRunning {
+                    try engine.start()
+                }
+            } else if wasRunning {
+                engine.pause()
+            }
+
+            selectedPreset = preset
+            settings.lastPresetName = preset.name
+            isPlaying = shouldPlay && engine.isRunning
+            errorMessage = nil
+            playbackCoordinator.tonesStateDidChange(isPlaying: isPlaying, presetName: preset.name)
+        } catch {
+            print("Failed to switch preset: \(error)")
+            errorMessage = "Unable to update tone preset. Please try again."
             isPlaying = false
             playbackCoordinator.tonesStateDidChange(isPlaying: false, presetName: selectedPreset?.name)
         }
@@ -151,6 +200,10 @@ final class BrainTonesViewModel: ObservableObject {
             play: { [weak self] in Task { @MainActor in self?.handleCoordinatorPlay() } },
             pause: { [weak self] in Task { @MainActor in self?.handleCoordinatorPause() } }
         )
+        playbackCoordinator.registerToneSeriesControls(
+            skipForward: { [weak self] in self?.handleSeriesSkip(.forward) ?? false },
+            skipBackward: { [weak self] in self?.handleSeriesSkip(.backward) ?? false }
+        )
     }
 
     private func handleCoordinatorPlay() {
@@ -172,5 +225,15 @@ final class BrainTonesViewModel: ObservableObject {
 
     private func handleCoordinatorPause() {
         pausePlayback()
+    }
+
+    private func currentPresetForSeries() -> Preset? {
+        if let selectedPreset {
+            return selectedPreset
+        }
+        if let name = settings.lastPresetName {
+            return presets.first { $0.name == name }
+        }
+        return nil
     }
 }

@@ -1,6 +1,7 @@
 [
   {
     "name": "Edge: Initiation & Buildup",
+    "series": "Edge",
     "layers": [
       {
         "freq": 10,
@@ -27,6 +28,7 @@
   },
   {
     "name": "Edge: Contractile Conditioning",
+    "series": "Edge",
     "layers": [
       {
         "freq": 5.5,
@@ -53,6 +55,7 @@
   },
   {
     "name": "Edge: Stability for Dry Contractions",
+    "series": "Edge",
     "layers": [
       {
         "freq": 5.5,
@@ -79,6 +82,7 @@
   },
   {
     "name": "Spot: Internal Focus",
+    "series": "Spot",
     "layers": [
       {
         "freq": 9.5,
@@ -105,6 +109,7 @@
   },
   {
     "name": "Spot: Wave Expansion",
+    "series": "Spot",
     "layers": [
       {
         "freq": 5.5,
@@ -131,6 +136,7 @@
   },
   {
     "name": "Spot: Surrender",
+    "series": "Spot",
     "layers": [
       {
         "freq": 5.5,

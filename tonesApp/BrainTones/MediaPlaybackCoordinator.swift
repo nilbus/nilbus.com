@@ -8,6 +8,8 @@ final class MediaPlaybackCoordinator {
 
     private var tonePlayHandler: (() -> Void)?
     private var tonePauseHandler: (() -> Void)?
+    private var toneSkipForwardHandler: (() -> Bool)?
+    private var toneSkipBackwardHandler: (() -> Bool)?
 
     private var musicPlayHandler: (() -> Void)?
     private var musicPauseHandler: (() -> Void)?
@@ -42,6 +44,14 @@ final class MediaPlaybackCoordinator {
         tonePauseHandler = pause
     }
 
+    func registerToneSeriesControls(
+        skipForward: @escaping () -> Bool,
+        skipBackward: @escaping () -> Bool
+    ) {
+        toneSkipForwardHandler = skipForward
+        toneSkipBackwardHandler = skipBackward
+    }
+
     func registerMusicControls(
         play: @escaping () -> Void,
         pause: @escaping () -> Void,
@@ -56,10 +66,10 @@ final class MediaPlaybackCoordinator {
         musicSeekHandler = seek
         nowPlayingManager.updateHandlers(
             onSkipForward: { [weak self] in
-                Task { @MainActor in self?.musicSkipForwardHandler?() }
+                Task { @MainActor in self?.skipForward() }
             },
             onSkipBackward: { [weak self] in
-                Task { @MainActor in self?.musicSkipBackwardHandler?() }
+                Task { @MainActor in self?.skipBackward() }
             },
             onSeek: { [weak self] position in
                 Task { @MainActor in self?.musicSeekHandler?(position) }
@@ -150,7 +160,7 @@ final class MediaPlaybackCoordinator {
         // start both by default. This implements the PRD requirement: "Play: Resume the last played
         // tone preset and last played track (at its saved playback position). Both tones and music start together."
         let shouldPlayBothByDefault = !desiredTonesPlaying && !desiredMusicPlaying
-        
+
         if shouldPlayBothByDefault || desiredTonesPlaying {
             desiredTonesPlaying = true
             tonePlayHandler?()
@@ -178,6 +188,16 @@ final class MediaPlaybackCoordinator {
         } else {
             playAll(rememberIntent: true)
         }
+    }
+
+    func skipForward() {
+        if toneSkipForwardHandler?() == true { return }
+        musicSkipForwardHandler?()
+    }
+
+    func skipBackward() {
+        if toneSkipBackwardHandler?() == true { return }
+        musicSkipBackwardHandler?()
     }
 
     // MARK: - Remote Handling
@@ -216,6 +236,8 @@ final class MediaPlaybackCoordinator {
     func resetForTesting() {
         tonePlayHandler = nil
         tonePauseHandler = nil
+        toneSkipForwardHandler = nil
+        toneSkipBackwardHandler = nil
         musicPlayHandler = nil
         musicPauseHandler = nil
         musicSkipForwardHandler = nil

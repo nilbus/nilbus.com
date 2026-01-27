@@ -23,6 +23,7 @@ struct PresetLibrary {
 
 struct Preset: Codable, Identifiable, Hashable {
     let name: String
+    let series: String?
     let layers: [ToneLayer]
 
     var id: String { name }
@@ -35,6 +36,12 @@ struct Preset: Codable, Identifiable, Hashable {
 
     var combinedPurposes: String {
         layers.compactMap { $0.purpose.isEmpty ? nil : $0.purpose }.joined(separator: ", ")
+    }
+
+    var normalizedSeries: String? {
+        guard let series = series?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !series.isEmpty else { return nil }
+        return series
     }
 }
 
