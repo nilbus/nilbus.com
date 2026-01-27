@@ -502,7 +502,7 @@ function generatePresetButtons() {
 		// Purposes text spanning both columns
 		const purposesDiv = document.createElement('div');
 		purposesDiv.className = 'preset-purposes-row';
-		purposesDiv.innerHTML = `<span class="preset-purposes">${upcaseFirstLetter(preset.layers.map(layer => layer.purpose).join(', '))}</span>`;
+		purposesDiv.innerHTML = `<span class="preset-purposes">${upcaseFirstLetter(preset.layers.map(layer => layer.purpose).filter(p => p && p.trim()).join(', '))}</span>`;
 
 		row.appendChild(speakersButton);
 		row.appendChild(headphonesButton);

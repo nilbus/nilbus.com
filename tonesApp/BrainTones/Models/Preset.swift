@@ -34,7 +34,7 @@ struct Preset: Codable, Identifiable, Hashable {
     }
 
     var combinedPurposes: String {
-        layers.map(\.purpose).joined(separator: ", ")
+        layers.compactMap { $0.purpose.isEmpty ? nil : $0.purpose }.joined(separator: ", ")
     }
 }
 
