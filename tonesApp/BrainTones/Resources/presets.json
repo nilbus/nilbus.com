@@ -78,6 +78,84 @@
     ]
   },
   {
+    "name": "Spot: Internal Focus",
+    "layers": [
+      {
+        "freq": 9.5,
+        "carrier": "285/174",
+        "type": "isochronic",
+        "vol": "50/30",
+        "purpose": "Calm presence without goals or expectations"
+      },
+      {
+        "freq": 7.83,
+        "carrier": "210.42/187.87",
+        "type": "isochronic",
+        "vol": "45/30",
+        "purpose": "Emotional coherence & safety"
+      },
+      {
+        "freq": 5.5,
+        "carrier": "417/210.42",
+        "type": "isochronic",
+        "vol": "45/25",
+        "purpose": "Early pelvic interoceptive mapping"
+      }
+    ]
+  },
+  {
+    "name": "Spot: Wave Expansion",
+    "layers": [
+      {
+        "freq": 5.5,
+        "carrier": "417/210.42",
+        "type": "isochronic",
+        "vol": "85/35",
+        "purpose": "After attention effortlessly internal"
+      },
+      {
+        "freq": 4.5,
+        "carrier": "174/157.43",
+        "type": "isochronic",
+        "vol": "65/30",
+        "purpose": "breath effortlessly slow"
+      },
+      {
+        "freq": 2.8,
+        "carrier": "157.43/140.28",
+        "type": "isochronic",
+        "vol": "55/25",
+        "purpose": "pelvic tone neutral/available, sensation can expand without goal or urgency"
+      }
+    ]
+  },
+  {
+    "name": "Spot: Surrender",
+    "layers": [
+      {
+        "freq": 5.5,
+        "carrier": "417/210.42",
+        "type": "isochronic",
+        "vol": "75/30",
+        "purpose": "After circulating without buildup"
+      },
+      {
+        "freq": 2.5,
+        "carrier": "157.43/140.28",
+        "type": "isochronic",
+        "vol": "75/30",
+        "purpose": "pelvic floor & breath spontaneous"
+      },
+      {
+        "freq": 0.75,
+        "carrier": "396/175.35",
+        "type": "isochronic",
+        "vol": "55/30",
+        "purpose": "Orgasmic surrender, deep parasympathetic release"
+      }
+    ]
+  },
+  {
     "name": "HFDO Surrender",
     "layers": [
       {
