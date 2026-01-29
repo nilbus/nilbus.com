@@ -62,7 +62,7 @@
 	</script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Brainwave Presets, powered by Brainaural</title>
+	<title>BrainTones – Get your head in the right space</title>
 	<meta name="keywords" content="brainwaves entrainment, alpha, beta, theta, gamma, binaural beats, isochronic tones, nonaural beats, bilateral, white noise, focus, study, relax, anxiety, stress, meditation, sleep, dream, lucid dreaming">
 	<meta name="description" content="Use AI-generated Brainwave Entrainement tone layers for various scenarioes, with background music via YouTube playlists">
 	<meta name="author" content="Edward Anderson, Dr. Ir. Stéphane Pigeon">
@@ -77,7 +77,7 @@
 	<link rel="image_src" href="socialPreview.jpg">
 	<meta name="twitter:card" content="summary_large_image">
 	<meta name="twitter:site" content="@nilbus">
-	<meta name="twitter:title" content="Brainwave Presets, powered by Brainaural">
+	<meta name="twitter:title" content="BrainTones – Get your head in the right space">
 	<meta name="twitter:description" content="Use AI-generated Brainwave Entrainement tone layers for various scenarioes, with background music via YouTube playlists">
 	<meta name="twitter:image:src" content="socialPreview.jpg">
 
@@ -90,10 +90,16 @@
 <div class="anchor" id="player"></div>
 
 <div class="tile1">
-	<a href="#" class="nounderline"><div id="title"><img src="ba_logo.png" class="logo"> <span class="white">brain</span><span class="accent-red">aural</span><span class="reg">®</span></div></a>
-<div id="subtitle"><span class="white">Ultimate</span> <span class="white">Brainwaves</span></div>	<div class="ctrSection">
-		<img src="mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" title="Mute">
-		<img src="link.png" class="ctrlImg" onclick="openBrainaural()" title="Tweak at Brainaural.com">
+<a href="#" class="nounderline">
+	<div id="title">
+		<img src="ba_logo.png" class="logo">
+		<span class="white">brain</span><span class="accent-red">tones</span>
+	</div>
+</a>
+<div id="subtitle"><span class="white">Get your head in the right space</span></div>
+<div class="ctrSection">
+	<img src="mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" title="Mute">
+	<img src="link.png" class="ctrlImg" onclick="openBrainaural()" title="Tweak at Brainaural.com">
 </div>
 
 <!-- Screen Wake Lock Status -->
@@ -126,7 +132,8 @@
 	</div>
 </div>
 
-<div id="radioTouch"></div></div>
+<div id="radioTouch"></div>
+</div>
 
 <script>
 
@@ -373,7 +380,7 @@ function init() {
 	if(typeof webkitAudioContext !== "undefined") bWEBAUDIO=1;
 	if(typeof AudioContext !== "undefined") bWEBAUDIO=1;
 	if (!bWEBAUDIO) {
-	  alert('Web Audio API is missing. To enjoy Brainaural, please use a recent version of Chrome, Edge, Safari or Firefox (basically everything but Internet Explorer).');
+	  alert('Web Audio API is missing. To enjoy BrainTones, please use a recent version of Chrome, Edge, Safari or Firefox (basically everything but Internet Explorer).');
 	}
 
 	buildUI();
@@ -1225,7 +1232,7 @@ function updateMediaSessionMetadata(presetName = 'Ultimate Brainwaves') {
 	navigator.mediaSession.metadata = new MediaMetadata({
 		title: presetName,
 		artist: 'nilbus.com',
-		album: 'Brainaural Sets',
+		album: 'BrainTones',
 		artwork: [
 			{ src: 'ba_logo.png', sizes: '192x192', type: 'image/png' },
 			{ src: 'ba_logo.png', sizes: '512x512', type: 'image/png' }
