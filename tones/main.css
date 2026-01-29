@@ -376,14 +376,22 @@ blockquote {
 }
 
 .preset-button.active {
-	background: rgba(100, 30, 30, 0.95);
-	border-color: var(--accent-red);
+	background: var(--accent-red-bright);
+	border-color: var(--accent-red-bright);
 	color: var(--text-primary);
-	box-shadow: 0 0 0 1px var(--accent-red);
+	box-shadow: 0 0 0 1px var(--accent-red-bright);
+	filter: none; /* override global .active which would invert and turn button white */
+}
+
+.preset-button.active .preset-icon {
+	/* White icon on bright red background */
+	filter: brightness(0) invert(1);
 }
 
 .preset-button.active:hover {
-	background: rgba(110, 35, 35, 0.95);
+	background: var(--accent-red);
+	border-color: var(--accent-red);
+	box-shadow: 0 0 0 1px var(--accent-red);
 }
 
 .preset-icon {
