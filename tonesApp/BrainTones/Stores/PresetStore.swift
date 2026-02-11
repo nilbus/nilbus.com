@@ -22,9 +22,22 @@ final class PresetStore: ObservableObject {
 }
 
 private extension PresetStore {
+    /// Use bundle ID so the correct preset file is chosen at runtime (Kids bundle
+    /// only contains presets_kids.json). More reliable than compile-time KIDS flag.
+    static var presetsFileName: String {
+        if bundleIdentifier == "com.nilbus.BrainTonesKids" {
+            return "presets_kids"
+        }
+        return "presets"
+    }
+
+    private static var bundleIdentifier: String {
+        Bundle.main.bundleIdentifier ?? ""
+    }
+
     func loadPresets() {
-        guard let url = bundle.url(forResource: "presets", withExtension: "json") else {
-            print("Missing presets.json in bundle.")
+        guard let url = bundle.url(forResource: Self.presetsFileName, withExtension: "json") else {
+            print("Missing \(Self.presetsFileName).json in bundle.")
             presets = []
             return
         }

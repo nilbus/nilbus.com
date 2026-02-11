@@ -1,86 +1,5 @@
 [
   {
-    "name": "Edge: Initiation & Buildup",
-    "series": "Edge",
-    "layers": [
-      {
-        "freq": 10,
-        "carrier": "285/174",
-        "type": "isochronic",
-        "vol": "55/55",
-        "purpose": "(5–10 min) Calm arousal, emotional safety, sympathetic braking"
-      },
-      {
-        "freq": 7.83,
-        "carrier": "210.42/187.87",
-        "type": "isochronic",
-        "vol": "45/45",
-        "purpose": "Cortical-limbic / emotional coherence, relaxed sensual presence"
-      },
-      {
-        "freq": 5.5,
-        "carrier": "417/210.42",
-        "type": "isochronic",
-        "vol": "55/55",
-        "purpose": "Early pelvic interoception without emission loading"
-      }
-    ]
-  },
-  {
-    "name": "Edge: Contractile Conditioning",
-    "series": "Edge",
-    "layers": [
-      {
-        "freq": 5.5,
-        "carrier": "417/210.42",
-        "type": "isochronic",
-        "vol": "85/85",
-        "purpose": "Pelvic sensory amplification, pleasure wave mapping"
-      },
-      {
-        "freq": 7.83,
-        "carrier": "210.42/187.87",
-        "type": "isochronic",
-        "vol": "55/55",
-        "purpose": "Arousal coherence, emotional containment"
-      },
-      {
-        "freq": 2.8,
-        "carrier": "157.43/140.28",
-        "type": "isochronic",
-        "vol": "55/55",
-        "purpose": "Parasympathetic biasing without loss of control"
-      }
-    ]
-  },
-  {
-    "name": "Edge: Stability for Dry Contractions",
-    "series": "Edge",
-    "layers": [
-      {
-        "freq": 5.5,
-        "carrier": "417/210.42",
-        "type": "isochronic",
-        "vol": "95/95",
-        "purpose": "Primary euphoric contraction support without expulsion"
-      },
-      {
-        "freq": 2.5,
-        "carrier": "157.43/140.28",
-        "type": "isochronic",
-        "vol": "75/75",
-        "purpose": "Parasympathetic dominance"
-      },
-      {
-        "freq": 9.5,
-        "carrier": "285/174",
-        "type": "isochronic",
-        "vol": "30/30",
-        "purpose": "Cortical presence, prevention of autonomic drop-through"
-      }
-    ]
-  },
-  {
     "name": "Spot: Internal Focus",
     "series": "Spot",
     "layers": [
@@ -392,6 +311,87 @@
         "type": "isochronic",
         "vol": "65",
         "purpose": "Deep, short rejuvenating sleep"
+      }
+    ]
+  },
+  {
+    "name": "Edge: Initiation & Buildup",
+    "series": "Edge",
+    "layers": [
+      {
+        "freq": 10,
+        "carrier": "285/174",
+        "type": "isochronic",
+        "vol": "55/55",
+        "purpose": "(5–10 min) Calm arousal, emotional safety, sympathetic braking"
+      },
+      {
+        "freq": 7.83,
+        "carrier": "210.42/187.87",
+        "type": "isochronic",
+        "vol": "45/45",
+        "purpose": "Cortical-limbic / emotional coherence, relaxed sensual presence"
+      },
+      {
+        "freq": 5.5,
+        "carrier": "417/210.42",
+        "type": "isochronic",
+        "vol": "55/55",
+        "purpose": "Early pelvic interoception without emission loading"
+      }
+    ]
+  },
+  {
+    "name": "Edge: Contractile Conditioning",
+    "series": "Edge",
+    "layers": [
+      {
+        "freq": 5.5,
+        "carrier": "417/210.42",
+        "type": "isochronic",
+        "vol": "85/85",
+        "purpose": "Pelvic sensory amplification, pleasure wave mapping"
+      },
+      {
+        "freq": 7.83,
+        "carrier": "210.42/187.87",
+        "type": "isochronic",
+        "vol": "55/55",
+        "purpose": "Arousal coherence, emotional containment"
+      },
+      {
+        "freq": 2.8,
+        "carrier": "157.43/140.28",
+        "type": "isochronic",
+        "vol": "55/55",
+        "purpose": "Parasympathetic biasing without loss of control"
+      }
+    ]
+  },
+  {
+    "name": "Edge: Stability for Dry Contractions",
+    "series": "Edge",
+    "layers": [
+      {
+        "freq": 5.5,
+        "carrier": "417/210.42",
+        "type": "isochronic",
+        "vol": "95/95",
+        "purpose": "Primary euphoric contraction support without expulsion"
+      },
+      {
+        "freq": 2.5,
+        "carrier": "157.43/140.28",
+        "type": "isochronic",
+        "vol": "75/75",
+        "purpose": "Parasympathetic dominance"
+      },
+      {
+        "freq": 9.5,
+        "carrier": "285/174",
+        "type": "isochronic",
+        "vol": "30/30",
+        "purpose": "Cortical presence, prevention of autonomic drop-through"
       }
     ]
   }

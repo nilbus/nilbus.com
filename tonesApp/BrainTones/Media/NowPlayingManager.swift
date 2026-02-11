@@ -5,6 +5,14 @@ import UIKit
 final class NowPlayingManager {
     static let shared = NowPlayingManager()
 
+    private static var nowPlayingLogoName: String {
+        #if KIDS
+        return "logo_kids"
+        #else
+        return "ba_logo"
+        #endif
+    }
+
     private var playHandler: (() -> Void)?
     private var pauseHandler: (() -> Void)?
     private var skipForwardHandler: (() -> Void)?
@@ -101,7 +109,7 @@ final class NowPlayingManager {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         }
 
-        if let artworkImage = UIImage(named: "ba_logo") {
+        if let artworkImage = UIImage(named: Self.nowPlayingLogoName) {
             let artwork = MPMediaItemArtwork(boundsSize: artworkImage.size) { _ in
                 artworkImage
             }

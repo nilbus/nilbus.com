@@ -1,6 +1,14 @@
 import SwiftUI
 
 struct ContentView: View {
+    private static var logoImageName: String {
+        #if KIDS
+        return "logo_kids"
+        #else
+        return "ba_logo"
+        #endif
+    }
+
     @StateObject private var tonesViewModel = BrainTonesViewModel()
     @StateObject private var musicViewModel = MusicPlayerViewModel()
     @State private var sliderEditing = false
@@ -29,7 +37,7 @@ struct ContentView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center, spacing: 16) {
-                Image("ba_logo")
+                Image(Self.logoImageName)
                     .resizable()
                     .frame(width: 54, height: 54)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
