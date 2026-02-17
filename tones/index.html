@@ -9,6 +9,28 @@
 	<script src="mousetrap.min.js"></script>
 	<script src="preset_data.js"></script>
 	<script>
+		var DEFAULT_PLAYLIST_ID = 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
+		var DEFAULT_PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
+		var DEFAULT_PLAYLIST_TITLE = 'AllieSpaces';
+
+		function ensureDefaultPlaylistStored() {
+			var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
+			var recentPlaylists = getRecentPlaylists();
+
+			// Only seed the default when there are no stored playlists at all.
+			if (savedPlaylistId || recentPlaylists.length > 0) {
+				return savedPlaylistId || (recentPlaylists[0] && recentPlaylists[0].id) || null;
+			}
+
+			localStorage.setItem('youtube_playlist_id', DEFAULT_PLAYLIST_ID);
+			localStorage.setItem('youtube_playlist_url', DEFAULT_PLAYLIST_URL);
+
+			// Seed recent playlists so playback state can persist on first load.
+			addToRecentPlaylists(DEFAULT_PLAYLIST_ID, DEFAULT_PLAYLIST_TITLE, DEFAULT_PLAYLIST_URL);
+
+			return DEFAULT_PLAYLIST_ID;
+		}
+
 		function initializeYouTubePlayer() {
 			// Check if the target element exists
 			var targetElement = document.getElementById('youtube-player');
@@ -22,9 +44,8 @@
 				return;
 			}
 
-			// Get saved playlist ID or use default
-			var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
-			var playlistId = savedPlaylistId || 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
+			// Ensure default playlist is stored for persistence on first load
+			var playlistId = ensureDefaultPlaylistStored();
 
 			player = new YT.Player('youtube-player', {
 				height: '315',
@@ -1595,6 +1616,9 @@ function handlePlaylistFormSubmission() {
 document.addEventListener('DOMContentLoaded', function() {
 	var playlistInput = document.getElementById('playlist-url');
 	var saveButton = document.getElementById('save-playlist-btn');
+
+	// Ensure the default playlist is stored before restoring the input.
+	ensureDefaultPlaylistStored();
 
 	// Restore saved playlist URL on page load
 	var savedPlaylistUrl = localStorage.getItem('youtube_playlist_url');
