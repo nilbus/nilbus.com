@@ -3,3 +3,25 @@ test-results/
 node_modules/
 playwright-report/
 .cursor/commands/deploy.md
+
+# iOS/Xcode
+tonesApp/build/
+tonesApp/device-scheme-defaults.json
+tonesApp/BrainTones.xcodeproj/xcshareddata/
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.moved-aside
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
+
+# macOS
+.DS_Store

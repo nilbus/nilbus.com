@@ -181,6 +181,10 @@ var wakeLock = null; // Screen Wake Lock API
 var player = null;
 var isPlayerReady = false;
 var autoSaveInterval = null; // Timer for auto-saving playlist state every 29 seconds
+var TONES_MEDIA_ELEMENT_OUTPUT_ENABLED = true;
+var tonesMediaOutputElement = null;
+var tonesMediaOutputDestination = null;
+var tonesOutputNode = null;
 
 // Navigation History (in-memory only, for forward/back position resumption)
 var previousTrackIndex = null; // Track index we came from when pressing Forward
@@ -215,6 +219,55 @@ var fmGain=[];
 var filterGain=[];
 var gainGlobal=[];
 
+function ensureTonesOutputNode() {
+	if (!context) {
+		return;
+	}
+
+	// Default output is direct WebAudio.
+	tonesOutputNode = context.destination;
+
+	if (!TONES_MEDIA_ELEMENT_OUTPUT_ENABLED) {
+		return;
+	}
+
+	if (typeof context.createMediaStreamDestination !== 'function') {
+		return;
+	}
+
+	if (!tonesMediaOutputDestination) {
+		tonesMediaOutputDestination = context.createMediaStreamDestination();
+	}
+
+	if (!tonesMediaOutputElement) {
+		tonesMediaOutputElement = new Audio();
+		tonesMediaOutputElement.id = 'tones-media-output';
+		tonesMediaOutputElement.autoplay = false;
+		tonesMediaOutputElement.preload = 'auto';
+		tonesMediaOutputElement.muted = false;
+		tonesMediaOutputElement.volume = 1;
+		tonesMediaOutputElement.playsInline = true;
+		tonesMediaOutputElement.setAttribute('aria-hidden', 'true');
+
+		// Append hidden to DOM for better mobile/WebKit compatibility.
+		try {
+			tonesMediaOutputElement.style.display = 'none';
+			document.body.appendChild(tonesMediaOutputElement);
+		} catch (e) {}
+	}
+
+	try {
+		if (tonesMediaOutputElement.srcObject !== tonesMediaOutputDestination.stream) {
+			tonesMediaOutputElement.srcObject = tonesMediaOutputDestination.stream;
+		}
+	} catch (e) {}
+
+	// Route tones to the MediaStream destination and use this audible media element
+	// as the session anchor, so tones appear as standard media playback.
+	tonesOutputNode = tonesMediaOutputDestination;
+	mediaSessionAnchor = tonesMediaOutputElement;
+}
+
 
 function webAudioContextCheck() {
 	if(context && context.state == "suspended") {
@@ -231,6 +284,9 @@ function initializeAudio() {
 
 	// Mark audio as initialized to prevent reinitialization
 	bAUDIO_INITIALIZED = 1;
+
+	// Configure tones output routing early (may replace destination with MediaStreamDestination).
+	ensureTonesOutputNode();
 
 	// Create all audio nodes and start oscillators
 	for (var t=0;t<TABS;t++) {
@@ -348,7 +404,7 @@ function initializeAudio() {
 	gainGlobal[t]=context.createGain();
 	gainGlobal[t].gain.value=LEVEL[t]/100;
 	gainI[t].connect(gainGlobal[t]);
-	gainGlobal[t].connect(context.destination);
+	gainGlobal[t].connect(tonesOutputNode || context.destination);
 
 	// everything is ready and connected, start!
 	lfo[t].start();
@@ -373,7 +429,6 @@ function initializeAudio() {
 
 
 function init() {
-
 	// Startup checks
 
 	// Supports WebAudio?
@@ -927,6 +982,9 @@ async function performPlayAction(){
 			context.resume().then(async () => {
 			$("#mute").removeClass("superactive");
 
+			// Ensure tones output routing is configured before starting playback.
+			try { ensureTonesOutputNode(); } catch (e) {}
+
 			// Play the anchor audio element to maintain Media Session
 			if (mediaSessionAnchor) {
 				mediaSessionAnchor.play().catch(e => console.log('Anchor play error:', e));
@@ -1093,6 +1151,12 @@ function setupMediaSession() {
 		return;
 	}
 
+	// If experimental tones-as-media-element output is enabled, ensure the anchor is the
+	// audible tones media element. This makes tones appear as standard media playback.
+	try {
+		ensureTonesOutputNode();
+	} catch (e) {}
+
 	// Create a silent audio element to anchor the Media Session
 	// This is a workaround for browsers that don't properly support Media Session with Web Audio API alone
 	if (!mediaSessionAnchor) {
@@ -1102,7 +1166,6 @@ function setupMediaSession() {
 		mediaSessionAnchor.loop = true;
 		mediaSessionAnchor.volume = 0; // Silent
 		mediaSessionAnchor.preload = 'auto';
-
 	}
 
 	// Set initial media metadata
@@ -1245,6 +1308,12 @@ function updateActivePresetDisplay() {
 	document.querySelectorAll('.preset-button').forEach(btn => {
 		btn.classList.remove('active');
 	});
+
+	// When paused, keep UI unselected
+	if (bPaused) {
+		updateMediaSessionMetadata(currentPreset ? currentPreset.name : undefined);
+		return;
+	}
 
 	// If we have an active preset, highlight its button and update metadata
 	if (currentPreset && currentOutputType) {
