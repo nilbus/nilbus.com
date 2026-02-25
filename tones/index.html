@@ -9,6 +9,28 @@
 	<script src="mousetrap.min.js"></script>
 	<script src="preset_data.js"></script>
 	<script>
+		var DEFAULT_PLAYLIST_ID = 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
+		var DEFAULT_PLAYLIST_URL = 'https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
+		var DEFAULT_PLAYLIST_TITLE = 'AllieSpaces';
+
+		function ensureDefaultPlaylistStored() {
+			var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
+			var recentPlaylists = getRecentPlaylists();
+
+			// Only seed the default when there are no stored playlists at all.
+			if (savedPlaylistId || recentPlaylists.length > 0) {
+				return savedPlaylistId || (recentPlaylists[0] && recentPlaylists[0].id) || null;
+			}
+
+			localStorage.setItem('youtube_playlist_id', DEFAULT_PLAYLIST_ID);
+			localStorage.setItem('youtube_playlist_url', DEFAULT_PLAYLIST_URL);
+
+			// Seed recent playlists so playback state can persist on first load.
+			addToRecentPlaylists(DEFAULT_PLAYLIST_ID, DEFAULT_PLAYLIST_TITLE, DEFAULT_PLAYLIST_URL);
+
+			return DEFAULT_PLAYLIST_ID;
+		}
+
 		function initializeYouTubePlayer() {
 			// Check if the target element exists
 			var targetElement = document.getElementById('youtube-player');
@@ -22,9 +44,8 @@
 				return;
 			}
 
-			// Get saved playlist ID or use default
-			var savedPlaylistId = localStorage.getItem('youtube_playlist_id');
-			var playlistId = savedPlaylistId || 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
+			// Ensure default playlist is stored for persistence on first load
+			var playlistId = ensureDefaultPlaylistStored();
 
 			player = new YT.Player('youtube-player', {
 				height: '315',
@@ -100,6 +121,15 @@
 <div class="ctrSection">
 	<img src="mute.png" class="ctrlImg" id="mute" onclick="handleMuteClick()" title="Mute">
 	<img src="link.png" class="ctrlImg" onclick="openBrainaural()" title="Tweak at Brainaural.com">
+	<div class="balance-section">
+		<div class="balance-slider-wrap">
+			<div id="tones-music-balance" class="balance-slider"></div>
+			<div class="balance-labels">
+				<span class="balance-label-left">Tones</span>
+				<span class="balance-label-right">Music</span>
+			</div>
+		</div>
+	</div>
 </div>
 
 <!-- Screen Wake Lock Status -->
@@ -186,6 +216,17 @@ var tonesMediaOutputElement = null;
 var tonesMediaOutputDestination = null;
 var tonesOutputNode = null;
 
+// Tones/Music balance: 0 = tones only, 50 = both full, 100 = music only. Halfway left->center = tones 100%, music 50%.
+var tonesMusicBalance = (function() {
+	var key = "tones_music_balance";
+	var saved = localStorage.getItem(key);
+	if (saved !== null) {
+		var n = parseInt(saved, 10);
+		if (!isNaN(n) && n >= 0 && n <= 100) return n;
+	}
+	return 50;
+})();
+
 // Navigation History (in-memory only, for forward/back position resumption)
 var previousTrackIndex = null; // Track index we came from when pressing Forward
 var previousTrackPosition = 0; // Position in that track
@@ -245,7 +286,7 @@ function ensureTonesOutputNode() {
 		tonesMediaOutputElement.autoplay = false;
 		tonesMediaOutputElement.preload = 'auto';
 		tonesMediaOutputElement.muted = false;
-		tonesMediaOutputElement.volume = 1;
+		tonesMediaOutputElement.volume = 1; // updated by applyTonesMusicBalance()
 		tonesMediaOutputElement.playsInline = true;
 		tonesMediaOutputElement.setAttribute('aria-hidden', 'true');
 
@@ -266,8 +307,28 @@ function ensureTonesOutputNode() {
 	// as the session anchor, so tones appear as standard media playback.
 	tonesOutputNode = tonesMediaOutputDestination;
 	mediaSessionAnchor = tonesMediaOutputElement;
+	applyTonesMusicBalance();
 }
 
+// Slider position 0 = left (tones only), 50 = center (both full), 100 = right (music only).
+// Halfway between left and center (25) => tones 100%, music 50%.
+function applyTonesMusicBalance() {
+	var p = tonesMusicBalance / 100;
+	var tonesVol, musicVol;
+	if (p <= 0.5) {
+		tonesVol = 1;
+		musicVol = 2 * p;
+	} else {
+		tonesVol = 2 * (1 - p);
+		musicVol = 1;
+	}
+	if (tonesMediaOutputElement) {
+		tonesMediaOutputElement.volume = tonesVol;
+	}
+	if (player && isPlayerReady && typeof player.setVolume === 'function') {
+		player.setVolume(Math.round(musicVol * 100));
+	}
+}
 
 function webAudioContextCheck() {
 	if(context && context.state == "suspended") {
@@ -527,6 +588,37 @@ function buildUI(){
           setLevel(ui.value);
         }
       });} );
+
+      $(function(){
+        var balanceEl = $("#tones-music-balance");
+        if (balanceEl.length) {
+          balanceEl.slider({
+            animate: "fast",
+            min: 0,
+            max: 100,
+            value: tonesMusicBalance,
+            step: 1,
+            range: "min",
+            slide: function(e, ui) {
+              tonesMusicBalance = ui.value;
+              localStorage.setItem("tones_music_balance", String(tonesMusicBalance));
+              applyTonesMusicBalance();
+            },
+            change: function(e, ui) {
+              tonesMusicBalance = ui.value;
+              localStorage.setItem("tones_music_balance", String(tonesMusicBalance));
+              applyTonesMusicBalance();
+            }
+          });
+          balanceEl.on("dblclick", function() {
+            tonesMusicBalance = 50;
+            localStorage.setItem("tones_music_balance", "50");
+            balanceEl.slider("value", 50);
+            applyTonesMusicBalance();
+          });
+          applyTonesMusicBalance();
+        }
+      });
 }
 
 function generatePresetButtons() {
@@ -1455,6 +1547,9 @@ function onPlayerReady(event) {
 
 	// Render recent playlists on page load
 	renderRecentPlaylists();
+
+	// Apply current tones/music balance to YouTube volume
+	applyTonesMusicBalance();
 }
 
 function onPlayerStateChange(event) {
@@ -1595,6 +1690,9 @@ function handlePlaylistFormSubmission() {
 document.addEventListener('DOMContentLoaded', function() {
 	var playlistInput = document.getElementById('playlist-url');
 	var saveButton = document.getElementById('save-playlist-btn');
+
+	// Ensure the default playlist is stored before restoring the input.
+	ensureDefaultPlaylistStored();
 
 	// Restore saved playlist URL on page load
 	var savedPlaylistUrl = localStorage.getItem('youtube_playlist_url');

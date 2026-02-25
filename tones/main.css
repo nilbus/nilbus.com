@@ -282,7 +282,12 @@ a.white:hover {
 
 
 .ctrSection {
-	padding:15px 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 15px 40px;
 	border: 0px solid blue;
 }
 
@@ -329,12 +334,9 @@ blockquote {
 
 
 @media screen and (max-height: 640px) {
-#title {
-	display:none;
-}
-#subtitle {
-	display:none;
-}
+	#subtitle {
+		display: none;
+	}
 }
 
 /* ===========================================
@@ -422,6 +424,61 @@ blockquote {
 	font-style: italic;
 	color: var(--text-secondary);
 }
+
+/* ===========================================
+   TONES / MUSIC BALANCE SLIDER
+   =========================================== */
+.balance-section {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+	width: 240px;
+}
+
+.balance-label {
+	flex-shrink: 0;
+	color: var(--text-primary);
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.balance-slider-wrap {
+	flex: 1;
+	min-width: 0;
+}
+
+.balance-slider-wrap .ui-slider-horizontal {
+	height: 6px;
+	border-radius: 3px;
+	background: var(--bg-button);
+}
+
+.balance-slider-wrap .ui-slider .ui-slider-range {
+	background: #2196f3;
+	border-radius: 3px 0 0 3px;
+}
+
+.balance-slider-wrap .ui-slider .ui-slider-handle {
+	width: 22px;
+	height: 14px;
+	margin-left: -11px;
+	margin-top: 1px;
+	border-radius: 7px;
+	background: white;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.balance-labels {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 4px;
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.balance-label-left { margin-right: auto; }
+.balance-label-right { margin-left: auto; }
 
 /* ===========================================
    YOUTUBE SECTION STYLES
