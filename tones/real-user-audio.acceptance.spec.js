@@ -1,0 +1,1066 @@
+const { test, expect } = require('@playwright/test');
+
+const DEFAULT_PLAYLIST_ID = 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
+const DEFAULT_PLAYLIST_URL = `https://www.youtube.com/playlist?list=${DEFAULT_PLAYLIST_ID}`;
+const DEFAULT_PLAYLIST_TITLE = 'AllieSpaces';
+
+const CUSTOM_PLAYLIST_ID = 'PLa7mrH1FP1itWJGvbEymj_rlPwWimyRf_';
+const CUSTOM_PLAYLIST_URL = `https://music.youtube.com/playlist?list=${CUSTOM_PLAYLIST_ID}&si=c-EN6ax2quye7vAI`;
+const CUSTOM_PLAYLIST_TITLE = 'Acceptance Custom Playlist';
+
+const FIRST_PRESET = { index: 0, name: 'Focused & Sustainable Work' };
+const ALT_PRESET = { index: 1, name: 'Procrastination Crusher' };
+const SPLIT_CARRIER_PRESET = { index: 8, name: 'Edge: Initiation & Buildup' };
+
+const MIN_TONE_RMS = 0.0005;
+const YOUTUBE_READY_TIMEOUT_MS = 20000;
+const YOUTUBE_PLAY_TIMEOUT_MS = 5000;
+const YOUTUBE_NOT_PLAYING_TIMEOUT_MS = 2000;
+
+test.describe('real user audio acceptance', () => {
+  test.describe.configure({ mode: 'serial' });
+  test.setTimeout(70000);
+
+  test.beforeEach(async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'Real WebAudio and YouTube acceptance coverage runs only in Chromium.');
+    await installAcceptanceProbes(page);
+  });
+
+  test.describe('startup / first-run playback', () => {
+    test('Given a first run, when the page loads, then tones and YouTube are paused with the default playlist available', async ({ page }) => {
+      await openFreshApp(page);
+
+      await expectNoTonesPlaying(page);
+      await expectYouTubeNotPlaying(page);
+      await expectDefaultPlaylistAvailable(page);
+    });
+
+    test('Given a first run, when the first preset is clicked, then first tones and the default playlist play', async ({ page }) => {
+      await openFreshApp(page);
+
+      await clickPreset(page, FIRST_PRESET.index, 'headphones');
+
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+    });
+
+    test('Given a first run, when Space is pressed, then first tones and the default playlist play', async ({ page }) => {
+      test.fail(true, 'Space currently starts playback without selecting the first tone preset.');
+      await openFreshApp(page);
+
+      await page.keyboard.press('Space');
+
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'speakers',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+    });
+
+    test('Given a first run, when the default playlist link is clicked, then first tones and the default playlist play', async ({ page }) => {
+      await openFreshApp(page);
+
+      await clickPlaylistLink(page, DEFAULT_PLAYLIST_TITLE);
+
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'speakers',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+    });
+
+    test('Given a first run, when the YouTube embed is clicked directly, then tones do not start', async ({ page }) => {
+      await openFreshApp(page);
+
+      await clickYouTubeEmbed(page);
+
+      await expectNoTonesPlaying(page);
+    });
+  });
+
+  test.describe('playback controls', () => {
+    test('Given playback is active, when the active preset is clicked again, then tones and music pause', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await clickPreset(page, FIRST_PRESET.index, 'headphones');
+
+      await expectPlaybackPaused(page);
+    });
+
+    test('Given playback is active, when mute is clicked twice, then tones and music pause and resume', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await page.locator('#mute').click();
+      await expectPlaybackPaused(page);
+
+      await page.locator('#mute').click();
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+    });
+
+    test('Given playback is active, when Space is pressed twice, then tones and music pause and resume', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await page.keyboard.press('Space');
+      await expectPlaybackPaused(page);
+
+      await page.keyboard.press('Space');
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+    });
+
+    test('Given playback is active from initial page load, when the native media play/pause key pauses, then tones and music pause together', async ({ page }) => {
+      test.fail(true, 'Native media key handling currently lets the YouTube iframe own the initial media session, so tones are not paused with music.');
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await page.keyboard.press('MediaPlayPause');
+
+      await expectPlaybackPaused(page);
+    });
+
+    test('Given tones have been started and stopped once, when Media Session play and pause fire, then tones and music pause and resume together', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await page.locator('#mute').click();
+      await expectPlaybackPaused(page);
+
+      await invokeMediaSessionAction(page, 'play');
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await invokeMediaSessionAction(page, 'pause');
+      await expectPlaybackPaused(page);
+
+      await invokeMediaSessionAction(page, 'play');
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+    });
+
+    test('Given playback is active, when Media Session previous and next fire, then YouTube position or track changes while tones continue', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await seekYouTubeTo(page, 8);
+      await invokeMediaSessionAction(page, 'previoustrack');
+      await waitForYouTubeSnapshot(page, snapshot => snapshot.currentTime <= 2, {
+        message: 'Expected previous-track action to restart the current video position.',
+      });
+      await expectSelectedTone(page, FIRST_PRESET.index, 'headphones');
+
+      const beforeNext = await readYouTubeSnapshot(page);
+      await invokeMediaSessionAction(page, 'nexttrack');
+      await waitForYouTubeSnapshot(page, snapshot => snapshot.playlistIndex !== beforeNext.playlistIndex, {
+        message: 'Expected next-track action to change the YouTube playlist index.',
+      });
+      await expectYouTubePlaying(page, { playlistId: DEFAULT_PLAYLIST_ID });
+      await expectSelectedTone(page, FIRST_PRESET.index, 'headphones');
+    });
+  });
+
+  test.describe('preset / output changes', () => {
+    test('Given playback is active, when another preset is selected, then the active tone set changes and the current playlist keeps playing', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      const firstParams = await readAppliedToneParams(page);
+
+      await clickPreset(page, ALT_PRESET.index, 'headphones');
+
+      await expectPlaybackActive(page, {
+        presetIndex: ALT_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      const altParams = await readAppliedToneParams(page);
+      expect(altParams).not.toEqual(firstParams);
+    });
+
+    test('Given a split-carrier preset is playing, when output changes between headphones and speakers, then tone params change and playback stays active', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: SPLIT_CARRIER_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      const headphonesParams = await readAppliedToneParams(page);
+
+      await clickPreset(page, SPLIT_CARRIER_PRESET.index, 'speakers');
+
+      await expectPlaybackActive(page, {
+        presetIndex: SPLIT_CARRIER_PRESET.index,
+        outputType: 'speakers',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      const speakersParams = await readAppliedToneParams(page);
+      expect(speakersParams).not.toEqual(headphonesParams);
+    });
+  });
+
+  test.describe('playlist and persistence', () => {
+    test('Given a custom playlist is added, when its recent playlist link is clicked, then first tones and the custom playlist play', async ({ page }) => {
+      test.fail(true, 'Clicking a custom recent playlist on first run currently starts tones but leaves the real YouTube player unstarted.');
+      await openFreshApp(page);
+      await addCustomPlaylist(page);
+
+      await clickPlaylistLink(page, CUSTOM_PLAYLIST_TITLE);
+
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'speakers',
+        playlistId: CUSTOM_PLAYLIST_ID,
+      });
+    });
+
+    test('Given tones are playing with the default playlist, when a custom playlist is added, then tones continue and the custom playlist plays', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await addCustomPlaylist(page);
+
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: CUSTOM_PLAYLIST_ID,
+      });
+    });
+
+    test('Given custom playlist and alternate tone were active before reload, when Space is pressed after reload, then the same tone and playlist play', async ({ page }) => {
+      test.fail(true, 'The app currently persists the playlist but not the selected tone/output for Space after reload.');
+      await openFreshApp(page);
+      await addCustomPlaylist(page);
+      await establishPlayback(page, {
+        presetIndex: ALT_PRESET.index,
+        outputType: 'headphones',
+        playlistId: CUSTOM_PLAYLIST_ID,
+      });
+
+      await page.reload();
+      await waitForAppReady(page);
+      await page.keyboard.press('Space');
+
+      await expectPlaybackActive(page, {
+        presetIndex: ALT_PRESET.index,
+        outputType: 'headphones',
+        playlistId: CUSTOM_PLAYLIST_ID,
+      });
+    });
+
+    test('Given alternate tone was active before reload, when a playlist link is clicked after reload, then the same tone and clicked playlist play', async ({ page }) => {
+      test.fail(true, 'Playlist links after reload currently start the first speaker preset instead of the last selected tone/output.');
+      await openFreshApp(page);
+      await addCustomPlaylist(page);
+      await clickPlaylistLink(page, DEFAULT_PLAYLIST_TITLE);
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'speakers',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      await establishPlayback(page, {
+        presetIndex: ALT_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await page.reload();
+      await waitForAppReady(page);
+      await clickPlaylistLink(page, CUSTOM_PLAYLIST_TITLE);
+
+      await expectPlaybackActive(page, {
+        presetIndex: ALT_PRESET.index,
+        outputType: 'headphones',
+        playlistId: CUSTOM_PLAYLIST_ID,
+      });
+    });
+
+    test('Given a playlist position was saved, when playback starts after reload, then YouTube resumes that playlist index/time while tones start', async ({ page }) => {
+      await seedSavedPlaylistPosition(page, {
+        playlistId: DEFAULT_PLAYLIST_ID,
+        playlistUrl: DEFAULT_PLAYLIST_URL,
+        title: DEFAULT_PLAYLIST_TITLE,
+        videoIndex: 1,
+        playbackTime: 12,
+      });
+      await page.goto('/');
+      await waitForAppReady(page);
+      await waitForYouTubeSnapshot(page, snapshot => snapshot.playlistIndex === 1 && snapshot.currentTime >= 11, {
+        timeout: 10000,
+        message: 'Expected saved YouTube playlist index and start time to be cued on reload.',
+      });
+
+      await clickPreset(page, FIRST_PRESET.index, 'headphones');
+
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      const snapshot = await readYouTubeSnapshot(page);
+      expect(snapshot.playlistIndex).toBe(1);
+      expect(snapshot.currentTime).toBeGreaterThan(11);
+    });
+  });
+
+  test.describe('balance / external playback-affecting controls', () => {
+    test('Given playback is active, when balance moves to tones-only, then tones volume stays audible and YouTube volume is zero', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await setBalance(page, 0);
+
+      await expectBalanceVolumes(page, { tonesVolume: 1, youtubeVolume: 0 });
+      await expectSelectedTone(page, FIRST_PRESET.index, 'headphones');
+    });
+
+    test('Given playback is active, when balance moves to music-only, then tones element volume is zero and YouTube volume stays audible', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await setBalance(page, 100);
+
+      await expectBalanceVolumes(page, { tonesVolume: 0, youtubeVolume: 100 });
+      await expectYouTubePlaying(page, { playlistId: DEFAULT_PLAYLIST_ID });
+    });
+
+    test('Given balance was changed, when the page reloads, then the balance setting is preserved', async ({ page }) => {
+      await openFreshApp(page);
+      await setBalance(page, 25);
+
+      await page.reload();
+      await waitForAppReady(page);
+
+      await waitForPageValue(page, () => {
+        return {
+          globalValue: window.tonesMusicBalance,
+          storedValue: localStorage.getItem('tones_music_balance'),
+          sliderValue: window.$ ? window.$('#tones-music-balance').slider('value') : null,
+        };
+      }, value => value.globalValue === 25 && value.storedValue === '25' && value.sliderValue === 25, {
+        message: 'Expected balance slider, global value, and localStorage to preserve 25 after reload.',
+      });
+    });
+
+    test('Given playback is active, when the Brainaural external-link control is clicked, then tones and music pause before window.open', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+
+      await page.locator('img[src="link.png"]').click();
+
+      await waitForPageValue(page, () => window.__brainTonesAcceptance.windowOpenCalls, calls => calls.length === 1, {
+        message: 'Expected the external Brainaural link to call window.open once.',
+      });
+      await expectPlaybackPaused(page);
+      const openCall = await page.evaluate(() => window.__brainTonesAcceptance.windowOpenCalls[0]);
+      expect(openCall.args[0]).toContain('https://brainaural.com/play.php?');
+      expect(openCall.bPaused).toBe(true);
+    });
+  });
+});
+
+async function installAcceptanceProbes(page) {
+  await page.addInitScript(() => {
+    window.__brainTonesAcceptance = {
+      mediaSessionHandlers: {},
+      mediaSessionActions: [],
+      mediaSessionWrapError: null,
+      windowOpenCalls: [],
+    };
+
+    window.__readAcceptanceToneState = function(presetIndex, outputType) {
+      const emptyState = {
+        expectedPresetName: null,
+        currentPresetName: null,
+        currentOutputType: null,
+        bPaused: window.bPaused,
+        contextState: window.context ? window.context.state : null,
+        activeButton: false,
+        mismatches: ['preset data unavailable'],
+      };
+
+      if (
+        typeof PRESET_TONES === 'undefined' ||
+        typeof generatePresetParams !== 'function' ||
+        !PRESET_TONES[presetIndex]
+      ) {
+        return emptyState;
+      }
+
+      const preset = PRESET_TONES[presetIndex];
+      const expected = generatePresetParams(preset, outputType);
+      const mappings = {
+        mod: MOD,
+        car: CARRIER,
+        noi: NOISE,
+        iso: ISOCHRONIC,
+        bin: BINAURAL,
+        bil: BILATERAL,
+        fm: FM,
+        lvl: LEVEL,
+      };
+      const mismatches = [];
+
+      Object.entries(expected).forEach(([key, expectedValue]) => {
+        const match = key.match(/^([a-z]+)(\d+)$/);
+        if (!match) {
+          mismatches.push(`${key}: unrecognized expected param`);
+          return;
+        }
+
+        const [, prefix, indexText] = match;
+        const source = mappings[prefix];
+        const layerIndex = Number(indexText);
+        if (!source) {
+          mismatches.push(`${key}: missing source array`);
+          return;
+        }
+
+        const actualValue = Number(source[layerIndex]);
+        const expectedNumber = Number(expectedValue);
+        if (Math.abs(actualValue - expectedNumber) > 0.01) {
+          mismatches.push(`${key}: expected ${expectedNumber}, got ${actualValue}`);
+        }
+      });
+
+      return {
+        expectedPresetName: preset.name,
+        currentPresetName: currentPreset ? currentPreset.name : null,
+        currentOutputType,
+        bPaused,
+        contextState: context ? context.state : null,
+        activeButton: Boolean(document.getElementById(`preset-${presetIndex}-${outputType}`)?.classList.contains('active')),
+        mismatches,
+      };
+    };
+
+    const originalOpen = window.open;
+    window.open = function(...args) {
+      let youtubeState = null;
+      try {
+        youtubeState = window.player && typeof window.player.getPlayerState === 'function'
+          ? window.player.getPlayerState()
+          : null;
+      } catch (e) {}
+
+      window.__brainTonesAcceptance.windowOpenCalls.push({
+        args,
+        bPaused: window.bPaused,
+        contextState: window.context ? window.context.state : null,
+        youtubeState,
+      });
+
+      if (args[0] && String(args[0]).startsWith('https://brainaural.com/play.php?')) {
+        return null;
+      }
+
+      return originalOpen.apply(window, args);
+    };
+
+    const wrapMediaSession = () => {
+      try {
+        if (!navigator.mediaSession || navigator.mediaSession.__brainTonesAcceptanceWrapped) {
+          return;
+        }
+
+        const originalSetActionHandler = navigator.mediaSession.setActionHandler.bind(navigator.mediaSession);
+        navigator.mediaSession.setActionHandler = function(action, handler) {
+          window.__brainTonesAcceptance.mediaSessionActions.push(action);
+          window.__brainTonesAcceptance.mediaSessionHandlers[action] = handler;
+          return originalSetActionHandler(action, handler);
+        };
+
+        Object.defineProperty(navigator.mediaSession, '__brainTonesAcceptanceWrapped', {
+          value: true,
+          configurable: true,
+        });
+      } catch (error) {
+        window.__brainTonesAcceptance.mediaSessionWrapError = String(error && error.message ? error.message : error);
+      }
+    };
+
+    wrapMediaSession();
+    const wrapTimer = setInterval(wrapMediaSession, 50);
+    window.addEventListener('load', () => setTimeout(() => clearInterval(wrapTimer), 5000));
+  });
+}
+
+async function openFreshApp(page) {
+  await page.goto('/');
+  await waitForAppReady(page);
+  await expectDefaultPlaylistAvailable(page);
+}
+
+async function waitForAppReady(page) {
+  await page.locator('#preset-0-headphones').waitFor({ state: 'visible', timeout: 10000 });
+  await waitForYouTubeReady(page);
+}
+
+async function waitForYouTubeReady(page) {
+  await waitForPageValue(page, () => {
+    return Boolean(
+      window.isPlayerReady &&
+      window.player &&
+      typeof window.player.getPlayerState === 'function' &&
+      window.YT &&
+      window.YT.PlayerState
+    );
+  }, Boolean, {
+    timeout: YOUTUBE_READY_TIMEOUT_MS,
+    message: 'Expected the real YouTube iframe API player to become ready.',
+  });
+}
+
+async function expectDefaultPlaylistAvailable(page) {
+  await expect(page.locator('#playlist-url')).toHaveValue(DEFAULT_PLAYLIST_URL);
+  await expect(page.locator('.playlist-link', { hasText: DEFAULT_PLAYLIST_TITLE })).toBeVisible({ timeout: 10000 });
+
+  const stored = await page.evaluate(() => {
+    return {
+      playlistId: localStorage.getItem('youtube_playlist_id'),
+      playlistUrl: localStorage.getItem('youtube_playlist_url'),
+      recentPlaylists: JSON.parse(localStorage.getItem('youtube_recent_playlists') || '[]'),
+    };
+  });
+
+  expect(stored.playlistId).toBe(DEFAULT_PLAYLIST_ID);
+  expect(stored.playlistUrl).toBe(DEFAULT_PLAYLIST_URL);
+  expect(stored.recentPlaylists.some(playlist => (
+    playlist.id === DEFAULT_PLAYLIST_ID &&
+    playlist.title === DEFAULT_PLAYLIST_TITLE &&
+    playlist.url === DEFAULT_PLAYLIST_URL
+  ))).toBe(true);
+}
+
+async function clickPreset(page, presetIndex, outputType) {
+  await page.locator(`#preset-${presetIndex}-${outputType}`).click();
+}
+
+async function clickPlaylistLink(page, title) {
+  await page.locator('.playlist-link', { hasText: title }).click();
+}
+
+async function clickYouTubeEmbed(page) {
+  const iframe = page.locator('iframe#youtube-player, #youtube-player iframe').first();
+  await iframe.waitFor({ state: 'visible', timeout: 10000 });
+  const box = await iframe.boundingBox();
+  if (!box) {
+    throw new Error('YouTube iframe was not visible enough to click.');
+  }
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await page.waitForTimeout(500);
+}
+
+async function addCustomPlaylist(page) {
+  await page.locator('#playlist-url').fill(CUSTOM_PLAYLIST_URL);
+  page.once('dialog', async dialog => {
+    await dialog.accept(CUSTOM_PLAYLIST_TITLE);
+  });
+  await page.locator('#save-playlist-btn').click();
+  await expect(page.locator('.playlist-link', { hasText: CUSTOM_PLAYLIST_TITLE })).toBeVisible({ timeout: 10000 });
+  await expectActivePlaylist(page, CUSTOM_PLAYLIST_ID);
+}
+
+async function establishPlayback(page, { presetIndex, outputType, playlistId }) {
+  await clickPreset(page, presetIndex, outputType);
+  await expectSelectedTone(page, presetIndex, outputType);
+  await expectActivePlaylist(page, playlistId);
+
+  try {
+    await expectYouTubePlaying(page, { playlistId });
+    return;
+  } catch (error) {
+    const appState = await page.evaluate(({ presetIndex: pagePresetIndex, outputType: pageOutputType }) => {
+      const activeButton = document.getElementById(`preset-${pagePresetIndex}-${pageOutputType}`);
+      return {
+        bPaused,
+        activeButton: Boolean(activeButton && activeButton.classList.contains('active')),
+        currentPresetName: currentPreset ? currentPreset.name : null,
+        currentOutputType,
+      };
+    }, { presetIndex, outputType });
+    const youtube = await readYouTubeSnapshot(page);
+    const canNudgePlayback = (
+      appState.bPaused === false &&
+      appState.activeButton === true &&
+      appState.currentOutputType === outputType &&
+      youtube.ready === true &&
+      youtube.localPlaylistId === playlistId &&
+      [youtube.states.UNSTARTED, youtube.states.CUED].includes(youtube.state)
+    );
+
+    if (!canNudgePlayback) {
+      throw error;
+    }
+
+    await page.evaluate(() => {
+      player.playVideo();
+    });
+    await expectYouTubePlaying(page, { playlistId });
+  }
+}
+
+async function expectPlaybackActive(page, { presetIndex, outputType, playlistId }) {
+  await expectSelectedTone(page, presetIndex, outputType);
+  await expectActivePlaylist(page, playlistId);
+  await expectYouTubePlaying(page, { playlistId });
+}
+
+async function expectPlaybackPaused(page) {
+  await waitForPageValue(page, () => {
+    return {
+      bPaused: window.bPaused,
+      contextState: window.context ? window.context.state : null,
+      activePresetCount: document.querySelectorAll('.preset-button.active').length,
+      muteActive: document.getElementById('mute') ? document.getElementById('mute').classList.contains('superactive') : false,
+    };
+  }, state => (
+    state.bPaused === true &&
+    state.activePresetCount === 0 &&
+    state.muteActive === true &&
+    (!state.contextState || state.contextState === 'suspended')
+  ), {
+    timeout: 10000,
+    message: 'Expected app tone state to be paused.',
+  });
+
+  await expectTonesSilentOrUnavailable(page);
+  await expectYouTubeNotPlaying(page);
+}
+
+async function expectNoTonesPlaying(page) {
+  const state = await page.evaluate(() => {
+    return {
+      bPaused: window.bPaused,
+      initialized: Boolean(window.bAUDIO_INITIALIZED),
+      contextState: window.context ? window.context.state : null,
+      activePresetCount: document.querySelectorAll('.preset-button.active').length,
+      hasToneStream: Boolean(window.tonesMediaOutputDestination && window.tonesMediaOutputDestination.stream),
+    };
+  });
+
+  expect(state.bPaused).toBe(true);
+  expect(state.activePresetCount).toBe(0);
+
+  if (state.initialized && state.hasToneStream && state.contextState === 'running') {
+    await expectTonesSilentOrUnavailable(page);
+  }
+}
+
+async function expectSelectedTone(page, presetIndex, outputType) {
+  await expect(page.locator(`#preset-${presetIndex}-${outputType}`)).toHaveClass(/active/, { timeout: 10000 });
+
+  await waitForPageValue(page, ({ presetIndex: pagePresetIndex, outputType: pageOutputType }) => {
+    return window.__readAcceptanceToneState(pagePresetIndex, pageOutputType);
+  }, state => (
+    state.currentPresetName === state.expectedPresetName &&
+    state.currentOutputType === outputType &&
+    state.bPaused === false &&
+    state.contextState === 'running' &&
+    state.activeButton === true &&
+    state.mismatches.length === 0
+  ), {
+    arg: { presetIndex, outputType },
+    timeout: 10000,
+    message: `Expected ${outputType} preset ${presetIndex} tone params to be active.`,
+  });
+
+  await expectTonesAudible(page);
+}
+
+async function expectTonesAudible(page) {
+  const sample = await sampleTonePcm(page);
+  expect(sample.available).toBe(true);
+  expect(sample.rms).toBeGreaterThan(MIN_TONE_RMS);
+  expect(sample.peak).toBeGreaterThan(MIN_TONE_RMS);
+}
+
+async function expectTonesSilentOrUnavailable(page) {
+  const sample = await sampleTonePcm(page, 250);
+  if (!sample.available) {
+    return;
+  }
+  expect(sample.rms).toBeLessThan(MIN_TONE_RMS);
+}
+
+async function sampleTonePcm(page, durationMs = 350) {
+  return page.evaluate(async ({ durationMs: pageDurationMs }) => {
+    if (!window.tonesMediaOutputDestination || !window.tonesMediaOutputDestination.stream) {
+      return { available: false, rms: 0, peak: 0, reason: 'missing tonesMediaOutputDestination.stream' };
+    }
+
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) {
+      return { available: false, rms: 0, peak: 0, reason: 'missing AudioContext' };
+    }
+
+    const probeContext = window.__tonesPcmProbeContext || new AudioContextCtor();
+    window.__tonesPcmProbeContext = probeContext;
+    if (probeContext.state === 'suspended') {
+      await probeContext.resume();
+    }
+
+    const source = probeContext.createMediaStreamSource(window.tonesMediaOutputDestination.stream);
+    const analyser = probeContext.createAnalyser();
+    analyser.fftSize = 2048;
+    source.connect(analyser);
+
+    const data = new Float32Array(analyser.fftSize);
+    let sumSquares = 0;
+    let sampleCount = 0;
+    let peak = 0;
+    const deadline = performance.now() + pageDurationMs;
+
+    while (performance.now() < deadline) {
+      analyser.getFloatTimeDomainData(data);
+      for (let i = 0; i < data.length; i += 1) {
+        const value = data[i];
+        sumSquares += value * value;
+        sampleCount += 1;
+        peak = Math.max(peak, Math.abs(value));
+      }
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    try { source.disconnect(); } catch (e) {}
+    try { analyser.disconnect(); } catch (e) {}
+
+    return {
+      available: true,
+      rms: sampleCount > 0 ? Math.sqrt(sumSquares / sampleCount) : 0,
+      peak,
+    };
+  }, { durationMs });
+}
+
+async function readAppliedToneParams(page) {
+  return page.evaluate(() => {
+    return {
+      mod: Array.from(window.MOD),
+      carrier: Array.from(window.CARRIER),
+      noise: Array.from(window.NOISE),
+      isochronic: Array.from(window.ISOCHRONIC),
+      binaural: Array.from(window.BINAURAL),
+      bilateral: Array.from(window.BILATERAL),
+      fm: Array.from(window.FM),
+      level: Array.from(window.LEVEL),
+    };
+  });
+}
+
+async function expectActivePlaylist(page, playlistId) {
+  await waitForPageValue(page, () => localStorage.getItem('youtube_playlist_id'), value => value === playlistId, {
+    timeout: 5000,
+    message: `Expected active playlist ${playlistId}.`,
+  });
+}
+
+async function readYouTubeSnapshot(page) {
+  return page.evaluate(() => {
+    const states = window.YT && window.YT.PlayerState ? {
+      UNSTARTED: window.YT.PlayerState.UNSTARTED,
+      ENDED: window.YT.PlayerState.ENDED,
+      PLAYING: window.YT.PlayerState.PLAYING,
+      PAUSED: window.YT.PlayerState.PAUSED,
+      BUFFERING: window.YT.PlayerState.BUFFERING,
+      CUED: window.YT.PlayerState.CUED,
+    } : {};
+
+    const snapshot = {
+      ready: Boolean(window.isPlayerReady),
+      hasPlayer: Boolean(window.player),
+      state: null,
+      currentTime: null,
+      playlistIndex: null,
+      playlistLength: null,
+      volume: null,
+      localPlaylistId: localStorage.getItem('youtube_playlist_id'),
+      states,
+      error: null,
+    };
+
+    if (!window.player) {
+      return snapshot;
+    }
+
+    try {
+      if (typeof window.player.getPlayerState === 'function') {
+        snapshot.state = window.player.getPlayerState();
+      }
+      if (typeof window.player.getCurrentTime === 'function') {
+        snapshot.currentTime = window.player.getCurrentTime();
+      }
+      if (typeof window.player.getPlaylistIndex === 'function') {
+        snapshot.playlistIndex = window.player.getPlaylistIndex();
+      }
+      if (typeof window.player.getPlaylist === 'function') {
+        const playlist = window.player.getPlaylist();
+        snapshot.playlistLength = Array.isArray(playlist) ? playlist.length : null;
+      }
+      if (typeof window.player.getVolume === 'function') {
+        snapshot.volume = window.player.getVolume();
+      }
+    } catch (error) {
+      snapshot.error = String(error && error.message ? error.message : error);
+    }
+
+    return snapshot;
+  });
+}
+
+async function expectYouTubePlaying(page, { playlistId, timeout = YOUTUBE_PLAY_TIMEOUT_MS } = {}) {
+  let firstPlayingTime = null;
+  let lastSnapshot = null;
+  const deadline = Date.now() + timeout;
+
+  while (Date.now() < deadline) {
+    lastSnapshot = await readYouTubeSnapshot(page);
+
+    if (
+      (!playlistId || lastSnapshot.localPlaylistId === playlistId) &&
+      lastSnapshot.ready &&
+      lastSnapshot.state === lastSnapshot.states.PLAYING &&
+      Number.isFinite(lastSnapshot.currentTime)
+    ) {
+      if (firstPlayingTime === null) {
+        firstPlayingTime = lastSnapshot.currentTime;
+      } else if (lastSnapshot.currentTime > firstPlayingTime + 0.15) {
+        return lastSnapshot;
+      }
+    } else {
+      firstPlayingTime = null;
+    }
+
+    await page.waitForTimeout(100);
+  }
+
+  throw new Error(`Expected YouTube to be PLAYING with advancing currentTime. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
+}
+
+async function expectYouTubeNotPlaying(page) {
+  let firstSnapshot = await readYouTubeSnapshot(page);
+  const nonPlayingStates = new Set([
+    firstSnapshot.states.UNSTARTED,
+    firstSnapshot.states.ENDED,
+    firstSnapshot.states.PAUSED,
+    firstSnapshot.states.CUED,
+  ]);
+
+  if (!firstSnapshot.hasPlayer || !firstSnapshot.ready || nonPlayingStates.has(firstSnapshot.state)) {
+    return firstSnapshot;
+  }
+
+  const startTime = Number.isFinite(firstSnapshot.currentTime) ? firstSnapshot.currentTime : null;
+  let lastSnapshot = firstSnapshot;
+  const deadline = Date.now() + YOUTUBE_NOT_PLAYING_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    lastSnapshot = await readYouTubeSnapshot(page);
+
+    if (nonPlayingStates.has(lastSnapshot.state)) {
+      return lastSnapshot;
+    }
+
+    if (
+      lastSnapshot.state === lastSnapshot.states.PLAYING &&
+      Number.isFinite(startTime) &&
+      Number.isFinite(lastSnapshot.currentTime) &&
+      lastSnapshot.currentTime > startTime + 0.15
+    ) {
+      throw new Error(`Expected YouTube not to play, but currentTime advanced. First: ${JSON.stringify(firstSnapshot)} Last: ${JSON.stringify(lastSnapshot)}`);
+    }
+
+    await page.waitForTimeout(100);
+  }
+
+  if (lastSnapshot.state === lastSnapshot.states.PLAYING) {
+    throw new Error(`Expected YouTube not to be PLAYING. Last snapshot: ${JSON.stringify(lastSnapshot)}`);
+  }
+
+  return lastSnapshot;
+}
+
+async function waitForYouTubeSnapshot(page, predicate, { timeout = 5000, message = 'Expected YouTube snapshot condition.' } = {}) {
+  let lastSnapshot = null;
+  const deadline = Date.now() + timeout;
+
+  while (Date.now() < deadline) {
+    lastSnapshot = await readYouTubeSnapshot(page);
+    if (predicate(lastSnapshot)) {
+      return lastSnapshot;
+    }
+    await page.waitForTimeout(100);
+  }
+
+  throw new Error(`${message} Last snapshot: ${JSON.stringify(lastSnapshot)}`);
+}
+
+async function seekYouTubeTo(page, seconds) {
+  await page.evaluate(secondsInPage => {
+    window.player.seekTo(secondsInPage, true);
+  }, seconds);
+
+  await waitForYouTubeSnapshot(page, snapshot => snapshot.currentTime >= seconds - 1, {
+    message: `Expected YouTube to seek to ${seconds}s.`,
+  });
+}
+
+async function invokeMediaSessionAction(page, action) {
+  await waitForMediaSessionAction(page, action);
+  await page.evaluate(async actionInPage => {
+    const handler = window.__brainTonesAcceptance.mediaSessionHandlers[actionInPage];
+    const result = handler();
+    if (result && typeof result.then === 'function') {
+      await result;
+    }
+  }, action);
+}
+
+async function waitForMediaSessionAction(page, action) {
+  await waitForPageValue(page, actionInPage => {
+    return Boolean(
+      window.__brainTonesAcceptance &&
+      window.__brainTonesAcceptance.mediaSessionHandlers &&
+      typeof window.__brainTonesAcceptance.mediaSessionHandlers[actionInPage] === 'function'
+    );
+  }, Boolean, {
+    arg: action,
+    timeout: 5000,
+    message: `Expected Media Session action handler "${action}" to be registered.`,
+  });
+}
+
+async function setBalance(page, value) {
+  const slider = page.locator('#tones-music-balance');
+  const box = await slider.boundingBox();
+  if (!box) {
+    throw new Error('Balance slider was not visible enough to move.');
+  }
+
+  const xOffset = Math.max(1, Math.min(box.width - 1, box.width * value / 100));
+  await page.mouse.click(box.x + xOffset, box.y + box.height / 2);
+  await waitForPageValue(page, () => {
+    return {
+      globalValue: window.tonesMusicBalance,
+      storedValue: localStorage.getItem('tones_music_balance'),
+      sliderValue: window.$ ? window.$('#tones-music-balance').slider('value') : null,
+    };
+  }, state => state.globalValue === value && state.storedValue === String(value) && state.sliderValue === value, {
+    message: `Expected balance slider to move to ${value}.`,
+  });
+}
+
+async function expectBalanceVolumes(page, { tonesVolume, youtubeVolume }) {
+  await waitForPageValue(page, () => {
+    return {
+      tonesVolume: window.tonesMediaOutputElement ? window.tonesMediaOutputElement.volume : null,
+      youtubeVolume: window.player && typeof window.player.getVolume === 'function' ? window.player.getVolume() : null,
+    };
+  }, volumes => (
+    volumes.tonesVolume === tonesVolume &&
+    volumes.youtubeVolume === youtubeVolume
+  ), {
+    timeout: 5000,
+    message: `Expected tones volume ${tonesVolume} and YouTube volume ${youtubeVolume}.`,
+  });
+}
+
+async function seedSavedPlaylistPosition(page, { playlistId, playlistUrl, title, videoIndex, playbackTime }) {
+  await page.addInitScript(seed => {
+    localStorage.setItem('youtube_playlist_id', seed.playlistId);
+    localStorage.setItem('youtube_playlist_url', seed.playlistUrl);
+    localStorage.setItem('youtube_recent_playlists', JSON.stringify([{
+      id: seed.playlistId,
+      title: seed.title,
+      url: seed.playlistUrl,
+      addedAt: Date.now(),
+    }]));
+    localStorage.setItem('youtube_playlist_states', JSON.stringify({
+      [seed.playlistId]: {
+        videoIndex: seed.videoIndex,
+        playbackTime: seed.playbackTime,
+        lastUsed: Date.now(),
+      },
+    }));
+  }, { playlistId, playlistUrl, title, videoIndex, playbackTime });
+}
+
+async function waitForPageValue(page, producer, predicate, {
+  arg,
+  timeout = 5000,
+  interval = 100,
+  message = 'Expected page value condition.',
+} = {}) {
+  let lastValue = null;
+  const deadline = Date.now() + timeout;
+
+  while (Date.now() < deadline) {
+    lastValue = await page.evaluate(producer, arg);
+    if (predicate(lastValue)) {
+      return lastValue;
+    }
+    await page.waitForTimeout(interval);
+  }
+
+  throw new Error(`${message} Last value: ${JSON.stringify(lastValue)}`);
+}

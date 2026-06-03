@@ -1193,6 +1193,12 @@ test.describe('Media Session API - Track Navigation', () => {
     });
     expect(handlersExist).toBe(true);
 
+    // The first Back press restarts the current track when more than 5 seconds in.
+    // Set the mock near the start so this test covers actual previous-track navigation.
+    await page.evaluate(() => {
+      window.mockPlayerState.currentTime = 3;
+    });
+
     // When the previoustrack media key action is triggered
     await page.evaluate(() => {
       if (window.mediaSessionHandlers && window.mediaSessionHandlers.previoustrack) {
@@ -1246,6 +1252,7 @@ test.describe('Media Session API - Track Navigation', () => {
     // Set up playlist ID in localStorage so saveCurrentPlaylistState can save
     await page.evaluate(() => {
       localStorage.setItem('youtube_playlist_id', 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF');
+      window.mockPlayerState.currentTime = 3;
     });
 
     // When the previoustrack media key action is triggered
