@@ -132,16 +132,16 @@ test.describe('real user audio acceptance', () => {
       });
     });
 
-    test('Given playback is active from initial page load, when the native media play/pause key pauses, then tones and music pause together', async ({ page }) => {
-      test.fail(true, 'Native MediaPlayPause dispatch still does not reach the app Media Session owner in Chromium automation.');
+    test('Given playback is active from initial page load, when Media Session pause fires, then tones and music pause together', async ({ page }) => {
       await openFreshApp(page);
       await establishPlayback(page, {
         presetIndex: FIRST_PRESET.index,
         outputType: 'headphones',
         playlistId: DEFAULT_PLAYLIST_ID,
       });
+      await expectMediaOwnershipRefreshSettledAfterInitialPlayback(page);
 
-      await pressMediaPlayPause(page);
+      await invokeMediaSessionAction(page, 'pause');
 
       await expectPlaybackPaused(page);
     });
@@ -423,6 +423,7 @@ async function installAcceptanceProbes(page) {
     window.__brainTonesAcceptance = {
       mediaSessionHandlers: {},
       mediaSessionActions: [],
+      mediaOwnershipRefreshSchedules: [],
       mediaSessionWrapError: null,
       windowOpenCalls: [],
     };
@@ -547,9 +548,57 @@ async function installAcceptanceProbes(page) {
       }
     };
 
+    const wrapAppSession = () => {
+      try {
+        const session = window.BrainTones && window.BrainTones.session;
+        if (!session || session.__brainTonesAcceptanceWrapped || typeof session.scheduleMediaOwnershipPlaybackRefresh !== 'function') {
+          return;
+        }
+
+        const originalSchedule = session.scheduleMediaOwnershipPlaybackRefresh.bind(session);
+        session.scheduleMediaOwnershipPlaybackRefresh = function(delayMs) {
+          let youtubeSnapshot = null;
+          let appState = null;
+          try {
+            youtubeSnapshot = window.BrainTones.acceptance.getYouTubeSnapshot();
+          } catch (e) {}
+          try {
+            appState = window.BrainTones.acceptance.getState();
+          } catch (e) {}
+
+          const result = originalSchedule(delayMs);
+
+          window.__brainTonesAcceptance.mediaOwnershipRefreshSchedules.push({
+            at: performance.now(),
+            delayMs: Number(delayMs) || 0,
+            result,
+            youtubeState: youtubeSnapshot ? youtubeSnapshot.state : null,
+            youtubeCurrentTime: youtubeSnapshot ? youtubeSnapshot.currentTime : null,
+            appIsPaused: appState ? appState.isPaused : null,
+            presetIndex: appState ? appState.currentPresetIndex : null,
+            outputType: appState ? appState.currentOutputType : null,
+          });
+
+          return result;
+        };
+
+        Object.defineProperty(session, '__brainTonesAcceptanceWrapped', {
+          value: true,
+          configurable: true,
+        });
+      } catch (error) {
+        window.__brainTonesAcceptance.mediaSessionWrapError = String(error && error.message ? error.message : error);
+      }
+    };
+
     wrapMediaSession();
+    wrapAppSession();
     const wrapTimer = setInterval(wrapMediaSession, 50);
-    window.addEventListener('load', () => setTimeout(() => clearInterval(wrapTimer), 5000));
+    const appWrapTimer = setInterval(wrapAppSession, 50);
+    window.addEventListener('load', () => setTimeout(() => {
+      clearInterval(wrapTimer);
+      clearInterval(appWrapTimer);
+    }, 5000));
   });
 }
 
@@ -926,33 +975,6 @@ async function seekYouTubeTo(page, seconds) {
   });
 }
 
-async function pressMediaPlayPause(page) {
-  try {
-    await page.keyboard.press('MediaPlayPause');
-    return;
-  } catch (error) {
-    if (!String(error && error.message ? error.message : error).includes('Unknown key')) {
-      throw error;
-    }
-  }
-
-  const client = await page.context().newCDPSession(page);
-  await client.send('Input.dispatchKeyEvent', {
-    type: 'keyDown',
-    key: 'MediaPlayPause',
-    code: 'MediaPlayPause',
-    windowsVirtualKeyCode: 179,
-    nativeVirtualKeyCode: 179,
-  });
-  await client.send('Input.dispatchKeyEvent', {
-    type: 'keyUp',
-    key: 'MediaPlayPause',
-    code: 'MediaPlayPause',
-    windowsVirtualKeyCode: 179,
-    nativeVirtualKeyCode: 179,
-  });
-}
-
 async function invokeMediaSessionAction(page, action) {
   await waitForMediaSessionAction(page, action);
   await page.evaluate(async actionInPage => {
@@ -975,6 +997,37 @@ async function waitForMediaSessionAction(page, action) {
     arg: action,
     timeout: 5000,
     message: `Expected Media Session action handler "${action}" to be registered.`,
+  });
+}
+
+async function expectMediaOwnershipRefreshSettledAfterInitialPlayback(page) {
+  const schedule = await waitForPageValue(page, () => {
+    const schedules = window.__brainTonesAcceptance?.mediaOwnershipRefreshSchedules || [];
+    return schedules.find(entry => (
+      entry.result === true &&
+      entry.appIsPaused === false &&
+      entry.presetIndex !== null &&
+      Boolean(entry.outputType)
+    )) || null;
+  }, Boolean, {
+    timeout: 5000,
+    message: 'Expected media ownership playback refresh to be scheduled after initial app playback.',
+  });
+
+  await waitForPageValue(page, scheduleInPage => {
+    const appState = window.BrainTones.acceptance.getState();
+    const youtube = window.BrainTones.acceptance.getYouTubeSnapshot();
+    return (
+      performance.now() >= scheduleInPage.at + scheduleInPage.delayMs + 500 &&
+      appState.isPaused === false &&
+      appState.currentPresetIndex !== null &&
+      youtube.ready &&
+      youtube.state === youtube.states.PLAYING
+    );
+  }, Boolean, {
+    arg: schedule,
+    timeout: 5000,
+    message: 'Expected app playback to settle active after the media ownership playback refresh.',
   });
 }
 

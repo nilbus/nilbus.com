@@ -12,6 +12,8 @@
 		currentOutputType: null
 	};
 	var wakeLock = null;
+	var mediaOwnershipRefreshScheduled = false;
+	var mediaOwnershipRefreshCompleted = false;
 
 	function getPresetName(presetIndex) {
 		var preset = window.PRESET_TONES && window.PRESET_TONES[presetIndex];
@@ -196,8 +198,11 @@
 		await requestWakeLock();
 		if (BrainTones.mediaSession) {
 			BrainTones.mediaSession.reassertAppOwnership();
-			window.setTimeout(BrainTones.mediaSession.reassertAppOwnership, 300);
-			window.setTimeout(BrainTones.mediaSession.reassertAppOwnership, 1000);
+		}
+		if (BrainTones.session && typeof BrainTones.session.scheduleMediaOwnershipPlaybackRefresh === "function") {
+			BrainTones.session.scheduleMediaOwnershipPlaybackRefresh(0);
+		} else {
+			scheduleMediaOwnershipPlaybackRefresh(0);
 		}
 	}
 
@@ -225,6 +230,41 @@
 		}
 
 		return pausePlayback();
+	}
+
+	async function refreshMediaOwnershipPlayback() {
+		var currentPlaylist = storage.getCurrentPlaylist();
+		var presetIndex = state.currentPresetIndex;
+		var outputType = state.currentOutputType;
+
+		if (mediaOwnershipRefreshCompleted || state.isPaused || presetIndex === null || !outputType || !currentPlaylist) {
+			return false;
+		}
+
+		mediaOwnershipRefreshCompleted = true;
+		await pausePlayback();
+		await new Promise(function (resolve) {
+			window.setTimeout(resolve, 100);
+		});
+		await startPlayback({
+			presetIndex: presetIndex,
+			outputType: outputType,
+			playlist: currentPlaylist,
+			usePersistedTone: false
+		});
+		return true;
+	}
+
+	function scheduleMediaOwnershipPlaybackRefresh(delayMs) {
+		if (mediaOwnershipRefreshScheduled || mediaOwnershipRefreshCompleted || state.isPaused || state.currentPresetIndex === null || !state.currentOutputType) {
+			return false;
+		}
+
+		mediaOwnershipRefreshScheduled = true;
+		window.setTimeout(function () {
+			refreshMediaOwnershipPlayback();
+		}, Number(delayMs) || 0);
+		return true;
 	}
 
 	function selectPreset(options) {
@@ -282,6 +322,7 @@
 		startPlayback: startPlayback,
 		pausePlayback: pausePlayback,
 		togglePlayback: togglePlayback,
+		scheduleMediaOwnershipPlaybackRefresh: scheduleMediaOwnershipPlaybackRefresh,
 		selectPreset: selectPreset,
 		selectPlaylist: selectPlaylist
 	};
