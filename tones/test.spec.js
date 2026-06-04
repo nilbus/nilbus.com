@@ -325,6 +325,31 @@ test.describe('mocked non-playback coverage', () => {
     }));
   });
 
+  test('does not overwrite a saved nonzero playlist time with zero', async ({ page }) => {
+    await openApp(page);
+
+    const savedAt = Date.now() - 1000;
+    await page.evaluate(({ savedAt }) => {
+      localStorage.setItem('youtube_playlist_states', JSON.stringify({
+        [localStorage.getItem('youtube_playlist_id')]: {
+          videoIndex: 2,
+          playbackTime: 45,
+          lastUsed: savedAt,
+        },
+      }));
+      window.mockPlayerState.currentIndex = 0;
+      window.mockPlayerState.currentTime = 0;
+      window.BrainTones.youtube.saveCurrentPosition();
+    }, { savedAt });
+
+    const states = await page.evaluate(() => JSON.parse(localStorage.getItem('youtube_playlist_states') || '{}'));
+    expect(states[DEFAULT_PLAYLIST_ID]).toEqual({
+      videoIndex: 2,
+      playbackTime: 45,
+      lastUsed: savedAt,
+    });
+  });
+
   test('persists native balance input values', async ({ page }) => {
     await openApp(page);
 
