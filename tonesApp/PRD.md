@@ -31,7 +31,7 @@ Brain Tones enables users to:
 #### 3.1.1 Preset Library
 - **Requirement:** The app must load and display a library of tone presets from bundled JSON (`presets.json`)
 - **Preset Structure:** Each preset contains:
-  - Name (e.g., "Focused & Sustainable Work", "Procrastination Crusher")
+  - Name (e.g., "Focused & Sustainable Thinking", "Procrastination Crusher")
   - Multiple tone layers (typically 2-4 layers per preset)
   - Each layer includes:
     - Modulation frequency (`freq`)

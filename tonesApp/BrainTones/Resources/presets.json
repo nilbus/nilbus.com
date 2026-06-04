@@ -114,7 +114,7 @@
     ]
   },
   {
-    "name": "Focused & Sustainable Work",
+    "name": "Focused & Sustainable Thinking",
     "layers": [
       {
         "freq": 42,
@@ -136,6 +136,32 @@
         "type": "isochronic",
         "vol": "50",
         "purpose": "Mental relaxation"
+      }
+    ]
+  },
+  {
+    "name": "Relaxed, Productive Creativity",
+    "layers": [
+      {
+        "freq": 14,
+        "carrier": 250,
+        "type": "isochronic",
+        "vol": "60",
+        "purpose": "Steady analytical focus"
+      },
+      {
+        "freq": 10,
+        "carrier": 230,
+        "type": "binaural",
+        "vol": "65/50",
+        "purpose": "Relaxed clarity and mental ease"
+      },
+      {
+        "freq": 7.5,
+        "carrier": 200,
+        "type": "isochronic",
+        "vol": "45",
+        "purpose": "Creative flow and pattern recognition"
       }
     ]
   },
@@ -214,32 +240,6 @@
         "type": "isochronic",
         "vol": "50",
         "purpose": "Calm vigilance under pressure"
-      }
-    ]
-  },
-  {
-    "name": "Relaxed, Productive Creativity",
-    "layers": [
-      {
-        "freq": 14,
-        "carrier": 250,
-        "type": "isochronic",
-        "vol": "60",
-        "purpose": "Steady analytical focus"
-      },
-      {
-        "freq": 10,
-        "carrier": 230,
-        "type": "binaural",
-        "vol": "65/50",
-        "purpose": "Relaxed clarity and mental ease"
-      },
-      {
-        "freq": 7.5,
-        "carrier": 200,
-        "type": "isochronic",
-        "vol": "45",
-        "purpose": "Creative flow and pattern recognition"
       }
     ]
   },
