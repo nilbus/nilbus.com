@@ -210,11 +210,7 @@
 		if (session && !session.getState().isPaused) {
 			session.selectPlaylist(playlist);
 		} else {
-			youtube.loadPlaylist({
-				id: playlist.id,
-				url: playlist.url,
-				autoplay: false
-			});
+			storage.setCurrentPlaylist(playlist);
 		}
 	}
 
@@ -229,11 +225,8 @@
 		if (session && !session.getState().isPaused) {
 			session.selectPlaylist(playlist);
 		} else {
-			youtube.loadPlaylist({
-				id: playlist.id,
-				url: playlist.url,
-				autoplay: false
-			});
+			youtube.saveCurrentPosition();
+			storage.setCurrentPlaylist(playlist);
 		}
 	}
 

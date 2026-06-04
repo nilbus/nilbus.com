@@ -244,7 +244,6 @@ test.describe('real user audio acceptance', () => {
 
   test.describe('playlist and persistence', () => {
     test('Given a custom playlist is added, when its recent playlist link is clicked, then first tones and the custom playlist play', async ({ page }) => {
-      test.fail(true, 'The real YouTube Music custom playlist loads but remains unstarted through the iframe API.');
       await openFreshApp(page);
       await addCustomPlaylist(page);
 
@@ -275,7 +274,6 @@ test.describe('real user audio acceptance', () => {
     });
 
     test('Given custom playlist and alternate tone were active before reload, when Space is pressed after reload, then the same tone and playlist play', async ({ page }) => {
-      test.fail(true, 'The real YouTube Music custom playlist loads but remains unstarted through the iframe API before reload can be asserted.');
       await openFreshApp(page);
       await addCustomPlaylist(page);
       await establishPlayback(page, {
@@ -296,7 +294,6 @@ test.describe('real user audio acceptance', () => {
     });
 
     test('Given alternate tone was active before reload, when a playlist link is clicked after reload, then the same tone and clicked playlist play', async ({ page }) => {
-      test.fail(true, 'The real YouTube Music custom playlist loads but remains unstarted through the iframe API before reload can be asserted.');
       await openFreshApp(page);
       await addCustomPlaylist(page);
       await clickPlaylistLink(page, DEFAULT_PLAYLIST_TITLE);

@@ -182,6 +182,11 @@
 		}
 
 		var states = getPlaylistStates();
+		var existingPlaybackTime = Number(states[playlistId] && states[playlistId].playbackTime);
+		if (isFinite(existingPlaybackTime) && existingPlaybackTime > 0 && playbackTime === 0) {
+			return;
+		}
+
 		states[playlistId] = {
 			videoIndex: videoIndex,
 			playbackTime: playbackTime,
