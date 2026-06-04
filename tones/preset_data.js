@@ -60,11 +60,19 @@ purposes (e.g. love tones). Use harmonics in carrier tones. const PRESET_TONES =
 
 const PRESET_TONES = [
   {
-    name: "Focused & Sustainable Work",
+    name: "Focused & Sustainable Thinking",
     layers: [
       { freq: 42, carrier: 240, type: "isochronic", vol: "70", purpose: "Cognitive sharpness" },
       { freq: 22, carrier: 220, type: "binaural", vol: "80/65", purpose: "Mental energy" },
       { freq: 10, carrier: 180, type: "isochronic", vol: "50", purpose: "Mental relaxation" }
+    ]
+  },
+  {
+    name: "Relaxed, Productive Creativity",
+    layers: [
+      { freq: 14, carrier: 250, type: "isochronic", vol: "60", purpose: "Steady analytical focus" },
+      { freq: 10, carrier: 230, type: "binaural", vol: "65/50", purpose: "Relaxed clarity and mental ease" },
+      { freq: 7.5, carrier: 200, type: "isochronic", vol: "45", purpose: "Creative flow and pattern recognition" }
     ]
   },
   {
@@ -89,14 +97,6 @@ const PRESET_TONES = [
       { freq: 40, carrier: 270, type: "isochronic", vol: "75", purpose: "Executive drive & mental precision" },
       { freq: 18, carrier: 250, type: "binaural", vol: "85/70", purpose: "Goal-oriented task engagement" },
       { freq: 9.5, carrier: 210, type: "isochronic", vol: "50", purpose: "Calm vigilance under pressure" }
-    ]
-  },
-  {
-    name: "Relaxed, Productive Creativity",
-    layers: [
-      { freq: 14, carrier: 250, type: "isochronic", vol: "60", purpose: "Steady analytical focus" },
-      { freq: 10, carrier: 230, type: "binaural", vol: "65/50", purpose: "Relaxed clarity and mental ease" },
-      { freq: 7.5, carrier: 200, type: "isochronic", vol: "45", purpose: "Creative flow and pattern recognition" }
     ]
   },
   {

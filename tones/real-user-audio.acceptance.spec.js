@@ -8,8 +8,8 @@ const CUSTOM_PLAYLIST_ID = 'PLa7mrH1FP1itWJGvbEymj_rlPwWimyRf_';
 const CUSTOM_PLAYLIST_URL = `https://music.youtube.com/playlist?list=${CUSTOM_PLAYLIST_ID}&si=9K1d6ackFCgoLRWS`;
 const CUSTOM_PLAYLIST_TITLE = 'Acceptance Custom Playlist';
 
-const FIRST_PRESET = { index: 0, name: 'Focused & Sustainable Work' };
-const ALT_PRESET = { index: 1, name: 'Procrastination Crusher' };
+const FIRST_PRESET = { index: 0, name: 'Focused & Sustainable Thinking' };
+const ALT_PRESET = { index: 2, name: 'Procrastination Crusher' };
 const SPLIT_CARRIER_PRESET = { index: 8, name: 'Edge: Initiation & Buildup' };
 
 const MIN_TONE_RMS = 0.0005;
