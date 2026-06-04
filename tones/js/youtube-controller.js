@@ -10,6 +10,7 @@
 	var readyCallbacks = [];
 	var autoSaveInterval = null;
 	var requestedInitialization = false;
+	var loadedPlaylistId = null;
 
 	var previousTrackIndex = null;
 	var previousTrackPosition = 0;
@@ -30,6 +31,35 @@
 		previousTrackPosition = 0;
 		forwardDestinationIndex = null;
 		forwardDestinationPosition = 0;
+	}
+
+	function retryAutoplayPlaylist(id) {
+		window.setTimeout(function () {
+			if (!player || !isReady) {
+				return;
+			}
+
+			var currentPlaylist = storage.getCurrentPlaylist();
+			if (!currentPlaylist || currentPlaylist.id !== id) {
+				return;
+			}
+
+			var playing = getPlayerStateValue("PLAYING");
+			var state = typeof player.getPlayerState === "function" ? player.getPlayerState() : null;
+			if (state === playing) {
+				return;
+			}
+
+			var playlistConfig = getPlaylistConfig(id);
+			if (typeof player.loadPlaylist === "function") {
+				player.loadPlaylist(playlistConfig);
+				loadedPlaylistId = id;
+			} else if (typeof player.cuePlaylist === "function") {
+				player.cuePlaylist(playlistConfig);
+				loadedPlaylistId = id;
+			}
+			play();
+		}, 500);
 	}
 
 	function getPlaylistConfig(playlistId) {
@@ -58,6 +88,7 @@
 		}
 
 		player.cuePlaylist(getPlaylistConfig(playlist.id));
+		loadedPlaylistId = playlist.id;
 	}
 
 	function notifyReady() {
@@ -94,6 +125,7 @@
 					list: currentPlaylist.id,
 					index: 0
 				});
+				loadedPlaylistId = currentPlaylist.id;
 			}
 		} catch (error) {
 			console.error("Unable to handle YouTube state change:", error);
@@ -182,19 +214,20 @@
 
 		try {
 			stopAutoSave();
-			if (typeof player.stopVideo === "function") {
-				player.stopVideo();
-			}
-			if (typeof player.clearVideo === "function") {
-				player.clearVideo();
-			}
-
 			var playlistConfig = getPlaylistConfig(id);
-			if (autoplay && typeof player.loadPlaylist === "function") {
-				player.loadPlaylist(playlistConfig);
+			if (autoplay && typeof player.cuePlaylist === "function") {
+				player.cuePlaylist(playlistConfig);
+				loadedPlaylistId = id;
 				play();
+				retryAutoplayPlaylist(id);
+			} else if (autoplay && typeof player.loadPlaylist === "function") {
+				player.loadPlaylist(playlistConfig);
+				loadedPlaylistId = id;
+				play();
+				retryAutoplayPlaylist(id);
 			} else if (typeof player.cuePlaylist === "function") {
 				player.cuePlaylist(playlistConfig);
+				loadedPlaylistId = id;
 			}
 
 			if (autoplay) {
@@ -367,6 +400,7 @@
 			playlistIndex: null,
 			playlistLength: null,
 			volume: null,
+			loadedPlaylistId: loadedPlaylistId,
 			localPlaylistId: currentPlaylist ? currentPlaylist.id : null,
 			states: states,
 			navigationHistory: {

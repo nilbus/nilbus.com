@@ -143,24 +143,13 @@
 
 	async function startPlayback(options) {
 		options = options || {};
-		var wasPaused = state.isPaused;
 		var selectedTone = normalizeToneSelection(options);
 		var playlist = normalizePlaylist(options.playlist);
-		var currentPlaylist = storage.getCurrentPlaylist();
-		var playlistChanged = Boolean(playlist && (!currentPlaylist || currentPlaylist.id !== playlist.id));
 		var youtubeSnapshot = youtube.getSnapshot();
 		var shouldLoadPlaylist = Boolean(
-			playlistChanged ||
 			options.forcePlaylistLoad ||
-			(
-				wasPaused &&
-				playlist.id !== BrainTones.config.DEFAULT_PLAYLIST_ID &&
-				youtubeSnapshot.states &&
-				(
-					youtubeSnapshot.state === youtubeSnapshot.states.UNSTARTED ||
-					youtubeSnapshot.state === youtubeSnapshot.states.CUED
-				)
-			)
+			!youtubeSnapshot.loadedPlaylistId ||
+			youtubeSnapshot.loadedPlaylistId !== playlist.id
 		);
 
 		toneEngine.initialize();
