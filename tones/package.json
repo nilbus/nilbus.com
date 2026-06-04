@@ -5,6 +5,7 @@
   "scripts": {
     "server": "npx http-server -p ${PORT:-8080} -c-1",
     "test": "NODE_NO_WARNINGS=1 playwright test --workers=14 --reporter=line",
+    "test:acceptance": "NODE_NO_WARNINGS=1 playwright test real-user-audio.acceptance.spec.js --project=chromium --workers=1 --reporter=line",
     "test:headed": "NODE_NO_WARNINGS=1 playwright test --workers=14 --headed",
     "test:ui": "NODE_NO_WARNINGS=1 playwright test --workers=14 --ui",
     "test:debug": "NODE_NO_WARNINGS=1 playwright test --workers=14 --debug",

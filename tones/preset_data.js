@@ -233,3 +233,6 @@ function generatePresetParams(preset, outputType) {
 
   return params;
 }
+
+window.PRESET_TONES = PRESET_TONES;
+window.generatePresetParams = generatePresetParams;
