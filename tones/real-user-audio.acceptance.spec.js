@@ -5,7 +5,7 @@ const DEFAULT_PLAYLIST_URL = `https://www.youtube.com/playlist?list=${DEFAULT_PL
 const DEFAULT_PLAYLIST_TITLE = 'AllieSpaces';
 
 const CUSTOM_PLAYLIST_ID = 'PLa7mrH1FP1itWJGvbEymj_rlPwWimyRf_';
-const CUSTOM_PLAYLIST_URL = `https://music.youtube.com/playlist?list=${CUSTOM_PLAYLIST_ID}&si=c-EN6ax2quye7vAI`;
+const CUSTOM_PLAYLIST_URL = `https://music.youtube.com/playlist?list=${CUSTOM_PLAYLIST_ID}&si=9K1d6ackFCgoLRWS`;
 const CUSTOM_PLAYLIST_TITLE = 'Acceptance Custom Playlist';
 
 const FIRST_PRESET = { index: 0, name: 'Focused & Sustainable Work' };
