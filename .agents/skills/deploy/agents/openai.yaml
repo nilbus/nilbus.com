@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deploy Brainaural"
+  short_description: "Deploy Brainaural to nilbus.com"
+  default_prompt: "Use $deploy to deploy the current committed Brainaural app to nilbus.com."
