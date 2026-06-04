@@ -233,25 +233,32 @@
 	}
 
 	async function refreshMediaOwnershipPlayback() {
-		var currentPlaylist = storage.getCurrentPlaylist();
 		var presetIndex = state.currentPresetIndex;
 		var outputType = state.currentOutputType;
 
-		if (mediaOwnershipRefreshCompleted || state.isPaused || presetIndex === null || !outputType || !currentPlaylist) {
+		if (mediaOwnershipRefreshCompleted || state.isPaused || presetIndex === null || !outputType) {
 			return false;
 		}
 
 		mediaOwnershipRefreshCompleted = true;
-		await pausePlayback();
+		await toneEngine.pause();
 		await new Promise(function (resolve) {
 			window.setTimeout(resolve, 100);
 		});
-		await startPlayback({
+		if (state.isPaused || state.currentPresetIndex !== presetIndex || state.currentOutputType !== outputType) {
+			return false;
+		}
+
+		toneEngine.initialize();
+		toneEngine.applyPreset({
 			presetIndex: presetIndex,
-			outputType: outputType,
-			playlist: currentPlaylist,
-			usePersistedTone: false
+			outputType: outputType
 		});
+		await toneEngine.play();
+		updateVisualAndMediaState();
+		if (BrainTones.mediaSession) {
+			BrainTones.mediaSession.reassertAppOwnership();
+		}
 		return true;
 	}
 
