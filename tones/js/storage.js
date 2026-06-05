@@ -245,6 +245,9 @@
 
 	function getBalance() {
 		var raw = getItem(keys.balance);
+		if (raw === null) {
+			return 50;
+		}
 		var value = Number(raw);
 		if (!isFinite(value) || value < 0 || value > 100) {
 			return 50;

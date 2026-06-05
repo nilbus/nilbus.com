@@ -147,10 +147,13 @@
 		var selectedTone = normalizeToneSelection(options);
 		var playlist = normalizePlaylist(options.playlist);
 		var youtubeSnapshot = youtube.getSnapshot();
+		var hasLoadedPlaylist = Boolean(
+			youtubeSnapshot.loadedPlaylistId === playlist.id &&
+			youtubeSnapshot.playlistLength > 0
+		);
 		var shouldLoadPlaylist = Boolean(
 			options.forcePlaylistLoad ||
-			!youtubeSnapshot.loadedPlaylistId ||
-			youtubeSnapshot.loadedPlaylistId !== playlist.id
+			!hasLoadedPlaylist
 		);
 
 		toneEngine.initialize();

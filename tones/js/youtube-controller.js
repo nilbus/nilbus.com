@@ -86,6 +86,9 @@
 		if (!playlist || !playlist.id) {
 			return;
 		}
+		if (playlist.id !== config.DEFAULT_PLAYLIST_ID) {
+			return;
+		}
 
 		player.cuePlaylist(getPlaylistConfig(playlist.id));
 		loadedPlaylistId = playlist.id;
@@ -156,13 +159,13 @@
 			return;
 		}
 
-		var playlist = storage.ensureDefaultPlaylist();
+		storage.ensureDefaultPlaylist();
 		player = new window.YT.Player("youtube-player", {
 			height: "315",
 			width: "560",
 			playerVars: {
 				listType: "playlist",
-				list: playlist.id,
+				list: config.DEFAULT_PLAYLIST_ID,
 				rel: 0,
 				showinfo: 0,
 				controls: 1,
@@ -215,13 +218,13 @@
 		try {
 			stopAutoSave();
 			var playlistConfig = getPlaylistConfig(id);
-			if (autoplay && typeof player.cuePlaylist === "function") {
-				player.cuePlaylist(playlistConfig);
+			if (autoplay && typeof player.loadPlaylist === "function") {
+				player.loadPlaylist(playlistConfig);
 				loadedPlaylistId = id;
 				play();
 				retryAutoplayPlaylist(id);
-			} else if (autoplay && typeof player.loadPlaylist === "function") {
-				player.loadPlaylist(playlistConfig);
+			} else if (autoplay && typeof player.cuePlaylist === "function") {
+				player.cuePlaylist(playlistConfig);
 				loadedPlaylistId = id;
 				play();
 				retryAutoplayPlaylist(id);
