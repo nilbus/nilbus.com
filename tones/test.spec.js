@@ -380,6 +380,23 @@ test.describe('mocked non-playback coverage', () => {
     expect((await appState(page)).youtubeDisplayMode).toBe('simple');
   });
 
+  test('syncs simple play/pause visual state after preset playback toggles', async ({ page }) => {
+    await openApp(page);
+
+    await page.locator('#youtube-display-toggle').click();
+    await expect(page.locator('#youtube-simple-controls')).toBeVisible();
+
+    await page.locator('#preset-0-headphones').click();
+    await page.waitForFunction(() => window.BrainTones.acceptance.getYouTubeSnapshot().state === window.BrainTones.acceptance.getYouTubeSnapshot().states.PLAYING);
+    expect(await page.locator('#youtube-playpause-btn').getAttribute('aria-label')).toBe('Pause YouTube');
+    expect(await page.locator('#youtube-playpause-btn').evaluate(button => button.classList.contains('is-paused'))).toBe(false);
+
+    await page.locator('#preset-0-headphones').click();
+    await page.waitForFunction(() => window.BrainTones.acceptance.getYouTubeSnapshot().state === window.BrainTones.acceptance.getYouTubeSnapshot().states.PAUSED);
+    expect(await page.locator('#youtube-playpause-btn').getAttribute('aria-label')).toBe('Play YouTube');
+    expect(await page.locator('#youtube-playpause-btn').evaluate(button => button.classList.contains('is-paused'))).toBe(true);
+  });
+
   test('simple YouTube controls only toggle YouTube playback and navigate tracks', async ({ page }) => {
     await openApp(page);
 
