@@ -342,6 +342,11 @@ blockquote {
 /* ===========================================
    PRESET GRID STYLES
    =========================================== */
+.preset-youtube-layout {
+	width: min(100% - 32px, 1180px);
+	margin: 0 auto;
+}
+
 .preset-grid {
 	display: flex;
 	flex-direction: column;
@@ -639,6 +644,30 @@ blockquote {
 /* ===========================================
    RESPONSIVE DESIGN
    =========================================== */
+
+@media (min-width: 950px) {
+	.preset-youtube-layout {
+		display: grid;
+		grid-template-columns: minmax(480px, 1fr) minmax(360px, 520px);
+		align-items: start;
+		column-gap: 32px;
+	}
+
+	.preset-grid,
+	.youtube-section {
+		margin-top: 20px;
+	}
+
+	.youtube-controls {
+		align-items: stretch;
+	}
+
+	#youtube-player {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 16 / 9;
+	}
+}
 
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
