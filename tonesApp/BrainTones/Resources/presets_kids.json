@@ -6,21 +6,21 @@
         "freq": 42,
         "carrier": 240,
         "type": "isochronic",
-        "vol": "70",
+        "vol": "70/75",
         "purpose": "Cognitive sharpness"
       },
       {
         "freq": 22,
         "carrier": 220,
         "type": "binaural",
-        "vol": "80/65",
+        "vol": "80/70",
         "purpose": "Mental energy"
       },
       {
         "freq": 10,
         "carrier": 180,
         "type": "isochronic",
-        "vol": "50",
+        "vol": "50/55",
         "purpose": "Mental relaxation"
       }
     ]
@@ -32,21 +32,21 @@
         "freq": 14,
         "carrier": 250,
         "type": "isochronic",
-        "vol": "60",
+        "vol": "70/75",
         "purpose": "Steady analytical focus"
       },
       {
         "freq": 10,
         "carrier": 230,
         "type": "binaural",
-        "vol": "65/50",
+        "vol": "75/60",
         "purpose": "Relaxed clarity and mental ease"
       },
       {
         "freq": 7.5,
         "carrier": 200,
         "type": "isochronic",
-        "vol": "45",
+        "vol": "55",
         "purpose": "Creative flow and pattern recognition"
       }
     ]
@@ -58,21 +58,21 @@
         "freq": 38,
         "carrier": 260,
         "type": "isochronic",
-        "vol": "75",
+        "vol": "65/70",
         "purpose": "Urgency and motivation"
       },
       {
         "freq": 18,
         "carrier": 280,
         "type": "binaural",
-        "vol": "85/70",
+        "vol": "75/65",
         "purpose": "Task initiation"
       },
       {
         "freq": 10,
         "carrier": 240,
         "type": "isochronic",
-        "vol": "50",
+        "vol": "45",
         "purpose": "Calm focus"
       }
     ]
@@ -84,21 +84,21 @@
         "freq": 40,
         "carrier": 290,
         "type": "isochronic",
-        "vol": "75",
+        "vol": "65/70",
         "purpose": "Peak alertness and problem-solving speed"
       },
       {
         "freq": 18,
         "carrier": 260,
         "type": "binaural",
-        "vol": "80/65",
+        "vol": "70/60",
         "purpose": "Maintain focused energy and task engagement"
       },
       {
         "freq": 10,
         "carrier": 220,
         "type": "isochronic",
-        "vol": "55",
+        "vol": "50",
         "purpose": "Keep calm flow without mental rigidity"
       }
     ]
@@ -110,21 +110,21 @@
         "freq": 40,
         "carrier": 270,
         "type": "isochronic",
-        "vol": "75",
+        "vol": "65/70",
         "purpose": "Executive drive & mental precision"
       },
       {
         "freq": 18,
         "carrier": 250,
         "type": "binaural",
-        "vol": "85/70",
+        "vol": "75/65",
         "purpose": "Goal-oriented task engagement"
       },
       {
         "freq": 9.5,
         "carrier": 210,
         "type": "isochronic",
-        "vol": "50",
+        "vol": "45",
         "purpose": "Calm vigilance under pressure"
       }
     ]
@@ -136,21 +136,21 @@
         "freq": 16,
         "carrier": 260,
         "type": "isochronic",
-        "vol": "50",
+        "vol": "65/70",
         "purpose": "Active verbal collaboration"
       },
       {
         "freq": 12,
         "carrier": 240,
         "type": "binaural",
-        "vol": "50/40",
+        "vol": "65/55",
         "purpose": "Calm focus with social awareness"
       },
       {
         "freq": 8,
         "carrier": 220,
         "type": "isochronic",
-        "vol": "50",
+        "vol": "65/70",
         "purpose": "Cooperative ease and flow"
       }
     ]
@@ -162,21 +162,21 @@
         "freq": 36,
         "carrier": 290,
         "type": "isochronic",
-        "vol": "75",
+        "vol": "70",
         "purpose": "Override fatigue with drive"
       },
       {
         "freq": 20,
         "carrier": 270,
         "type": "binaural",
-        "vol": "70/55",
+        "vol": "65/50",
         "purpose": "Sustained problem-solving energy"
       },
       {
         "freq": 9,
         "carrier": 230,
         "type": "isochronic",
-        "vol": "55",
+        "vol": "50",
         "purpose": "Prevent mental tension buildup"
       }
     ]
@@ -188,14 +188,14 @@
         "freq": 6,
         "carrier": 210,
         "type": "isochronic",
-        "vol": "70",
+        "vol": "80",
         "purpose": "Transition into restful nap state"
       },
       {
         "freq": 3,
         "carrier": 190,
         "type": "isochronic",
-        "vol": "65",
+        "vol": "75",
         "purpose": "Deep, short rejuvenating sleep"
       }
     ]

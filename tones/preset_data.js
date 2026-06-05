@@ -62,121 +62,121 @@ const PRESET_TONES = [
   {
     name: "Focused & Sustainable Thinking",
     layers: [
-      { freq: 42, carrier: 240, type: "isochronic", vol: "70", purpose: "Cognitive sharpness" },
-      { freq: 22, carrier: 220, type: "binaural", vol: "80/65", purpose: "Mental energy" },
-      { freq: 10, carrier: 180, type: "isochronic", vol: "50", purpose: "Mental relaxation" }
+      { freq: 42, carrier: 240, type: "isochronic", vol: "70/75", purpose: "Cognitive sharpness" },
+      { freq: 22, carrier: 220, type: "binaural", vol: "80/70", purpose: "Mental energy" },
+      { freq: 10, carrier: 180, type: "isochronic", vol: "50/55", purpose: "Mental relaxation" }
     ]
   },
   {
     name: "Relaxed, Productive Creativity",
     layers: [
-      { freq: 14, carrier: 250, type: "isochronic", vol: "60", purpose: "Steady analytical focus" },
-      { freq: 10, carrier: 230, type: "binaural", vol: "65/50", purpose: "Relaxed clarity and mental ease" },
-      { freq: 7.5, carrier: 200, type: "isochronic", vol: "45", purpose: "Creative flow and pattern recognition" }
+      { freq: 14, carrier: 250, type: "isochronic", vol: "70/75", purpose: "Steady analytical focus" },
+      { freq: 10, carrier: 230, type: "binaural", vol: "75/60", purpose: "Relaxed clarity and mental ease" },
+      { freq: 7.5, carrier: 200, type: "isochronic", vol: "55", purpose: "Creative flow and pattern recognition" }
     ]
   },
   {
     name: "Procrastination Crusher",
     layers: [
-      { freq: 38, carrier: 260, type: "isochronic", vol: "75", purpose: "Urgency and motivation" },
-      { freq: 18, carrier: 280, type: "binaural", vol: "85/70", purpose: "Task initiation" },
-      { freq: 10, carrier: 240, type: "isochronic", vol: "50", purpose: "Calm focus" }
+      { freq: 38, carrier: 260, type: "isochronic", vol: "65/70", purpose: "Urgency and motivation" },
+      { freq: 18, carrier: 280, type: "binaural", vol: "75/65", purpose: "Task initiation" },
+      { freq: 10, carrier: 240, type: "isochronic", vol: "45", purpose: "Calm focus" }
     ]
   },
   {
     name: "Jumpstart or Post-Meal Focus Boost",
     layers: [
-      { freq: 40, carrier: 290, type: "isochronic", vol: "75", purpose: "Peak alertness and problem-solving speed" },
-      { freq: 18, carrier: 260, type: "binaural", vol: "80/65", purpose: "Maintain focused energy and task engagement" },
-      { freq: 10, carrier: 220, type: "isochronic", vol: "55", purpose: "Keep calm flow without mental rigidity" }
+      { freq: 40, carrier: 290, type: "isochronic", vol: "65/70", purpose: "Peak alertness and problem-solving speed" },
+      { freq: 18, carrier: 260, type: "binaural", vol: "70/60", purpose: "Maintain focused energy and task engagement" },
+      { freq: 10, carrier: 220, type: "isochronic", vol: "50", purpose: "Keep calm flow without mental rigidity" }
     ]
   },
   {
     name: "Deadline Drive",
     layers: [
-      { freq: 40, carrier: 270, type: "isochronic", vol: "75", purpose: "Executive drive & mental precision" },
-      { freq: 18, carrier: 250, type: "binaural", vol: "85/70", purpose: "Goal-oriented task engagement" },
-      { freq: 9.5, carrier: 210, type: "isochronic", vol: "50", purpose: "Calm vigilance under pressure" }
+      { freq: 40, carrier: 270, type: "isochronic", vol: "65/70", purpose: "Executive drive & mental precision" },
+      { freq: 18, carrier: 250, type: "binaural", vol: "75/65", purpose: "Goal-oriented task engagement" },
+      { freq: 9.5, carrier: 210, type: "isochronic", vol: "45", purpose: "Calm vigilance under pressure" }
     ]
   },
   {
     name: "Pair Flow",
     layers: [
-      { freq: 16, carrier: 260, type: "isochronic", vol: "50", purpose: "Active verbal collaboration" },
-      { freq: 12, carrier: 240, type: "binaural", vol: "50/40", purpose: "Calm focus with social awareness" },
-      { freq: 8, carrier: 220, type: "isochronic", vol: "50", purpose: "Cooperative ease and flow" }
+      { freq: 16, carrier: 260, type: "isochronic", vol: "65/70", purpose: "Active verbal collaboration" },
+      { freq: 12, carrier: 240, type: "binaural", vol: "65/55", purpose: "Calm focus with social awareness" },
+      { freq: 8, carrier: 220, type: "isochronic", vol: "65/70", purpose: "Cooperative ease and flow" }
     ]
   },
   {
     name: "Second Wind",
     layers: [
-      { freq: 36, carrier: 290, type: "isochronic", vol: "75", purpose: "Override fatigue with drive" },
-      { freq: 20, carrier: 270, type: "binaural", vol: "70/55", purpose: "Sustained problem-solving energy" },
-      { freq: 9, carrier: 230, type: "isochronic", vol: "55", purpose: "Prevent mental tension buildup" }
+      { freq: 36, carrier: 290, type: "isochronic", vol: "70", purpose: "Override fatigue with drive" },
+      { freq: 20, carrier: 270, type: "binaural", vol: "65/50", purpose: "Sustained problem-solving energy" },
+      { freq: 9, carrier: 230, type: "isochronic", vol: "50", purpose: "Prevent mental tension buildup" }
     ]
   },
   {
     name: "Power Nap Reset",
     layers: [
-      { freq: 6, carrier: 210, type: "isochronic", vol: "70", purpose: "Transition into restful nap state" },
-      { freq: 3, carrier: 190, type: "isochronic", vol: "65", purpose: "Deep, short rejuvenating sleep" }
+      { freq: 6, carrier: 210, type: "isochronic", vol: "80", purpose: "Transition into restful nap state" },
+      { freq: 3, carrier: 190, type: "isochronic", vol: "75", purpose: "Deep, short rejuvenating sleep" }
     ]
   },
   {
     name: "Edge: Initiation & Buildup",
     layers: [
-      { freq: 10, carrier: "285/174", type: "isochronic", vol: "55/55", purpose: "(5–10 min) Calm arousal, emotional safety, sympathetic braking" },
-      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "45/45", purpose: "Cortical-limbic / emotional coherence, relaxed sensual presence" },
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "55/55", purpose: "Early pelvic interoception without emission loading" }
+      { freq: 10, carrier: "285/174", type: "isochronic", vol: "60/80", purpose: "(5–10 min) Calm arousal, emotional safety, sympathetic braking" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "50/65", purpose: "Cortical-limbic / emotional coherence, relaxed sensual presence" },
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "60/80", purpose: "Early pelvic interoception without emission loading" }
     ]
   },
   {
     name: "Edge: Contractile Conditioning",
     layers: [
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "85/85", purpose: "Pelvic sensory amplification, pleasure wave mapping" },
-      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "55/55", purpose: "Arousal coherence, emotional containment" },
-      { freq: 2.8, carrier: "157.43/140.28", type: "isochronic", vol: "55/55", purpose: "Parasympathetic biasing without loss of control" }
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "65/90", purpose: "Pelvic sensory amplification, pleasure wave mapping" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "40/55", purpose: "Arousal coherence, emotional containment" },
+      { freq: 2.8, carrier: "157.43/140.28", type: "isochronic", vol: "40/55", purpose: "Parasympathetic biasing without loss of control" }
     ]
   },
   {
     name: "Edge: Stability for Dry Contractions",
     layers: [
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "95/95", purpose: "Primary euphoric contraction support without expulsion" },
-      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "75/75", purpose: "Parasympathetic dominance" },
-      { freq: 9.5, carrier: "285/174", type: "isochronic", vol: "30/30", purpose: "Cortical presence, prevention of autonomic drop-through" }
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "65/90", purpose: "Primary euphoric contraction support without expulsion" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "50/70", purpose: "Parasympathetic dominance" },
+      { freq: 9.5, carrier: "285/174", type: "isochronic", vol: "20/30", purpose: "Cortical presence, prevention of autonomic drop-through" }
     ]
   },
   {
     name: "Spot: Internal Focus",
     layers: [
-      { freq: 9.5, carrier: "285/174", type: "isochronic", vol: "50/30", purpose: "Calm presence without goals or expectations" },
-      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "45/30", purpose: "Emotional coherence & safety" },
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "45/25", purpose: "Early pelvic interoceptive mapping" }
+      { freq: 9.5, carrier: "285/174", type: "isochronic", vol: "60/80", purpose: "Calm presence without goals or expectations" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "55/80", purpose: "Emotional coherence & safety" },
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "55/65", purpose: "Early pelvic interoceptive mapping" }
     ]
   },
   {
     name: "Spot: Wave Expansion",
     layers: [
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "85/35", purpose: "After attention effortlessly internal" },
-      { freq: 4.5, carrier: "174/157.43", type: "isochronic", vol: "65/30", purpose: "breath effortlessly slow" },
-      { freq: 2.8, carrier: "157.43/140.28", type: "isochronic", vol: "55/25", purpose: "pelvic tone neutral/available, sensation can expand without goal or urgency" }
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "65/85", purpose: "After attention effortlessly internal" },
+      { freq: 4.5, carrier: "174/157.43", type: "isochronic", vol: "50/75", purpose: "breath effortlessly slow" },
+      { freq: 2.8, carrier: "157.43/140.28", type: "isochronic", vol: "40/60", purpose: "pelvic tone neutral/available, sensation can expand without goal or urgency" }
     ]
   },
   {
     name: "Spot: Surrender",
     layers: [
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "75/30", purpose: "After circulating without buildup" },
-      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "75/30", purpose: "pelvic floor & breath spontaneous" },
-      { freq: 0.75, carrier: "396/175.35", type: "isochronic", vol: "55/30", purpose: "Orgasmic surrender, deep parasympathetic release" }
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "60/75", purpose: "After circulating without buildup" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "60/75", purpose: "pelvic floor & breath spontaneous" },
+      { freq: 0.75, carrier: "396/175.35", type: "isochronic", vol: "45/75", purpose: "Orgasmic surrender, deep parasympathetic release" }
     ]
   },
   {
     name: "HFDO Surrender",
     layers: [
-      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "80/80", purpose: "Pelvic sensory mapping, interoception" },
-      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "50/50", purpose: "Awareness anchor, cortical-limbic bridge" },
-      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "90/90", purpose: "Parasympathetic surrender, body melting" },
-      { freq: 0.5, carrier: "396/175.35", type: "isochronic", vol: "60/60", purpose: "Primal embodiment, energetic wave support" }
+      { freq: 5.5, carrier: "417/210.42", type: "isochronic", vol: "60/80", purpose: "Pelvic sensory mapping, interoception" },
+      { freq: 7.83, carrier: "210.42/187.87", type: "isochronic", vol: "35/50", purpose: "Awareness anchor, cortical-limbic bridge" },
+      { freq: 2.5, carrier: "157.43/140.28", type: "isochronic", vol: "65/90", purpose: "Parasympathetic surrender, body melting" },
+      { freq: 0.5, carrier: "396/175.35", type: "isochronic", vol: "45/60", purpose: "Primal embodiment, energetic wave support" }
     ]
   }
 ];
