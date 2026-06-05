@@ -82,8 +82,9 @@
 			var deleteButton = document.createElement("button");
 			deleteButton.type = "button";
 			deleteButton.className = "delete-btn";
-			deleteButton.textContent = "x";
-			deleteButton.setAttribute("aria-label", "Delete " + playlist.title);
+			deleteButton.textContent = "\u2715";
+			deleteButton.setAttribute("aria-label", "Remove " + playlist.title);
+			deleteButton.setAttribute("title", "Remove playlist");
 			deleteButton.addEventListener("click", function (event) {
 				event.preventDefault();
 				event.stopPropagation();

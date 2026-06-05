@@ -304,6 +304,35 @@ test.describe('mocked non-playback coverage', () => {
     expect(recentIds).not.toContain('PLTEST123456789');
   });
 
+  test('places playlist tools beside presets on wide screens', async ({ page }) => {
+    await page.setViewportSize({ width: 950, height: 900 });
+    await openApp(page);
+
+    const positions = await page.evaluate(() => {
+      const presets = document.querySelector('.preset-grid').getBoundingClientRect();
+      const youtube = document.querySelector('.youtube-section').getBoundingClientRect();
+      const player = document.querySelector('#youtube-player').getBoundingClientRect();
+
+      return {
+        presets: {
+          top: presets.top,
+          right: presets.right,
+        },
+        youtube: {
+          top: youtube.top,
+          left: youtube.left,
+        },
+        player: {
+          left: player.left,
+        },
+      };
+    });
+
+    expect(positions.youtube.left).toBeGreaterThan(positions.presets.right);
+    expect(Math.abs(positions.youtube.top - positions.presets.top)).toBeLessThan(2);
+    expect(positions.player.left).toBeGreaterThan(positions.presets.right);
+  });
+
   test('saves the outgoing playlist state when switching playlist URLs', async ({ page }) => {
     await openApp(page);
 
@@ -402,8 +431,9 @@ test.describe('mocked non-playback coverage', () => {
     ]));
 
     await page.locator('#preset-1-speakers').click();
+    const expectedTitle = await page.evaluate(() => window.PRESET_TONES[1].name);
     const metadata = await page.evaluate(() => navigator.mediaSession.metadata);
-    expect(metadata.title).toBe('Procrastination Crusher');
+    expect(metadata.title).toBe(expectedTitle);
   });
 
   test('generates Brainaural URLs from current tone params and pauses first', async ({ page }) => {
