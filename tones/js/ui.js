@@ -7,9 +7,11 @@
 	var toneEngine = BrainTones.toneEngine;
 	var session = null;
 	var YOUTUBE_SIMPLE_MODE_DELAY_MS = 1000;
+	var YOUTUBE_NOW_PLAYING_REFRESH_MS = 1000;
 	var youtubeDisplayMode = "player";
 	var youtubeSimpleModeTimer = null;
 	var keepPlayerModeForActivePlayback = false;
+	var youtubeNowPlayingRefreshTimer = null;
 
 	function upcaseFirstLetter(value) {
 		if (!value) {
@@ -224,6 +226,69 @@
 		}
 	}
 
+	function formatTrackTime(seconds) {
+		var normalized = Math.max(0, Math.floor(Number(seconds) || 0));
+		var hours = Math.floor(normalized / 3600);
+		var minutes = Math.floor((normalized % 3600) / 60);
+		var remainingSeconds = normalized % 60;
+		var paddedSeconds = remainingSeconds < 10 ? "0" + remainingSeconds : String(remainingSeconds);
+
+		if (hours > 0) {
+			var paddedMinutes = minutes < 10 ? "0" + minutes : String(minutes);
+			return hours + ":" + paddedMinutes + ":" + paddedSeconds;
+		}
+
+		return minutes + ":" + paddedSeconds;
+	}
+
+	function formatTrackTimeRange(currentTime, duration) {
+		var current = formatTrackTime(currentTime);
+		var normalizedDuration = Number(duration);
+		if (isFinite(normalizedDuration) && normalizedDuration > 0) {
+			return current + " / " + formatTrackTime(normalizedDuration);
+		}
+
+		return current;
+	}
+
+	function updateYouTubeNowPlaying() {
+		var titleElement = document.getElementById("youtube-track-title");
+		var authorElement = document.getElementById("youtube-track-author");
+		var indexElement = document.getElementById("youtube-track-index");
+		var timeElement = document.getElementById("youtube-track-time");
+		var snapshot = youtube && typeof youtube.getSnapshot === "function" ? youtube.getSnapshot() : {};
+		var videoData = snapshot.videoData || {};
+		var currentPlaylist = storage.getCurrentPlaylist();
+		var title = videoData.title || (currentPlaylist && currentPlaylist.title) || "YouTube playlist";
+		var author = videoData.author || "";
+		var trackNumber = Number(snapshot.playlistIndex) + 1;
+		var playlistLength = Number(snapshot.playlistLength);
+
+		if (titleElement) {
+			titleElement.textContent = title;
+		}
+		if (authorElement) {
+			authorElement.textContent = author;
+		}
+		if (indexElement) {
+			indexElement.textContent = isFinite(trackNumber) && trackNumber > 0 && isFinite(playlistLength) && playlistLength > 0
+				? "Track " + trackNumber + " of " + playlistLength
+				: "";
+		}
+		if (timeElement) {
+			timeElement.textContent = formatTrackTimeRange(snapshot.currentTime, snapshot.duration);
+		}
+	}
+
+	function startYouTubeNowPlayingRefresh() {
+		if (youtubeNowPlayingRefreshTimer) {
+			return;
+		}
+
+		updateYouTubeNowPlaying();
+		youtubeNowPlayingRefreshTimer = window.setInterval(updateYouTubeNowPlaying, YOUTUBE_NOW_PLAYING_REFRESH_MS);
+	}
+
 	function updateYouTubeTransportVisualState() {
 		var playPauseButton = document.getElementById("youtube-playpause-btn");
 		var previousButton = document.getElementById("youtube-previous-btn");
@@ -253,6 +318,8 @@
 		if (nextButton) {
 			nextButton.disabled = !isReady;
 		}
+
+		updateYouTubeNowPlaying();
 	}
 
 	function toggleYouTubeOnlyPlayback() {
@@ -454,6 +521,8 @@
 				setBalance(50);
 			});
 		}
+
+		startYouTubeNowPlayingRefresh();
 	}
 
 	function setPlaylistInputValue(url) {
@@ -471,6 +540,7 @@
 		setYouTubeDisplayMode: setYouTubeDisplayMode,
 		getYouTubeDisplayMode: function () { return youtubeDisplayMode; },
 		updateYouTubeTransportVisualState: updateYouTubeTransportVisualState,
+		updateYouTubeNowPlaying: updateYouTubeNowPlaying,
 		scheduleSimpleModeAfterPlaybackStart: scheduleSimpleModeAfterPlaybackStart,
 		cancelScheduledSimpleMode: cancelScheduledSimpleMode,
 		setBalance: setBalance,

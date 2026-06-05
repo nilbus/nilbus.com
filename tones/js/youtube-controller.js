@@ -400,8 +400,10 @@
 			hasPlayer: Boolean(player),
 			state: null,
 			currentTime: null,
+			duration: null,
 			playlistIndex: null,
 			playlistLength: null,
+			videoData: null,
 			volume: null,
 			loadedPlaylistId: loadedPlaylistId,
 			localPlaylistId: currentPlaylist ? currentPlaylist.id : null,
@@ -427,12 +429,18 @@
 			if (typeof player.getCurrentTime === "function") {
 				snapshot.currentTime = player.getCurrentTime();
 			}
+			if (typeof player.getDuration === "function") {
+				snapshot.duration = player.getDuration();
+			}
 			if (typeof player.getPlaylistIndex === "function") {
 				snapshot.playlistIndex = player.getPlaylistIndex();
 			}
 			if (typeof player.getPlaylist === "function") {
 				var playlist = player.getPlaylist();
 				snapshot.playlistLength = Array.isArray(playlist) ? playlist.length : null;
+			}
+			if (typeof player.getVideoData === "function") {
+				snapshot.videoData = player.getVideoData();
 			}
 			if (typeof player.getVolume === "function") {
 				snapshot.volume = player.getVolume();

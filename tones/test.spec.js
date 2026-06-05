@@ -112,6 +112,12 @@ test.beforeEach(async ({ page }) => {
     let playerState = -1;
     let currentIndex = 0;
     let currentTime = 0;
+    let duration = 208;
+    let videoData = {
+      video_id: 'video1',
+      title: 'LORN - ANVIL [Official Music Video]',
+      author: 'GERIKO',
+    };
     let volume = 100;
     const mockPlayer = {
       cuePlaylist: config => {
@@ -145,7 +151,9 @@ test.beforeEach(async ({ page }) => {
       getPlayerState: () => playerState,
       getPlaylistIndex: () => currentIndex,
       getCurrentTime: () => currentTime,
+      getDuration: () => duration,
       getPlaylist: () => ['video1', 'video2', 'video3'],
+      getVideoData: () => videoData,
       getVolume: () => volume,
       setVolume: nextVolume => {
         window.mockCalls.youtube.push(`setVolume:${nextVolume}`);
@@ -170,6 +178,10 @@ test.beforeEach(async ({ page }) => {
       set currentIndex(value) { currentIndex = value; },
       get currentTime() { return currentTime; },
       set currentTime(value) { currentTime = value; },
+      get duration() { return duration; },
+      set duration(value) { duration = value; },
+      get videoData() { return videoData; },
+      set videoData(value) { videoData = value; },
       get playerState() { return playerState; },
       set playerState(value) { playerState = value; },
       get volume() { return volume; },
@@ -394,6 +406,27 @@ test.describe('mocked non-playback coverage', () => {
     const youtubeCalls = await page.evaluate(() => window.mockCalls.youtube);
     expect(youtubeCalls).toContain('seekTo:0:true');
     expect(youtubeCalls).toContain('nextVideo');
+  });
+
+  test('shows current YouTube track details and live time in simple controls', async ({ page }) => {
+    await openApp(page);
+
+    await page.locator('#youtube-display-toggle').click();
+    await page.evaluate(() => {
+      window.mockPlayerState.currentIndex = 1;
+      window.mockPlayerState.currentTime = 75;
+      window.BrainTones.ui.updateYouTubeNowPlaying();
+    });
+
+    await expect(page.locator('#youtube-track-title')).toHaveText('LORN - ANVIL [Official Music Video]');
+    await expect(page.locator('#youtube-track-author')).toHaveText('GERIKO');
+    await expect(page.locator('#youtube-track-index')).toHaveText('Track 2 of 3');
+    await expect(page.locator('#youtube-track-time')).toHaveText('1:15 / 3:28');
+
+    await page.evaluate(() => {
+      window.mockPlayerState.currentTime = 76;
+    });
+    await expect(page.locator('#youtube-track-time')).toHaveText('1:16 / 3:28', { timeout: 1500 });
   });
 
   test('saves the outgoing playlist state when switching playlist URLs', async ({ page }) => {
