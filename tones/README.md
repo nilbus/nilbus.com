@@ -45,6 +45,6 @@ The test suite (`test.spec.js`) covers:
 
 ## Configuration
 
-- Tests run against `http://localhost:3000` served by npx http-server
+- Tests run against `http://localhost:3001` served by npx http-server
 - Supports Chromium, Firefox, and WebKit browsers
 - Each test runs in isolated browser context with clean localStorage
