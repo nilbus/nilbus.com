@@ -470,7 +470,8 @@ blockquote {
 .balance-slider::-webkit-slider-runnable-track {
 	height: 6px;
 	border-radius: 3px;
-	background: var(--bg-button);
+	background: #2196f3;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 .balance-slider::-webkit-slider-thumb {
@@ -487,7 +488,8 @@ blockquote {
 .balance-slider::-moz-range-track {
 	height: 6px;
 	border-radius: 3px;
-	background: var(--bg-button);
+	background: #2196f3;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 .balance-slider::-moz-range-thumb {
