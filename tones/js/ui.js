@@ -6,6 +6,10 @@
 	var youtube = BrainTones.youtube;
 	var toneEngine = BrainTones.toneEngine;
 	var session = null;
+	var YOUTUBE_SIMPLE_MODE_DELAY_MS = 1000;
+	var youtubeDisplayMode = "player";
+	var youtubeSimpleModeTimer = null;
+	var keepPlayerModeForActivePlayback = false;
 
 	function upcaseFirstLetter(value) {
 		if (!value) {
@@ -136,6 +140,8 @@
 				selectedButton.classList.add("active");
 			}
 		}
+
+		updateYouTubeTransportVisualState();
 	}
 
 	function getBalanceVolumes(value) {
@@ -151,6 +157,116 @@
 			tonesVolume: 2 * (1 - p),
 			musicVolume: 1
 		};
+	}
+
+	function clearYouTubeSimpleModeTimer() {
+		if (youtubeSimpleModeTimer) {
+			window.clearTimeout(youtubeSimpleModeTimer);
+			youtubeSimpleModeTimer = null;
+		}
+	}
+
+	function setYouTubeDisplayMode(mode, options) {
+		var nextMode = mode === "simple" ? "simple" : "player";
+		var section = document.querySelector(".youtube-section");
+		var toggle = document.getElementById("youtube-display-toggle");
+
+		if (options && options.userInitiated) {
+			clearYouTubeSimpleModeTimer();
+			if (nextMode === "player" && session && !session.getState().isPaused) {
+				keepPlayerModeForActivePlayback = true;
+			} else if (nextMode === "simple") {
+				keepPlayerModeForActivePlayback = false;
+			}
+		}
+
+		youtubeDisplayMode = nextMode;
+
+		if (section) {
+			section.classList.toggle("youtube-mode-player", nextMode === "player");
+			section.classList.toggle("youtube-mode-simple", nextMode === "simple");
+		}
+
+		if (toggle) {
+			toggle.textContent = nextMode === "simple" ? "Show video" : "Show controls";
+			toggle.setAttribute("aria-expanded", nextMode === "player" ? "true" : "false");
+		}
+	}
+
+	function toggleYouTubeDisplayMode() {
+		setYouTubeDisplayMode(youtubeDisplayMode === "simple" ? "player" : "simple", {
+			userInitiated: true
+		});
+	}
+
+	function scheduleSimpleModeAfterPlaybackStart(options) {
+		clearYouTubeSimpleModeTimer();
+
+		if (options && options.resetManualPreference) {
+			keepPlayerModeForActivePlayback = false;
+		}
+
+		if (keepPlayerModeForActivePlayback) {
+			return;
+		}
+
+		youtubeSimpleModeTimer = window.setTimeout(function () {
+			youtubeSimpleModeTimer = null;
+			setYouTubeDisplayMode("simple");
+		}, YOUTUBE_SIMPLE_MODE_DELAY_MS);
+	}
+
+	function cancelScheduledSimpleMode(options) {
+		clearYouTubeSimpleModeTimer();
+
+		if (options && options.resetManualPreference) {
+			keepPlayerModeForActivePlayback = false;
+		}
+	}
+
+	function updateYouTubeTransportVisualState() {
+		var playPauseButton = document.getElementById("youtube-playpause-btn");
+		var previousButton = document.getElementById("youtube-previous-btn");
+		var nextButton = document.getElementById("youtube-next-btn");
+		var snapshot = youtube && typeof youtube.getSnapshot === "function" ? youtube.getSnapshot() : {};
+		var states = snapshot.states || {};
+		var isReady = Boolean(snapshot.ready);
+		var isPlaying = snapshot.state === states.PLAYING || snapshot.state === states.BUFFERING;
+
+		if (playPauseButton) {
+			var playPauseLabel = isPlaying ? "Pause YouTube" : "Play YouTube";
+			var playPauseTitle = isPlaying ? "Pause YouTube" : "Play YouTube";
+			var playPauseIcon = playPauseButton.querySelector("[aria-hidden='true']");
+			playPauseButton.disabled = !isReady;
+			playPauseButton.setAttribute("aria-label", playPauseLabel);
+			playPauseButton.setAttribute("title", playPauseTitle);
+			playPauseButton.classList.toggle("is-paused", !isPlaying);
+			if (playPauseIcon) {
+				playPauseIcon.textContent = isPlaying ? "\u275A\u275A" : "\u25B6";
+			}
+		}
+
+		if (previousButton) {
+			previousButton.disabled = !isReady;
+		}
+
+		if (nextButton) {
+			nextButton.disabled = !isReady;
+		}
+	}
+
+	function toggleYouTubeOnlyPlayback() {
+		var snapshot = youtube && typeof youtube.getSnapshot === "function" ? youtube.getSnapshot() : {};
+		var states = snapshot.states || {};
+		var isPlaying = snapshot.state === states.PLAYING || snapshot.state === states.BUFFERING;
+
+		if (isPlaying) {
+			youtube.pause();
+		} else {
+			youtube.play();
+		}
+
+		window.setTimeout(updateYouTubeTransportVisualState, 100);
 	}
 
 	function setBalance(value) {
@@ -260,6 +376,10 @@
 		var playlistInput = document.getElementById("playlist-url");
 		var saveButton = document.getElementById("save-playlist-btn");
 		var balance = document.getElementById("tones-music-balance");
+		var youtubeDisplayToggle = document.getElementById("youtube-display-toggle");
+		var youtubePreviousButton = document.getElementById("youtube-previous-btn");
+		var youtubePlayPauseButton = document.getElementById("youtube-playpause-btn");
+		var youtubeNextButton = document.getElementById("youtube-next-btn");
 
 		if (muteButton) {
 			muteButton.addEventListener("click", function () {
@@ -302,6 +422,30 @@
 			saveButton.addEventListener("click", savePlaylistFromInput);
 		}
 
+		if (youtubeDisplayToggle) {
+			youtubeDisplayToggle.addEventListener("click", toggleYouTubeDisplayMode);
+		}
+
+		if (youtubePreviousButton) {
+			youtubePreviousButton.addEventListener("click", function () {
+				youtube.previousTrack();
+				window.setTimeout(updateYouTubeTransportVisualState, 100);
+			});
+		}
+
+		if (youtubePlayPauseButton) {
+			youtubePlayPauseButton.addEventListener("click", function () {
+				toggleYouTubeOnlyPlayback();
+			});
+		}
+
+		if (youtubeNextButton) {
+			youtubeNextButton.addEventListener("click", function () {
+				youtube.nextTrack();
+				window.setTimeout(updateYouTubeTransportVisualState, 100);
+			});
+		}
+
 		if (balance) {
 			balance.addEventListener("input", function () {
 				setBalance(balance.value);
@@ -324,6 +468,11 @@
 		renderRecentPlaylists: renderRecentPlaylists,
 		bindEvents: bindEvents,
 		setPlaybackVisualState: setPlaybackVisualState,
+		setYouTubeDisplayMode: setYouTubeDisplayMode,
+		getYouTubeDisplayMode: function () { return youtubeDisplayMode; },
+		updateYouTubeTransportVisualState: updateYouTubeTransportVisualState,
+		scheduleSimpleModeAfterPlaybackStart: scheduleSimpleModeAfterPlaybackStart,
+		cancelScheduledSimpleMode: cancelScheduledSimpleMode,
 		setBalance: setBalance,
 		markPlaylistInputValid: markPlaylistInputValid,
 		openBrainauralUrl: openBrainauralUrl,

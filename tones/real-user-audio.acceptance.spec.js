@@ -47,6 +47,20 @@ test.describe('real user audio acceptance', () => {
       });
     });
 
+    test('Given a first run, when playback starts, then simple YouTube controls appear while music continues', async ({ page }) => {
+      await openFreshApp(page);
+
+      await clickPreset(page, FIRST_PRESET.index, 'headphones');
+
+      await expectPlaybackActive(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      await expectYouTubeSimpleMode(page);
+      await expectYouTubePlaying(page, { playlistId: DEFAULT_PLAYLIST_ID });
+    });
+
     test('Given a first run, when Space is pressed, then first tones and the default playlist play', async ({ page }) => {
       await openFreshApp(page);
 
@@ -132,6 +146,25 @@ test.describe('real user audio acceptance', () => {
       });
     });
 
+    test('Given simple YouTube controls are showing, when play/pause is clicked twice, then only YouTube pauses and resumes', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      await expectYouTubeSimpleMode(page);
+
+      await page.locator('#youtube-playpause-btn').click();
+      await expectYouTubeNotPlaying(page);
+      await expectSelectedTone(page, FIRST_PRESET.index, 'headphones');
+
+      await page.locator('#youtube-playpause-btn').click();
+      await expectYouTubePlaying(page, { playlistId: DEFAULT_PLAYLIST_ID });
+      await expectSelectedTone(page, FIRST_PRESET.index, 'headphones');
+      await expectYouTubeSimpleMode(page);
+    });
+
     test('Given playback is active from initial page load, when Media Session pause fires, then tones and music pause together', async ({ page }) => {
       await openFreshApp(page);
       await establishPlayback(page, {
@@ -194,6 +227,31 @@ test.describe('real user audio acceptance', () => {
       await invokeMediaSessionAction(page, 'nexttrack');
       await waitForYouTubeSnapshot(page, snapshot => snapshot.playlistIndex !== beforeNext.playlistIndex, {
         message: 'Expected next-track action to change the YouTube playlist index.',
+      });
+      await expectYouTubePlaying(page, { playlistId: DEFAULT_PLAYLIST_ID });
+      await expectSelectedTone(page, FIRST_PRESET.index, 'headphones');
+    });
+
+    test('Given simple YouTube controls are showing, when previous and next are clicked, then YouTube position or track changes while tones continue', async ({ page }) => {
+      await openFreshApp(page);
+      await establishPlayback(page, {
+        presetIndex: FIRST_PRESET.index,
+        outputType: 'headphones',
+        playlistId: DEFAULT_PLAYLIST_ID,
+      });
+      await expectYouTubeSimpleMode(page);
+
+      await seekYouTubeTo(page, 8);
+      await page.locator('#youtube-previous-btn').click();
+      await waitForYouTubeSnapshot(page, snapshot => snapshot.currentTime <= 2, {
+        message: 'Expected simple previous control to restart the current video position.',
+      });
+      await expectSelectedTone(page, FIRST_PRESET.index, 'headphones');
+
+      const beforeNext = await readYouTubeSnapshot(page);
+      await page.locator('#youtube-next-btn').click();
+      await waitForYouTubeSnapshot(page, snapshot => snapshot.playlistIndex !== beforeNext.playlistIndex, {
+        message: 'Expected simple next control to change the YouTube playlist index.',
       });
       await expectYouTubePlaying(page, { playlistId: DEFAULT_PLAYLIST_ID });
       await expectSelectedTone(page, FIRST_PRESET.index, 'headphones');
@@ -620,6 +678,13 @@ async function waitForYouTubeReady(page) {
     timeout: YOUTUBE_READY_TIMEOUT_MS,
     message: 'Expected the real YouTube iframe API player to become ready.',
   });
+}
+
+async function expectYouTubeSimpleMode(page) {
+  await expect(page.locator('.youtube-section')).toHaveClass(/youtube-mode-simple/, { timeout: 5000 });
+  await expect(page.locator('#youtube-simple-controls')).toBeVisible();
+  await expect(page.locator('#youtube-display-toggle')).toHaveText('Show video');
+  await expect(page.locator('.youtube-player-container')).not.toBeVisible();
 }
 
 async function expectDefaultPlaylistAvailable(page) {

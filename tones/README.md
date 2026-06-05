@@ -2,6 +2,12 @@
 
 This directory contains an automated test suite for the Brainaural SPA using Playwright.
 
+## Product Notes
+
+- The YouTube playlist area loads with the embedded player visible so users can inspect the source player before playback.
+- Once BrainTones playback starts, the page waits 1 second and switches the YouTube area to simple previous/play-pause/next controls.
+- Simple mode hides the YouTube embed and controls YouTube only; the toggle restores the full embedded player when desired.
+
 ## Setup
 
 1. Install dependencies:
@@ -36,6 +42,7 @@ The test suite (`test.spec.js`) covers:
 8. **URL Generation** - Tests link button generates correct parameter URLs
 9. **Media Keys Integration** - Tests Media Session API integration
 10. **Keyboard Shortcuts** - Tests space bar and 'm' key shortcuts
+11. **YouTube Display Modes** - Tests full player/simple controls switching and transport button wiring
 
 ## Mocking Strategy
 

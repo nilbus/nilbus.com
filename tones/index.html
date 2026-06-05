@@ -59,12 +59,26 @@
 			<div id="preset-buttons-container"></div>
 		</div>
 
-		<div class="youtube-section">
+		<div class="youtube-section youtube-mode-player">
 			<div class="youtube-controls">
 				<button id="save-playlist-btn" class="save-button" type="button">Add Playlist</button>
 				<input type="text" id="playlist-url" class="playlist-input" placeholder="Enter YouTube playlist URL" value="https://www.youtube.com/playlist?list=PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF">
 			</div>
 			<div id="recent-playlists" class="recent-playlists-container" style="display: none;"></div>
+			<div class="youtube-display-bar">
+				<button id="youtube-display-toggle" class="youtube-display-toggle" type="button" aria-controls="youtube-player" aria-expanded="true">Show controls</button>
+			</div>
+			<div id="youtube-simple-controls" class="youtube-simple-controls" aria-label="YouTube playback controls">
+				<button id="youtube-previous-btn" class="youtube-transport-button" type="button" aria-label="Previous YouTube track" title="Previous YouTube track">
+					<span aria-hidden="true">&#9664;&#9664;</span>
+				</button>
+				<button id="youtube-playpause-btn" class="youtube-transport-button youtube-playpause-button" type="button" aria-label="Play YouTube" title="Play YouTube">
+					<span aria-hidden="true">&#9654;</span>
+				</button>
+				<button id="youtube-next-btn" class="youtube-transport-button" type="button" aria-label="Next YouTube track" title="Next YouTube track">
+					<span aria-hidden="true">&#9654;&#9654;</span>
+				</button>
+			</div>
 			<div class="youtube-player-container">
 				<div id="youtube-player"></div>
 			</div>
