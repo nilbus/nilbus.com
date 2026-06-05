@@ -143,6 +143,7 @@
 
 	async function startPlayback(options) {
 		options = options || {};
+		var wasPaused = state.isPaused;
 		var selectedTone = normalizeToneSelection(options);
 		var playlist = normalizePlaylist(options.playlist);
 		var youtubeSnapshot = youtube.getSnapshot();
@@ -184,6 +185,11 @@
 		await toneEngine.play();
 		youtube.play();
 		youtube.startAutoSave();
+		if (BrainTones.ui && typeof BrainTones.ui.scheduleSimpleModeAfterPlaybackStart === "function") {
+			BrainTones.ui.scheduleSimpleModeAfterPlaybackStart({
+				resetManualPreference: wasPaused
+			});
+		}
 		await requestWakeLock();
 		if (BrainTones.mediaSession) {
 			BrainTones.mediaSession.reassertAppOwnership();
@@ -205,6 +211,11 @@
 		youtube.pause();
 		youtube.saveCurrentPosition();
 		youtube.stopAutoSave();
+		if (BrainTones.ui && typeof BrainTones.ui.cancelScheduledSimpleMode === "function") {
+			BrainTones.ui.cancelScheduledSimpleMode({
+				resetManualPreference: true
+			});
+		}
 		await toneEngine.pause();
 		releaseWakeLock();
 		updateVisualAndMediaState();

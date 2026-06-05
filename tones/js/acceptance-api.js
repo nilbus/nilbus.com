@@ -16,6 +16,7 @@
 			currentPresetIndex: sessionState.currentPresetIndex,
 			currentOutputType: sessionState.currentOutputType,
 			isYouTubeReady: Boolean(BrainTones.youtube && BrainTones.youtube.isReady()),
+			youtubeDisplayMode: BrainTones.ui && typeof BrainTones.ui.getYouTubeDisplayMode === "function" ? BrainTones.ui.getYouTubeDisplayMode() : null,
 			activePlaylistId: sessionState.activePlaylistId || null,
 			hasToneStream: Boolean(destination && destination.stream)
 		};

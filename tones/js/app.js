@@ -70,6 +70,7 @@
 		BrainTones.youtube.onReady(function () {
 			BrainTones.ui.renderRecentPlaylists();
 			BrainTones.ui.setBalance(BrainTones.storage.getBalance());
+			BrainTones.ui.updateYouTubeTransportVisualState();
 		});
 		BrainTones.youtube.initializePlayer();
 

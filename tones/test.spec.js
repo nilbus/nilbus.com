@@ -333,6 +333,69 @@ test.describe('mocked non-playback coverage', () => {
     expect(positions.player.left).toBeGreaterThan(positions.presets.right);
   });
 
+  test('shows the embedded YouTube player first and toggles display modes', async ({ page }) => {
+    await openApp(page);
+
+    await expect(page.locator('.youtube-section')).toHaveClass(/youtube-mode-player/);
+    await expect(page.locator('#youtube-simple-controls')).not.toBeVisible();
+    await expect(page.locator('#youtube-display-toggle')).toHaveText('Show controls');
+    expect((await appState(page)).youtubeDisplayMode).toBe('player');
+
+    await page.locator('#youtube-display-toggle').click();
+
+    await expect(page.locator('.youtube-section')).toHaveClass(/youtube-mode-simple/);
+    await expect(page.locator('#youtube-simple-controls')).toBeVisible();
+    await expect(page.locator('#youtube-display-toggle')).toHaveText('Show video');
+    expect((await appState(page)).youtubeDisplayMode).toBe('simple');
+    await expect(page.locator('.youtube-player-container')).not.toBeVisible();
+
+    await page.locator('#youtube-display-toggle').click();
+
+    await expect(page.locator('.youtube-section')).toHaveClass(/youtube-mode-player/);
+    await expect(page.locator('#youtube-simple-controls')).not.toBeVisible();
+    await expect(page.locator('#youtube-display-toggle')).toHaveText('Show controls');
+    await expect(page.locator('.youtube-player-container')).toBeVisible();
+  });
+
+  test('switches to simple YouTube controls after app playback starts', async ({ page }) => {
+    await openApp(page);
+
+    await page.locator('#preset-0-headphones').click();
+
+    await expect(page.locator('.youtube-section')).toHaveClass(/youtube-mode-simple/, { timeout: 2500 });
+    await expect(page.locator('#youtube-simple-controls')).toBeVisible();
+    await expect(page.locator('.youtube-player-container')).not.toBeVisible();
+    expect((await appState(page)).youtubeDisplayMode).toBe('simple');
+  });
+
+  test('simple YouTube controls only toggle YouTube playback and navigate tracks', async ({ page }) => {
+    await openApp(page);
+
+    await page.locator('#preset-0-headphones').click();
+    await expect(page.locator('.youtube-section')).toHaveClass(/youtube-mode-simple/, { timeout: 2500 });
+
+    await page.locator('#youtube-playpause-btn').click();
+    await page.waitForFunction(() => window.BrainTones.acceptance.getYouTubeSnapshot().state === window.BrainTones.acceptance.getYouTubeSnapshot().states.PAUSED);
+    expect((await appState(page)).isPaused).toBe(false);
+    await expect(page.locator('#preset-0-headphones')).toHaveClass(/active/);
+    await expect(page.locator('#youtube-previous-btn')).toBeEnabled();
+    await expect(page.locator('#youtube-next-btn')).toBeEnabled();
+
+    await page.locator('#youtube-playpause-btn').click();
+    await page.waitForFunction(() => window.BrainTones.acceptance.getYouTubeSnapshot().state === window.BrainTones.acceptance.getYouTubeSnapshot().states.PLAYING);
+    expect((await appState(page)).isPaused).toBe(false);
+
+    await page.evaluate(() => {
+      window.mockPlayerState.currentTime = 8;
+    });
+    await page.locator('#youtube-previous-btn').click();
+    await page.locator('#youtube-next-btn').click();
+
+    const youtubeCalls = await page.evaluate(() => window.mockCalls.youtube);
+    expect(youtubeCalls).toContain('seekTo:0:true');
+    expect(youtubeCalls).toContain('nextVideo');
+  });
+
   test('saves the outgoing playlist state when switching playlist URLs', async ({ page }) => {
     await openApp(page);
 
