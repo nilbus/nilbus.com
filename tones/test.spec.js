@@ -402,8 +402,9 @@ test.describe('mocked non-playback coverage', () => {
     ]));
 
     await page.locator('#preset-1-speakers').click();
+    const expectedTitle = await page.evaluate(() => window.PRESET_TONES[1].name);
     const metadata = await page.evaluate(() => navigator.mediaSession.metadata);
-    expect(metadata.title).toBe('Procrastination Crusher');
+    expect(metadata.title).toBe(expectedTitle);
   });
 
   test('generates Brainaural URLs from current tone params and pauses first', async ({ page }) => {
