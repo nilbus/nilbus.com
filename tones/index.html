@@ -69,15 +69,25 @@
 				<button id="youtube-display-toggle" class="youtube-display-toggle" type="button" aria-controls="youtube-player" aria-expanded="true">Show controls</button>
 			</div>
 			<div id="youtube-simple-controls" class="youtube-simple-controls" aria-label="YouTube playback controls">
-				<button id="youtube-previous-btn" class="youtube-transport-button" type="button" aria-label="Previous YouTube track" title="Previous YouTube track">
-					<span aria-hidden="true">&#9664;&#9664;</span>
-				</button>
-				<button id="youtube-playpause-btn" class="youtube-transport-button youtube-playpause-button" type="button" aria-label="Play YouTube" title="Play YouTube">
-					<span aria-hidden="true">&#9654;</span>
-				</button>
-				<button id="youtube-next-btn" class="youtube-transport-button" type="button" aria-label="Next YouTube track" title="Next YouTube track">
-					<span aria-hidden="true">&#9654;&#9654;</span>
-				</button>
+				<div class="youtube-now-playing" aria-live="polite">
+					<div id="youtube-track-title" class="youtube-track-title">YouTube playlist</div>
+					<div class="youtube-track-meta">
+						<span id="youtube-track-author"></span>
+						<span id="youtube-track-index"></span>
+						<span id="youtube-track-time">0:00</span>
+					</div>
+				</div>
+				<div class="youtube-transport-controls">
+					<button id="youtube-previous-btn" class="youtube-transport-button" type="button" aria-label="Previous YouTube track" title="Previous YouTube track">
+						<span aria-hidden="true">&#9664;&#9664;</span>
+					</button>
+					<button id="youtube-playpause-btn" class="youtube-transport-button youtube-playpause-button" type="button" aria-label="Play YouTube" title="Play YouTube">
+						<span aria-hidden="true">&#9654;</span>
+					</button>
+					<button id="youtube-next-btn" class="youtube-transport-button" type="button" aria-label="Next YouTube track" title="Next YouTube track">
+						<span aria-hidden="true">&#9654;&#9654;</span>
+					</button>
+				</div>
 			</div>
 			<div class="youtube-player-container">
 				<div id="youtube-player"></div>

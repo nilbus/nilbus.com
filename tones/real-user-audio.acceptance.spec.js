@@ -377,6 +377,33 @@ test.describe('real user audio acceptance', () => {
       });
     });
 
+    test('Given a custom playlist was last used, when the page loads, then the custom playlist is ready before playback starts', async ({ page }) => {
+      await seedSavedPlaylistPosition(page, {
+        playlistId: CUSTOM_PLAYLIST_ID,
+        playlistUrl: CUSTOM_PLAYLIST_URL,
+        title: CUSTOM_PLAYLIST_TITLE,
+        videoIndex: 0,
+        playbackTime: 0,
+      });
+      await page.goto('/');
+      await waitForAppReady(page);
+
+      const snapshot = await waitForYouTubeSnapshot(page, youtube => (
+        youtube.localPlaylistId === CUSTOM_PLAYLIST_ID &&
+        youtube.loadedPlaylistId === CUSTOM_PLAYLIST_ID &&
+        youtube.playlistLength > 0
+      ), {
+        timeout: 10000,
+        message: 'Expected the stored custom playlist to be cued on startup before playback.',
+      });
+
+      expect(snapshot.state).not.toBe(snapshot.states.PLAYING);
+      await expect(page.locator('#playlist-url')).toHaveValue(CUSTOM_PLAYLIST_URL);
+      await expectActivePlaylist(page, CUSTOM_PLAYLIST_ID);
+      await expectNoTonesPlaying(page);
+      await expectYouTubeNotPlaying(page);
+    });
+
     test('Given a playlist position was saved, when playback starts after reload, then YouTube resumes that playlist index/time while tones start', async ({ page }) => {
       await seedSavedPlaylistPosition(page, {
         playlistId: DEFAULT_PLAYLIST_ID,

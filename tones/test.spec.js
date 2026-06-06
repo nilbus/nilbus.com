@@ -2,6 +2,8 @@ const { test, expect } = require('@playwright/test');
 
 const DEFAULT_PLAYLIST_ID = 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
 const DEFAULT_PLAYLIST_URL = `https://www.youtube.com/playlist?list=${DEFAULT_PLAYLIST_ID}`;
+const CUSTOM_PLAYLIST_ID = 'PLa7mrH1FP1itWJGvbEymj_rlPwWimyRf_';
+const CUSTOM_PLAYLIST_URL = `https://music.youtube.com/playlist?list=${CUSTOM_PLAYLIST_ID}&si=9K1d6ackFCgoLRWS`;
 
 test.beforeEach(async ({ page }) => {
   await page.route('https://www.youtube.com/iframe_api', route => {
@@ -112,6 +114,12 @@ test.beforeEach(async ({ page }) => {
     let playerState = -1;
     let currentIndex = 0;
     let currentTime = 0;
+    let duration = 208;
+    let videoData = {
+      video_id: 'video1',
+      title: 'LORN - ANVIL [Official Music Video]',
+      author: 'GERIKO',
+    };
     let volume = 100;
     const mockPlayer = {
       cuePlaylist: config => {
@@ -145,7 +153,9 @@ test.beforeEach(async ({ page }) => {
       getPlayerState: () => playerState,
       getPlaylistIndex: () => currentIndex,
       getCurrentTime: () => currentTime,
+      getDuration: () => duration,
       getPlaylist: () => ['video1', 'video2', 'video3'],
+      getVideoData: () => videoData,
       getVolume: () => volume,
       setVolume: nextVolume => {
         window.mockCalls.youtube.push(`setVolume:${nextVolume}`);
@@ -170,6 +180,10 @@ test.beforeEach(async ({ page }) => {
       set currentIndex(value) { currentIndex = value; },
       get currentTime() { return currentTime; },
       set currentTime(value) { currentTime = value; },
+      get duration() { return duration; },
+      set duration(value) { duration = value; },
+      get videoData() { return videoData; },
+      set videoData(value) { videoData = value; },
       get playerState() { return playerState; },
       set playerState(value) { playerState = value; },
       get volume() { return volume; },
@@ -178,6 +192,7 @@ test.beforeEach(async ({ page }) => {
     window.YT = {
       Player: function Player(_elementId, config) {
         window.mockCalls.youtube.push('YT.Player constructor');
+        window.mockPlayerConfig = config;
         requestAnimationFrame(() => {
           config.events.onReady({});
         });
@@ -279,6 +294,47 @@ test.describe('mocked non-playback coverage', () => {
     }));
   });
 
+  test('loads the stored custom playlist into the iframe before playback starts', async ({ page }) => {
+    await page.addInitScript(({ playlistId, playlistUrl }) => {
+      localStorage.setItem('youtube_playlist_id', playlistId);
+      localStorage.setItem('youtube_playlist_url', playlistUrl);
+      localStorage.setItem('youtube_recent_playlists', JSON.stringify([{
+        id: playlistId,
+        title: 'Custom Startup Playlist',
+        url: playlistUrl,
+        addedAt: Date.now(),
+      }]));
+    }, { playlistId: CUSTOM_PLAYLIST_ID, playlistUrl: CUSTOM_PLAYLIST_URL });
+
+    await openApp(page);
+
+    const startup = await page.evaluate(() => ({
+      playerVarsList: window.mockPlayerConfig.playerVars.list,
+      snapshot: window.BrainTones.acceptance.getYouTubeSnapshot(),
+      youtubeCalls: window.mockCalls.youtube.slice(),
+    }));
+    expect(startup.playerVarsList).toBe(CUSTOM_PLAYLIST_ID);
+    expect(startup.snapshot.localPlaylistId).toBe(CUSTOM_PLAYLIST_ID);
+    expect(startup.snapshot.loadedPlaylistId).toBe(CUSTOM_PLAYLIST_ID);
+    expect(startup.snapshot.playlistLength).toBeGreaterThan(0);
+    expect(startup.youtubeCalls).toContain(`cuePlaylist:${JSON.stringify({ listType: 'playlist', list: CUSTOM_PLAYLIST_ID })}`);
+    expect(startup.youtubeCalls.some(call => call.startsWith('loadPlaylist:'))).toBe(false);
+    await expect(page.locator('#playlist-url')).toHaveValue(CUSTOM_PLAYLIST_URL);
+
+    await page.locator('#preset-0-headphones').click();
+
+    const playbackCalls = await page.evaluate(() => window.mockCalls.youtube);
+    expect(playbackCalls.some(call => call.startsWith('loadPlaylist:'))).toBe(false);
+    await page.waitForFunction(playlistId => {
+      const snapshot = window.BrainTones.acceptance.getYouTubeSnapshot();
+      return (
+        snapshot.localPlaylistId === playlistId &&
+        snapshot.loadedPlaylistId === playlistId &&
+        snapshot.state === snapshot.states.PLAYING
+      );
+    }, CUSTOM_PLAYLIST_ID);
+  });
+
   test('marks invalid playlist URLs without changing the active playlist', async ({ page }) => {
     await openApp(page);
 
@@ -368,6 +424,23 @@ test.describe('mocked non-playback coverage', () => {
     expect((await appState(page)).youtubeDisplayMode).toBe('simple');
   });
 
+  test('syncs simple play/pause visual state after preset playback toggles', async ({ page }) => {
+    await openApp(page);
+
+    await page.locator('#youtube-display-toggle').click();
+    await expect(page.locator('#youtube-simple-controls')).toBeVisible();
+
+    await page.locator('#preset-0-headphones').click();
+    await page.waitForFunction(() => window.BrainTones.acceptance.getYouTubeSnapshot().state === window.BrainTones.acceptance.getYouTubeSnapshot().states.PLAYING);
+    expect(await page.locator('#youtube-playpause-btn').getAttribute('aria-label')).toBe('Pause YouTube');
+    expect(await page.locator('#youtube-playpause-btn').evaluate(button => button.classList.contains('is-paused'))).toBe(false);
+
+    await page.locator('#preset-0-headphones').click();
+    await page.waitForFunction(() => window.BrainTones.acceptance.getYouTubeSnapshot().state === window.BrainTones.acceptance.getYouTubeSnapshot().states.PAUSED);
+    expect(await page.locator('#youtube-playpause-btn').getAttribute('aria-label')).toBe('Play YouTube');
+    expect(await page.locator('#youtube-playpause-btn').evaluate(button => button.classList.contains('is-paused'))).toBe(true);
+  });
+
   test('simple YouTube controls only toggle YouTube playback and navigate tracks', async ({ page }) => {
     await openApp(page);
 
@@ -394,6 +467,27 @@ test.describe('mocked non-playback coverage', () => {
     const youtubeCalls = await page.evaluate(() => window.mockCalls.youtube);
     expect(youtubeCalls).toContain('seekTo:0:true');
     expect(youtubeCalls).toContain('nextVideo');
+  });
+
+  test('shows current YouTube track details and live time in simple controls', async ({ page }) => {
+    await openApp(page);
+
+    await page.locator('#youtube-display-toggle').click();
+    await page.evaluate(() => {
+      window.mockPlayerState.currentIndex = 1;
+      window.mockPlayerState.currentTime = 75;
+      window.BrainTones.ui.updateYouTubeNowPlaying();
+    });
+
+    await expect(page.locator('#youtube-track-title')).toHaveText('LORN - ANVIL [Official Music Video]');
+    await expect(page.locator('#youtube-track-author')).toHaveText('GERIKO');
+    await expect(page.locator('#youtube-track-index')).toHaveText('Track 2 of 3');
+    await expect(page.locator('#youtube-track-time')).toHaveText('1:15 / 3:28');
+
+    await page.evaluate(() => {
+      window.mockPlayerState.currentTime = 76;
+    });
+    await expect(page.locator('#youtube-track-time')).toHaveText('1:16 / 3:28', { timeout: 1500 });
   });
 
   test('saves the outgoing playlist state when switching playlist URLs', async ({ page }) => {

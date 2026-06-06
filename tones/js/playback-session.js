@@ -141,6 +141,17 @@
 		}
 	}
 
+	function updateYouTubeTransportVisualState() {
+		if (BrainTones.ui && typeof BrainTones.ui.updateYouTubeTransportVisualState === "function") {
+			BrainTones.ui.updateYouTubeTransportVisualState();
+			window.setTimeout(function () {
+				if (BrainTones.ui && typeof BrainTones.ui.updateYouTubeTransportVisualState === "function") {
+					BrainTones.ui.updateYouTubeTransportVisualState();
+				}
+			}, 100);
+		}
+	}
+
 	async function startPlayback(options) {
 		options = options || {};
 		var wasPaused = state.isPaused;
@@ -185,8 +196,10 @@
 			youtube.play();
 		}
 
+		updateYouTubeTransportVisualState();
 		await toneEngine.play();
 		youtube.play();
+		updateYouTubeTransportVisualState();
 		youtube.startAutoSave();
 		if (BrainTones.ui && typeof BrainTones.ui.scheduleSimpleModeAfterPlaybackStart === "function") {
 			BrainTones.ui.scheduleSimpleModeAfterPlaybackStart({
@@ -212,6 +225,7 @@
 
 		state.isPaused = true;
 		youtube.pause();
+		updateYouTubeTransportVisualState();
 		youtube.saveCurrentPosition();
 		youtube.stopAutoSave();
 		if (BrainTones.ui && typeof BrainTones.ui.cancelScheduledSimpleMode === "function") {
