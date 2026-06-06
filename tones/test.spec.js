@@ -2,6 +2,8 @@ const { test, expect } = require('@playwright/test');
 
 const DEFAULT_PLAYLIST_ID = 'PLr6Fn9qwKreJh28Ac9DexzsRY_tq6-KHF';
 const DEFAULT_PLAYLIST_URL = `https://www.youtube.com/playlist?list=${DEFAULT_PLAYLIST_ID}`;
+const CUSTOM_PLAYLIST_ID = 'PLa7mrH1FP1itWJGvbEymj_rlPwWimyRf_';
+const CUSTOM_PLAYLIST_URL = `https://music.youtube.com/playlist?list=${CUSTOM_PLAYLIST_ID}&si=9K1d6ackFCgoLRWS`;
 
 test.beforeEach(async ({ page }) => {
   await page.route('https://www.youtube.com/iframe_api', route => {
@@ -190,6 +192,7 @@ test.beforeEach(async ({ page }) => {
     window.YT = {
       Player: function Player(_elementId, config) {
         window.mockCalls.youtube.push('YT.Player constructor');
+        window.mockPlayerConfig = config;
         requestAnimationFrame(() => {
           config.events.onReady({});
         });
@@ -289,6 +292,47 @@ test.describe('mocked non-playback coverage', () => {
       title: 'AllieSpaces',
       url: DEFAULT_PLAYLIST_URL,
     }));
+  });
+
+  test('loads the stored custom playlist into the iframe before playback starts', async ({ page }) => {
+    await page.addInitScript(({ playlistId, playlistUrl }) => {
+      localStorage.setItem('youtube_playlist_id', playlistId);
+      localStorage.setItem('youtube_playlist_url', playlistUrl);
+      localStorage.setItem('youtube_recent_playlists', JSON.stringify([{
+        id: playlistId,
+        title: 'Custom Startup Playlist',
+        url: playlistUrl,
+        addedAt: Date.now(),
+      }]));
+    }, { playlistId: CUSTOM_PLAYLIST_ID, playlistUrl: CUSTOM_PLAYLIST_URL });
+
+    await openApp(page);
+
+    const startup = await page.evaluate(() => ({
+      playerVarsList: window.mockPlayerConfig.playerVars.list,
+      snapshot: window.BrainTones.acceptance.getYouTubeSnapshot(),
+      youtubeCalls: window.mockCalls.youtube.slice(),
+    }));
+    expect(startup.playerVarsList).toBe(CUSTOM_PLAYLIST_ID);
+    expect(startup.snapshot.localPlaylistId).toBe(CUSTOM_PLAYLIST_ID);
+    expect(startup.snapshot.loadedPlaylistId).toBe(CUSTOM_PLAYLIST_ID);
+    expect(startup.snapshot.playlistLength).toBeGreaterThan(0);
+    expect(startup.youtubeCalls).toContain(`cuePlaylist:${JSON.stringify({ listType: 'playlist', list: CUSTOM_PLAYLIST_ID })}`);
+    expect(startup.youtubeCalls.some(call => call.startsWith('loadPlaylist:'))).toBe(false);
+    await expect(page.locator('#playlist-url')).toHaveValue(CUSTOM_PLAYLIST_URL);
+
+    await page.locator('#preset-0-headphones').click();
+
+    const playbackCalls = await page.evaluate(() => window.mockCalls.youtube);
+    expect(playbackCalls.some(call => call.startsWith('loadPlaylist:'))).toBe(false);
+    await page.waitForFunction(playlistId => {
+      const snapshot = window.BrainTones.acceptance.getYouTubeSnapshot();
+      return (
+        snapshot.localPlaylistId === playlistId &&
+        snapshot.loadedPlaylistId === playlistId &&
+        snapshot.state === snapshot.states.PLAYING
+      );
+    }, CUSTOM_PLAYLIST_ID);
   });
 
   test('marks invalid playlist URLs without changing the active playlist', async ({ page }) => {

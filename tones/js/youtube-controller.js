@@ -3,7 +3,6 @@
 
 	var BrainTones = window.BrainTones || (window.BrainTones = {});
 	var storage = BrainTones.storage;
-	var config = BrainTones.config;
 
 	var player = null;
 	var isReady = false;
@@ -86,9 +85,6 @@
 		if (!playlist || !playlist.id) {
 			return;
 		}
-		if (playlist.id !== config.DEFAULT_PLAYLIST_ID) {
-			return;
-		}
 
 		player.cuePlaylist(getPlaylistConfig(playlist.id));
 		loadedPlaylistId = playlist.id;
@@ -159,13 +155,13 @@
 			return;
 		}
 
-		storage.ensureDefaultPlaylist();
+		var playlist = storage.ensureDefaultPlaylist();
 		player = new window.YT.Player("youtube-player", {
 			height: "315",
 			width: "560",
 			playerVars: {
 				listType: "playlist",
-				list: config.DEFAULT_PLAYLIST_ID,
+				list: playlist.id,
 				rel: 0,
 				showinfo: 0,
 				controls: 1,
